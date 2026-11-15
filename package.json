@@ -1,0 +1,22 @@
+{
+  "name": "eduerp",
+  "private": true,
+  "packageManager": "pnpm@10.34.9",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "db:up": "docker compose up -d --wait postgres redis mailpit",
+    "db:migrate": "pnpm --filter @eduerp/db migrate:deploy",
+    "db:seed": "pnpm --filter @eduerp/db seed && pnpm --filter @eduerp/api jobs:setup",
+    "worker": "pnpm --filter @eduerp/api worker"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0",
+    "typescript": "~5.8.3"
+  }
+}

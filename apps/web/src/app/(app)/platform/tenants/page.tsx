@@ -1,0 +1,282 @@
+'use client';
+
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { INSTITUTION_TYPES, assignPlanSchema, createTenantSchema } from '@eduerp/shared';
+import { api, ApiError } from '@/lib/api';
+import { useSession } from '@/lib/session';
+import { apiErrors, FieldErrors, validate } from '@/lib/form';
+import { Icon } from '@/components/Icon';
+import { Field, Modal } from '@/components/Modal';
+import { EmptyState, PageHeader, SkeletonRows, StatusBadge, useToast } from '@/components/ui';
+
+interface Tenant { id: string; name: string; slug: string; institutionType: string; city: string | null; status: string; createdAt: string }
+interface Plan { id: string; name: string; code: string; pricePerStudent: number; billingCycle: string; maxStudents: number | null; isActive: boolean }
+interface Entitlements {
+  subscription: { plan: { name: string; code: string }; status: string; startDate: string; endDate: string; studentCount: number; amount: number } | null;
+  modules: { code: string; name: string; group: string; core: boolean; isEnabled: boolean; source: string }[];
+}
+
+const TYPE_LABEL: Record<string, string> = { SCHOOL: 'School', PU_COLLEGE: 'PU college', DEGREE_COLLEGE: 'Degree college', UNIVERSITY: 'University', GROUP: 'Group of institutions' };
+const EMPTY = { name: '', slug: '', institutionType: 'SCHOOL', city: '', adminName: '', adminEmail: '', adminPassword: '' };
+const inr = (n: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n);
+const yearFromToday = () => {
+  const s = new Date();
+  const e = new Date(s);
+  e.setFullYear(e.getFullYear() + 1);
+  e.setDate(e.getDate() - 1);
+  return { startDate: s.toISOString().slice(0, 10), endDate: e.toISOString().slice(0, 10) };
+};
+
+export default function PlatformTenants() {
+  const { session } = useSession();
+  const toast = useToast();
+  const isSuper = session?.user.platformRole === 'SUPER_ADMIN';
+  const [rows, setRows] = useState<Tenant[] | null>(null);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState(EMPTY);
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const [formError, setFormError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  const [managing, setManaging] = useState<Tenant | null>(null);
+  const [ent, setEnt] = useState<Entitlements | null>(null);
+  const [sub, setSub] = useState({ planId: '', status: 'ACTIVE', startDate: '', endDate: '', studentCount: '0' });
+  const [subErrors, setSubErrors] = useState<FieldErrors>({});
+
+  const load = useCallback(() => {
+    api<Tenant[]>('/platform/tenants').then(setRows).catch(() => setRows([]));
+    api<Plan[]>('/platform/plans').then((p) => setPlans(p.filter((x) => x.isActive))).catch(() => setPlans([]));
+  }, []);
+  useEffect(load, [load]);
+
+  const shown = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return (rows ?? []).filter((t) => !q || t.name.toLowerCase().includes(q) || t.slug.includes(q) || (t.city ?? '').toLowerCase().includes(q));
+  }, [rows, query]);
+
+  if (!session?.user.platformRole) return <div className="alert">Platform staff only.</div>;
+
+  async function create() {
+    const payload = { name: form.name, slug: form.slug, institutionType: form.institutionType, city: form.city || undefined, admin: { fullName: form.adminName, email: form.adminEmail, password: form.adminPassword } };
+    const v = validate(createTenantSchema, payload);
+    if (!v.ok) return setErrors(v.errors);
+    setSaving(true);
+    try {
+      await api('/platform/tenants', { method: 'POST', body: JSON.stringify(v.data) });
+      setOpen(false);
+      toast(`${v.data.name} created — trial with every module`);
+      load();
+    } catch (err) {
+      const { fields, message } = apiErrors(err);
+      setErrors(fields);
+      setFormError(message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function manage(t: Tenant) {
+    setManaging(t);
+    setEnt(null);
+    setSubErrors({});
+    const e = await api<Entitlements>(`/platform/tenants/${t.id}/entitlements`);
+    setEnt(e);
+    const plan = e.subscription ? plans.find((p) => p.code === e.subscription!.plan.code) : undefined;
+    setSub({ planId: plan?.id ?? plans[0]?.id ?? '', status: e.subscription?.status === 'TRIAL' ? 'TRIAL' : 'ACTIVE', ...(e.subscription ? { startDate: e.subscription.startDate, endDate: e.subscription.endDate } : yearFromToday()), studentCount: String(e.subscription?.studentCount ?? 0) });
+  }
+
+  async function saveSubscription() {
+    if (!managing) return;
+    const v = validate(assignPlanSchema, { ...sub, studentCount: Number(sub.studentCount) });
+    if (!v.ok) return setSubErrors(v.errors);
+    setSaving(true);
+    try {
+      setEnt(await api<Entitlements>(`/platform/tenants/${managing.id}/subscription`, { method: 'POST', body: JSON.stringify(v.data) }));
+      toast(`${managing.name} is now on ${plans.find((p) => p.id === sub.planId)?.name}`);
+    } catch (e) {
+      const { fields, message } = apiErrors(e);
+      setSubErrors({ ...fields, ...(message ? { form: message } : {}) });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function toggleModule(code: string, isEnabled: boolean) {
+    if (!managing) return;
+    try {
+      setEnt(await api<Entitlements>(`/platform/tenants/${managing.id}/modules`, { method: 'PUT', body: JSON.stringify({ moduleCode: code, isEnabled }) }));
+    } catch (e) {
+      toast(e instanceof ApiError ? e.message : 'Could not change module', 'bad');
+    }
+  }
+
+  async function setStatus(status: 'ACTIVE' | 'SUSPENDED') {
+    if (!managing) return;
+    const reason = window.prompt(status === 'SUSPENDED' ? 'Reason for suspending (shown in the audit log):' : 'Reason for reactivating:');
+    if (!reason || reason.trim().length < 3) return;
+    try {
+      await api(`/platform/tenants/${managing.id}/status`, { method: 'PATCH', body: JSON.stringify({ status, reason }) });
+      toast(`${managing.name} ${status === 'SUSPENDED' ? 'suspended (read-only)' : 'reactivated'}`);
+      setManaging({ ...managing, status });
+      load();
+    } catch (e) {
+      toast(e instanceof ApiError ? e.message : 'Could not change status', 'bad');
+    }
+  }
+
+  const price = plans.find((p) => p.id === sub.planId);
+  const groups = ent ? [...new Set(ent.modules.map((m) => m.group))] : [];
+
+  return (
+    <>
+      <PageHeader
+        eyebrow="Platform console"
+        title="Institutions"
+        description="Every school or college group using EduERP: their plan, modules and status."
+        actions={isSuper && <button className="btn btn-primary" onClick={() => { setForm(EMPTY); setErrors({}); setFormError(null); setOpen(true); }}><Icon name="plus" /> Add institution</button>}
+      />
+
+      {rows === null ? (
+        <SkeletonRows />
+      ) : rows.length === 0 ? (
+        <EmptyState icon="building" title="No institutions yet" text="Create the first institution. It starts as a free trial with every module." />
+      ) : (
+        <>
+          <div className="toolbar">
+            <label className="search">
+              <Icon name="search" size={16} />
+              <input placeholder="Search by name, short name or city" value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Search institutions" />
+            </label>
+            <span className="muted">{shown.length} of {rows.length}</span>
+          </div>
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>Institution</th><th>Type</th><th>City</th><th>Status</th><th>Created</th><th /></tr></thead>
+              <tbody>
+                {shown.map((t) => (
+                  <tr key={t.id}>
+                    <td><strong>{t.name}</strong><span className="muted sub-line">{t.slug}</span></td>
+                    <td>{TYPE_LABEL[t.institutionType] ?? t.institutionType}</td>
+                    <td>{t.city ?? <span className="muted">—</span>}</td>
+                    <td><StatusBadge status={t.status} /></td>
+                    <td className="muted">{new Date(t.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                    <td className="num"><button className="btn btn-sm" onClick={() => manage(t)}>Manage</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+
+      <Modal open={open} onClose={() => setOpen(false)} title="Add institution" subtitle="Creates the institution, its standard roles and its first administrator." onSubmit={create} submitLabel="Create institution" busy={saving} error={formError}>
+        <Field id="t-name" label="Institution name" error={errors.name}>
+          <input id="t-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} autoFocus />
+        </Field>
+        <div className="grid-2">
+          <Field id="t-slug" label="Short name" error={errors.slug} hint="Lower-case, used in links: abc-school">
+            <input id="t-slug" value={form.slug} placeholder="abc-school" onChange={(e) => setForm({ ...form, slug: e.target.value })} />
+          </Field>
+          <Field id="t-type" label="Type">
+            <select id="t-type" value={form.institutionType} onChange={(e) => setForm({ ...form, institutionType: e.target.value })}>
+              {INSTITUTION_TYPES.map((t) => <option key={t} value={t}>{TYPE_LABEL[t] ?? t}</option>)}
+            </select>
+          </Field>
+        </div>
+        <Field id="t-city" label="City" error={errors.city}>
+          <input id="t-city" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+        </Field>
+        <h3 className="section-title">First administrator</h3>
+        <Field id="t-admin" label="Full name" error={errors['admin.fullName']}>
+          <input id="t-admin" value={form.adminName} onChange={(e) => setForm({ ...form, adminName: e.target.value })} />
+        </Field>
+        <div className="grid-2">
+          <Field id="t-email" label="Email" error={errors['admin.email']}>
+            <input id="t-email" type="email" value={form.adminEmail} onChange={(e) => setForm({ ...form, adminEmail: e.target.value })} />
+          </Field>
+          <Field id="t-pass" label="Temporary password" error={errors['admin.password']}>
+            <input id="t-pass" type="password" autoComplete="new-password" value={form.adminPassword} onChange={(e) => setForm({ ...form, adminPassword: e.target.value })} />
+          </Field>
+        </div>
+      </Modal>
+
+      <Modal open={!!managing} onClose={() => setManaging(null)} wide title={managing?.name ?? ''} subtitle={managing && <span className="manage-sub"><StatusBadge status={managing.status} /> {TYPE_LABEL[managing.institutionType]} · {managing.slug}</span>} onSubmit={saveSubscription} submitLabel="Save plan" busy={saving} error={subErrors.form}>
+        {!ent ? (
+          <div className="skeleton-wrap"><div className="skeleton" /><div className="skeleton" style={{ width: '60%' }} /></div>
+        ) : (
+          <>
+            <h3 className="section-title first">Plan</h3>
+            {ent.subscription && (
+              <div className="notice"><Icon name="info" />Now on <strong>&nbsp;{ent.subscription.plan.name}&nbsp;</strong> until {new Date(ent.subscription.endDate).toLocaleDateString('en-IN')} · {ent.subscription.studentCount} students · {inr(ent.subscription.amount)}</div>
+            )}
+            {plans.length === 0 ? (
+              <p className="muted">Create a plan first under <strong>Plans</strong>.</p>
+            ) : (
+              <>
+                <div className="grid-3">
+                  <Field id="s-plan" label="Plan" error={subErrors.planId}>
+                    <select id="s-plan" value={sub.planId} onChange={(e) => setSub({ ...sub, planId: e.target.value })} disabled={!isSuper}>
+                      {plans.map((p) => <option key={p.id} value={p.id}>{p.name} · {inr(p.pricePerStudent)}/student</option>)}
+                    </select>
+                  </Field>
+                  <Field id="s-status" label="Status">
+                    <select id="s-status" value={sub.status} onChange={(e) => setSub({ ...sub, status: e.target.value })} disabled={!isSuper}>
+                      <option value="TRIAL">Trial</option>
+                      <option value="ACTIVE">Active (paid)</option>
+                    </select>
+                  </Field>
+                  <Field id="s-count" label="Students" error={subErrors.studentCount} hint={price?.maxStudents ? `Up to ${price.maxStudents}` : undefined}>
+                    <input id="s-count" type="number" min={0} value={sub.studentCount} onChange={(e) => setSub({ ...sub, studentCount: e.target.value })} disabled={!isSuper} />
+                  </Field>
+                </div>
+                <div className="grid-2">
+                  <Field id="s-start" label="From" error={subErrors.startDate}>
+                    <input id="s-start" type="date" value={sub.startDate} onChange={(e) => setSub({ ...sub, startDate: e.target.value })} disabled={!isSuper} />
+                  </Field>
+                  <Field id="s-end" label="Until" error={subErrors.endDate}>
+                    <input id="s-end" type="date" value={sub.endDate} onChange={(e) => setSub({ ...sub, endDate: e.target.value })} disabled={!isSuper} />
+                  </Field>
+                </div>
+                {price && <p className="muted small">Amount per {price.billingCycle === 'YEARLY' ? 'year' : 'month'}: <strong>{inr(price.pricePerStudent * Number(sub.studentCount || 0))}</strong></p>}
+              </>
+            )}
+
+            <h3 className="section-title">Modules</h3>
+            <p className="muted small">Switching a module here overrides the plan for this institution only (for example a paid add-on).</p>
+            {groups.map((g) => (
+              <div key={g} className="module-group">
+                <span className="module-group-name">{g}</span>
+                <div className="module-grid">
+                  {ent.modules.filter((m) => m.group === g).map((m) => (
+                    <label key={m.code} className={`module-toggle ${m.isEnabled ? 'on' : ''} ${m.core ? 'core' : ''}`}>
+                      <input type="checkbox" checked={m.isEnabled} disabled={m.core || !isSuper} onChange={(e) => toggleModule(m.code, e.target.checked)} />
+                      <span className="switch" aria-hidden />
+                      <span className="module-name">{m.name}</span>
+                      {m.core ? <span className="tag">Core</span> : m.source === 'OVERRIDE' ? <span className="tag gold">Add-on</span> : null}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            {isSuper && managing && (
+              <div className="danger-zone">
+                <div>
+                  <strong>{managing.status === 'SUSPENDED' ? 'Reactivate institution' : 'Suspend institution'}</strong>
+                  <span className="muted">{managing.status === 'SUSPENDED' ? 'Users can make changes again.' : 'Users can still sign in and view, but cannot change anything.'}</span>
+                </div>
+                {managing.status === 'SUSPENDED' ? (
+                  <button type="button" className="btn" onClick={() => setStatus('ACTIVE')}>Reactivate</button>
+                ) : (
+                  <button type="button" className="btn btn-danger" onClick={() => setStatus('SUSPENDED')}>Suspend</button>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </Modal>
+    </>
+  );
+}

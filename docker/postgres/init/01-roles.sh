@@ -1,0 +1,18 @@
+#!/bin/sh
+# Runs once, on first start of an empty data volume.
+# eduerp_owner (POSTGRES_USER) owns schema + runs migrations.
+# eduerp_app is the runtime role: LOGIN, NOSUPERUSER, NOBYPASSRLS -> RLS always applies.
+set -e
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<SQL
+CREATE ROLE eduerp_app LOGIN NOSUPERUSER NOBYPASSRLS NOCREATEDB NOCREATEROLE PASSWORD '${APP_PASSWORD}';
+CREATE DATABASE eduerp_test OWNER ${POSTGRES_USER};
+SQL
+for db in "$POSTGRES_DB" eduerp_test; do
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$db" <<SQL
+REVOKE ALL ON SCHEMA public FROM PUBLIC;
+GRANT USAGE ON SCHEMA public TO eduerp_app;
+ALTER DEFAULT PRIVILEGES FOR ROLE ${POSTGRES_USER} IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO eduerp_app;
+ALTER DEFAULT PRIVILEGES FOR ROLE ${POSTGRES_USER} IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO eduerp_app;
+ALTER DEFAULT PRIVILEGES FOR ROLE ${POSTGRES_USER} IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO eduerp_app;
+SQL
+done
