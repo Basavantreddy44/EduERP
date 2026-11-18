@@ -1,5 +1,14 @@
 # Changelog
 
+## [Unreleased] — 2026-11-18 (Phase 12 Engagement II)
+### Added
+- Staff meetings and committees: schedule, invite, answer, attendance, minutes (draft, shared, approved and then locked) and action items with owners and due dates.
+- Complaints from parents (in the app) and staff: categories with a person responsible and a time to resolve, replies and staff-only notes, sensitive complaints for permitted staff only, rating on closing, reopening, and hourly escalation of overdue complaints.
+- Front office: visitor log (only the last 4 characters of an ID kept), gate passes (a guardian on record at once, anyone else after approval), call log with follow-ups, postal register with hand-over.
+- Department requests between departments: request types, approval when needed, assignment within the handling department, updates, completion and closing by the requester.
+### Changed
+- The "Meetings" module switch now covers parent-teacher meetings and staff meetings.
+
 ## [Unreleased] — 2026-11-18 (Phase 11 Engagement I)
 ### Added
 - School news feed: posts for the whole school, a class or a section, with photos and PDFs.
