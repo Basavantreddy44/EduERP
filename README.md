@@ -1,6 +1,8 @@
 # EDUErp — School & College ERP (Multi-tenant SaaS)
 
-> **Status:** Blueprint / analysis phase. **No application code exists yet.** Phase 0 development starts only after the blueprint is approved (see [docs/DECISION_LOG.md](docs/DECISION_LOG.md) → *Open decisions*).
+A comprehensive School & College ERP platform designed to digitize and streamline educational institution operations, including student admissions, academics, attendance, examinations, fees, HR, library, transport, and parent communication.
+
+> **Status:** In development — not yet released to institutions (release once all modules are complete). The working application (NestJS API + Next.js web + PostgreSQL) covers admissions & students, fees & basic accounts, staff, attendance & leave, dashboards, the parent & student app, transport, hostel & mess, academics, exams & report cards, and school engagement; accounts, HR and payroll are being built now. Current progress: [docs/DEVELOPMENT_STATUS.md](docs/DEVELOPMENT_STATUS.md) · plan: [docs/IMPLEMENTATION_ROADMAP.md](docs/IMPLEMENTATION_ROADMAP.md) · decisions: [docs/DECISION_LOG.md](docs/DECISION_LOG.md).
 
 EDUErp is a multi-tenant, multi-campus ERP for schools, higher-secondary institutions and colleges. It covers the full student lifecycle (enquiry → admission → academics → exams → certificates → alumni), integrated double-entry accounting, HR and payroll, and campus operations (hostel, transport, library, procurement, inventory), with parent/student/staff mobile journeys.
 
