@@ -77,6 +77,15 @@ export async function downloadFile(path: string): Promise<void> {
   setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
 
+/** Authenticated file as a local object URL (e.g. a photo in a news post). The caller revokes it. */
+export async function blobUrl(path: string): Promise<string> {
+  const go = () => fetch(`/api/v1${path}`, { credentials: 'same-origin', headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {} });
+  let res = await go();
+  if (res.status === 401 && (await refreshSession())) res = await go();
+  if (!res.ok) throw new ApiError(res.status, 'error', 'Could not load the file');
+  return URL.createObjectURL(await res.blob());
+}
+
 /** Multipart upload (imports, files). */
 export async function uploadFile<T>(path: string, file: File, fields: Record<string, string> = {}): Promise<T> {
   const form = new FormData();

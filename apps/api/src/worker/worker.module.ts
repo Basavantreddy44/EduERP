@@ -13,6 +13,8 @@ import { FeeCollectionService } from '../modules/fees/collection.service';
 import { FeeOnlineService } from '../modules/fees/online.service';
 import { PAYMENT_GATEWAY, createGateway } from '../modules/fees/gateway';
 import { LateFeeService } from '../modules/fees/late-fee.service';
+import { TransportFleetService } from '../modules/transport/fleet.service';
+import { ComplaintsService } from '../modules/engagement/complaints.service';
 
 /** Everything the background worker needs; no HTTP. */
 @Module({
@@ -39,7 +41,10 @@ import { LateFeeService } from '../modules/fees/late-fee.service';
     FeeOnlineService,
     { provide: PAYMENT_GATEWAY, useFactory: createGateway },
     LateFeeService,
+    // Transport: bus documents and driving licences expiring (30 / 15 / 7 days).
+    TransportFleetService,
+    ComplaintsService,
   ],
-  exports: [JobsRunner, Db, FeeOnlineService, LateFeeService],
+  exports: [JobsRunner, Db, FeeOnlineService, LateFeeService, TransportFleetService, ComplaintsService],
 })
 export class WorkerModule {}

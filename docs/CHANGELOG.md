@@ -1,5 +1,149 @@
 # Changelog
 
+## [Unreleased] — 2026-11-18 (Phase 11 Engagement I)
+### Added
+- School news feed: posts for the whole school, a class or a section, with photos and PDFs.
+- Teachers' posts can be set to need approval.
+- Moderators can pin, hide and act on reports.
+- Parents see only the news meant for their children, and can react, comment and report.
+- Events with registration, places, parent consent and fees, which are billed once.
+- Event attendance, marked after the event.
+- A calendar of events, holidays, exams and parent-teacher meetings (month view, and a list on phones).
+- Parent-teacher meetings: a meeting day for chosen classes, with times for each teacher.
+- Parents book one time with each of their child's teachers in the app; a time can never be booked twice.
+- Teachers record each meeting with notes, and parents can leave feedback.
+
+## [Unreleased] — 2026-11-18 (Phase 10 Academics II)
+### Added
+- Syllabus units and topics for each class and subject.
+- Lesson plans by the subject teacher: taught or postponed.
+- Syllabus coverage for every subject and class.
+- Study material: notes, links, videos and PDF worksheets for a class.
+- Parents and students open study material in the app; teachers see how many have opened each item.
+- Bonafide, study, character and conduct certificates from English or Kannada templates.
+- Certificates are numbered without gaps, carry a QR code, and can be checked by anyone on a public page.
+- Certificates can be cancelled with a reason, or sent for approval first.
+
+### Changed
+- The offline page now tells "no internet" apart from "EduERP is not answering".
+
+## [Unreleased] — 2026-11-18 (Phase 9 Exams & report cards)
+### Added
+- Grading scales and assessment schemes, with ready-made CBSE, Karnataka State and Karnataka PU patterns you can change.
+- Exams and their timetable for each class.
+- Mark entry by the subject teacher: absent, malpractice and exempt codes; marks can never be above the maximum.
+- Every mark sheet is verified by a second person and then locked. Corrections need a reason and are logged.
+- Results calculated exactly by the scheme: weights, rounding and pass rules, with rank, attendance and remarks.
+- Co-scholastic grades.
+- Publishing by someone who did not enter the marks. Each publication is a new version and older ones are kept.
+- Printable report cards (A4) in English and Kannada.
+- Parents see published results and the report card in the app.
+
+## [Unreleased] — 2026-11-18 (Phase 8 Academics I)
+### Added
+- Subjects, each class's syllabus (core subjects, languages, optional subjects) and rooms.
+- Class teacher and subject teachers for every class; students' optional subjects.
+- Timetable for every class on the bell timings. Publishing refuses clashes — a teacher or a room can never be in two places in the same period — and says exactly where.
+- Teachers see their own week and today's lessons.
+- Substitutions: only teachers who are free that period (and not on leave) are offered; the substitute is told in the app.
+- Homework: teachers give homework to their classes, parents are told, students submit answers in the app, and teachers mark them.
+- Class diary: notes to the whole class or to one child's parents, who confirm they have seen them.
+- Parent app: the child's timetable one day at a time (with substitutes shown) and a Homework tab with the diary.
+
+## [Unreleased] — 2026-11-18 (Phase 7 Hostel & mess)
+### Added
+- Hostels with rooms, beds and each room's items. An occupancy picture shows every hostel and room at a glance.
+- Allot a bed: boys' and girls' hostels are kept separate, and a bed can never be given twice. The hostel fee for the rest of the year and the caution deposit go onto the bills straight away.
+- Check-in and check-out against the room's items. Anything damaged or missing becomes a damage charge once approved, and the deposit to refund is worked out.
+- Night roll-call. Parents of absent students are told by app and email.
+- Outpasses: the parent approves in the app, then the warden. The student cannot go out without both.
+- Home-going register. Anyone collecting a student who is not a guardian on record needs the warden's explicit OK.
+- Visitors log and maintenance requests.
+- Mess: meal plans, a weekly menu, billing and today's meal counts for the kitchen.
+- Parents see their child's room, the warden, recent nights, today's menu, and outpasses to approve.
+- SMS / WhatsApp alerts show "Coming soon".
+
+## [Unreleased] — 2026-11-18 (Phase 6 Transport)
+### Added
+- Buses and vans, each with its papers (RC, insurance, fitness, permit, PUC, road tax). Reminders go out 30, 15 and 7 days before any paper or a driver's licence runs out.
+- Drivers, attendants and conductors, chosen from the staff list.
+- Routes, each with a bus, a driver and its stops in pickup order, with times and a yearly fee per stop.
+- Put a student on a bus from their profile. The bus can never be over-full, and the bus fee for the rest of the year goes onto the student's bills straight away.
+- A printable list of students on each route, stop by stop, for the driver.
+- Parents see their child's bus, stop, pickup and drop times and the driver's phone in the app. Live bus location shows "Coming soon".
+
+## [Unreleased] — 2026-11-17 (M5.3 Installable app — Parent & student app phase complete)
+### Added
+- Parents (and staff) can add EduERP to their phone's home screen, where it opens like an app with the school's icon.
+- A clear "You are offline" page in English and Kannada when there is no internet. No school data is stored on the phone.
+- Bottom tabs on phones for Home, Attendance, Fees and Leave.
+- Phone notifications show "Coming soon".
+
+## [Unreleased] — 2026-11-17 (M5.2 Child's day-to-day in the parent app)
+### Added
+- Parents see each child's attendance as a month calendar with the percentage, what is still to pay, every bill and receipt (printable), and can pay everything due online.
+- Parents can apply for their child's leave and withdraw it before it starts. The school's approvers decide as usual.
+- Where the school has no online payment set up, the parent app shows "Coming soon".
+
+## [Unreleased] — 2026-11-17 (M5.1 Parent & student logins)
+### Added
+- The office can give a parent (or an older student) a login from the student's profile. The person gets an email to set their password. One login covers all their children at the school.
+- Parents and students sign in to their own simple app showing each child's class.
+- Logins can be removed at any time. A child who leaves the school drops out of the parent's app on its own.
+- "Coming soon" markers where SMS / WhatsApp will appear once a provider is chosen.
+
+## [Unreleased] — 2026-11-17 (M4.3 Trends — Dashboards phase complete)
+### Added
+- Home screen charts: fee collection for each of the last 30 days, and student attendance % for each school day of the last 4 weeks. Hover over a day for its details, or open each chart as a table.
+
+## [Unreleased] — 2026-11-17 (M4.1–M4.2 Dashboard)
+### Added
+- A new home screen showing today at a glance: attendance, staff present, fees collected and outstanding, admission follow-ups, and approvals waiting. Each person sees only what their role allows.
+- A "Needs attention" list: classes not marked, staff attendance not saved, follow-ups due, applications to review, overdue fees and approvals. Each item opens the screen where it is done.
+- Fees collected this month by payment mode, and this year's admissions by stage.
+### Changed
+- Staff attendance, enquiries, applications and dues open already filtered when reached from the home screen.
+
+## [Unreleased] — 2026-11-17 (M3.5 Attendance reports — Staff, Attendance & Leave phase complete)
+### Added
+- Monthly class register (students × days) with each student's attendance %.
+- Student attendance % for any period, with the list of students below the minimum (75 % by default, changeable in Settings).
+- Staff attendance for the month.
+- Every report downloads to Excel with exactly what is on screen.
+
+## [Unreleased] — 2026-11-17 (M3.4 Leave & staff attendance)
+### Added
+- Leave types for staff (paid / unpaid, days a year) and for students.
+- Staff apply for their own leave and see their balance; the office applies for students and other staff. Only working days are counted; overlapping or over-the-limit leave is refused; approval through Approvals when a rule is set.
+- Approved leave appears as "Leave" on attendance sheets automatically.
+- Staff attendance: mark every staff member for the day with in / out times.
+
+## [Unreleased] — 2026-11-17 (M3.3 Corrections & parent alerts)
+### Added
+- Correct a submitted attendance mark with a reason; if the institution sets an approval rule, the change waits for the approver.
+- A list of all attendance corrections: who asked, why, and who decided.
+- Parents of absent students get an email the same day (once per day, to the main contact). Can be switched off in Settings.
+
+## [Unreleased] — 2026-11-17 (M3.2 Attendance)
+### Added
+- Take attendance on a phone or computer: everyone starts as present; tap absent, late, half day or leave; add a note; save a draft or submit.
+- Submitted attendance is locked (changes will go through a correction request).
+- "Attendance at a glance": which classes have taken attendance today and how many students are absent.
+- Bell timings per campus, and a setting for daily or period-wise attendance and for weekly holidays (e.g. 2nd and 4th Saturdays).
+- No attendance can be taken on holidays, weekly holidays or future dates.
+
+## [Unreleased] — 2026-11-16 (M3.1 Staff)
+### Added
+- Staff list: add, edit, search by name / code / mobile, filter by type and department, import and export with Excel.
+- Employee codes are given automatically (EMP-0001…) unless you enter your own.
+- Mark staff as on long leave, resigned or relieved (with the last working day).
+- Link a staff member to their login (needed for attendance next).
+
+## [Unreleased] — 2026-11-15 (M1.4 Lifecycle — Admissions & Students phase complete)
+### Added
+- Year-end promotion: pick the years and classes, check who moves where (missing sections, seats, students with dues), mark students who stay back, then confirm. Final-year students pass out; fees for the new year are assigned automatically; past promotions are listed.
+- Transfer Certificate: issued only when all fees are paid; numbered and printable; the student is marked transferred and no further fees are billed.
+
 ## [Unreleased] — 2026-11-15 (M2.5 Dues & reports — Fees phase complete)
 ### Added
 - Dues list with how long amounts are overdue, filters, export, and email reminders (with a payment link).

@@ -2,10 +2,10 @@ import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import type { PermissionCode } from '@eduerp/shared';
-import { CORE_MODULES } from '@eduerp/shared';
+import { CORE_MODULES, PORTAL_STUDENT_STATUSES } from '@eduerp/shared';
 import { ACCESS_KEY, AccessRule, MODULE_KEY } from './decorators';
 import { AuthContext, CampusScope, TokenIdentity } from './auth-context';
-import { Db } from './prisma.service';
+import { Db, Tx } from './prisma.service';
 import { Forbidden, Unauthorized } from './problem';
 
 const READ_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
@@ -67,7 +67,7 @@ export class AccessGuard implements CanActivate {
       }
 
       // Tenant route
-      if (rule.kind !== 'permission' && rule.kind !== 'member') throw Forbidden('route-not-classified', 'Route has no access rule');
+      if (rule.kind !== 'permission' && rule.kind !== 'member' && rule.kind !== 'portal') throw Forbidden('route-not-classified', 'Route has no access rule');
       if (!id.tenantId) throw Forbidden('tenant-required', 'Choose an institution first');
       const membership = await tx.userTenant.findFirst({
         where: { tenantId: id.tenantId, userId: id.userId },
@@ -80,18 +80,34 @@ export class AccessGuard implements CanActivate {
         throw Forbidden('tenant-read-only', 'This institution account is suspended; data is read-only');
       }
 
+      if (rule.kind === 'portal') {
+        // Never staff roles: only the person's own links, and only while the student is still here.
+        const rows = await tx.$queryRaw<{ id: string }[]>`
+          SELECT s.id FROM students s
+           WHERE s.status = ANY(${[...PORTAL_STUDENT_STATUSES]}::text[])
+             AND (s.user_id = ${id.userId}::uuid
+                  OR s.id IN (SELECT sg.student_id FROM student_guardians sg JOIN guardians g ON g.id = sg.guardian_id WHERE g.user_id = ${id.userId}::uuid))`;
+        auth.portalStudentIds = rows.map((r) => r.id);
+        await this.requireModule(tx, moduleCode);
+        return auth;
+      }
+
       const roles = await tx.userRole.findMany({
         where: { userId: id.userId },
         select: { campusId: true, role: { select: { rolePermissions: { select: { permission: { select: { code: true } } } } } } },
       });
       auth.permissions = buildPermissionMap(roles);
       if (rule.kind === 'permission' && !auth.permissions.has(rule.code)) throw Forbidden();
-      if (moduleCode && !(CORE_MODULES as string[]).includes(moduleCode)) {
-        const on = await tx.tenantModule.findFirst({ where: { moduleCode, isEnabled: true }, select: { id: true } });
-        if (!on) throw Forbidden('module-not-enabled', "This module is not part of your institution's plan");
-      }
+      await this.requireModule(tx, moduleCode);
       return auth;
     });
+  }
+
+  private async requireModule(tx: Tx, moduleCode?: string) {
+    if (moduleCode && !(CORE_MODULES as string[]).includes(moduleCode)) {
+      const on = await tx.tenantModule.findFirst({ where: { moduleCode, isEnabled: true }, select: { id: true } });
+      if (!on) throw Forbidden('module-not-enabled', "This module is not part of your institution's plan");
+    }
   }
 }
 

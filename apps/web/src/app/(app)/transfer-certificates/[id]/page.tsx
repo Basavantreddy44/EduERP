@@ -99,8 +99,8 @@ export default function TransferCertificatePage() {
         <p className="tc-cert">{t('stu.tc.certify', { name: studentName(s) })}</p>
 
         <footer className="tc-foot">
-          <span className="receipt-sign">{tc.issuedBy ?? ''}<span className="muted small">{t('stu.tc.preparedBy')}</span></span>
-          <span className="receipt-sign"><span className="tc-sign-space" aria-hidden /><span className="muted small">{t('stu.tc.principal')}</span></span>
+          <span className="receipt-sign"><span className="tc-sign-name">{tc.issuedBy || ' '}</span><span className="muted small">{t('stu.tc.preparedBy')}</span></span>
+          <span className="receipt-sign"><span className="tc-sign-name" aria-hidden>{' '}</span><span className="muted small">{t('stu.tc.principal')}</span></span>
         </footer>
         <p className="receipt-note muted small">{t('stu.tc.note')}</p>
       </article>

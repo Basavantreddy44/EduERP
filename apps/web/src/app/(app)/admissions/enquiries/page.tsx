@@ -41,6 +41,7 @@ export default function EnquiriesPage() {
   const [data, setData] = useState<{ rows: Row[]; summary: { byStatus: Record<string, number>; dueOrOverdue: number } } | null>(null);
   const [filter, setFilter] = useState<Filter>('ALL');
   const [query, setQuery] = useState('');
+  useEffect(() => { if (new URLSearchParams(window.location.search).get('show') === 'due') setFilter('DUE'); }, []); // from the dashboard
 
   const load = useCallback(() => {
     api<typeof data>(`/admissions/enquiries${campusId ? `?campusId=${campusId}` : ''}`).then(setData).catch(() => setData({ rows: [], summary: { byStatus: {}, dueOrOverdue: 0 } }));

@@ -16,6 +16,7 @@ export type AccessRule =
   | { kind: 'authenticated' }
   | { kind: 'platform'; roles: string[] }
   | { kind: 'member' }
+  | { kind: 'portal' }
   | { kind: 'permission'; code: PermissionCode };
 
 export const Public = () => SetMetadata(ACCESS_KEY, { kind: 'public' } satisfies AccessRule);
@@ -27,6 +28,8 @@ export const MODULE_KEY = 'eduerp:module';
 export const RequireModule = (code: string) => SetMetadata(MODULE_KEY, code);
 
 export const TenantMember = () => SetMetadata(ACCESS_KEY, { kind: 'member' } satisfies AccessRule);
+/** Parent & student app (M5.1): a member of the institution; access comes only from guardian / student links (auth.portalStudentIds). */
+export const PortalUser = () => SetMetadata(ACCESS_KEY, { kind: 'portal' } satisfies AccessRule);
 export const RequirePermission = (code: PermissionCode) =>
   SetMetadata(ACCESS_KEY, { kind: 'permission', code } satisfies AccessRule);
 

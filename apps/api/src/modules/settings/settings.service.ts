@@ -20,6 +20,7 @@ export interface EffectiveSetting {
   campusValue: unknown;
   value: unknown;
   source: Source;
+  options: { value: string; label: string }[] | null;
 }
 
 const unknownKey = (key: string) => new AppError(HttpStatus.UNPROCESSABLE_ENTITY, 'setting-unknown', `There is no setting called "${key}"`);
@@ -74,6 +75,7 @@ export class SettingsService {
         campusValue: camp?.settingValue ?? null,
         value: camp ? camp.settingValue : inst ? inst.settingValue : def.defaultValue,
         source,
+        options: def.options ?? null,
       };
     });
   }

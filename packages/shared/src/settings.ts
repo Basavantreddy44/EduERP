@@ -13,11 +13,13 @@ export interface SettingDefinition<T = unknown> {
   key: string;
   label: string;
   description: string;
-  group: 'General' | 'Attendance' | 'Fees' | 'Notifications' | 'Files';
+  group: 'General' | 'Attendance' | 'Fees' | 'Notifications' | 'Files' | 'Engagement';
   schema: z.ZodType<T>;
   defaultValue: T;
   /** Where it may be set. TENANT = institution-wide value; CAMPUS = per-campus override allowed. */
   scopes: SettingScope[];
+  /** Fixed choices (shown as a dropdown). */
+  options?: { value: string; label: string }[];
 }
 
 const define = <T>(d: SettingDefinition<T>) => d;
@@ -40,6 +42,50 @@ export const SETTINGS = [
     group: 'General',
     schema: z.enum(['en', 'kn']),
     defaultValue: 'en' as 'en' | 'kn',
+    scopes: ['TENANT', 'CAMPUS'],
+  }),
+  define({
+    key: 'attendance.mode',
+    label: 'How attendance is taken',
+    description: 'Daily: one mark per student per day. Period-wise: a mark in every period (usual in PU and degree colleges).',
+    group: 'Attendance',
+    schema: z.enum(['DAILY', 'PERIOD']),
+    defaultValue: 'DAILY' as 'DAILY' | 'PERIOD',
+    scopes: ['TENANT', 'CAMPUS'],
+    options: [{ value: 'DAILY', label: 'Daily' }, { value: 'PERIOD', label: 'Period-wise' }],
+  }),
+  define({
+    key: 'attendance.weekly_off',
+    label: 'Weekly holidays',
+    description: 'Days on which attendance is not taken (in addition to the holiday list).',
+    group: 'Attendance',
+    schema: z.enum(['SUN', 'SUN_2ND_4TH_SAT', 'SAT_SUN', 'NONE']),
+    defaultValue: 'SUN' as 'SUN' | 'SUN_2ND_4TH_SAT' | 'SAT_SUN' | 'NONE',
+    scopes: ['TENANT', 'CAMPUS'],
+    options: [
+      { value: 'SUN', label: 'Sundays' },
+      { value: 'SUN_2ND_4TH_SAT', label: 'Sundays and 2nd & 4th Saturdays' },
+      { value: 'SAT_SUN', label: 'Saturdays and Sundays' },
+      { value: 'NONE', label: 'None' },
+    ],
+  }),
+  define({
+    key: 'attendance.absent_alerts',
+    label: 'Tell parents when a child is absent',
+    description: 'When attendance is submitted, the main contact of each absent student gets one message for the day (email now; SMS / WhatsApp when set up).',
+    group: 'Attendance',
+    schema: z.enum(['ON', 'OFF']),
+    defaultValue: 'ON' as 'ON' | 'OFF',
+    scopes: ['TENANT', 'CAMPUS'],
+    options: [{ value: 'ON', label: 'Yes' }, { value: 'OFF', label: 'No' }],
+  }),
+  define({
+    key: 'attendance.min_percent',
+    label: 'Minimum attendance (%)',
+    description: 'Students below this percentage are listed in the attendance reports (e.g. 75 for exam eligibility).',
+    group: 'Attendance',
+    schema: z.number().int().min(1).max(100),
+    defaultValue: 75,
     scopes: ['TENANT', 'CAMPUS'],
   }),
   define({
@@ -77,6 +123,16 @@ export const SETTINGS = [
     schema: z.number().int().min(1).max(25),
     defaultValue: 10,
     scopes: ['TENANT'],
+  }),
+  define({
+    key: 'feed.teacher_posts_need_approval',
+    label: 'Teachers’ news posts need approval',
+    description: 'Posts by staff who cannot moderate the feed wait until a moderator approves them.',
+    group: 'Engagement',
+    schema: z.enum(['ON', 'OFF']),
+    defaultValue: 'ON' as 'ON' | 'OFF',
+    scopes: ['TENANT', 'CAMPUS'],
+    options: [{ value: 'ON', label: 'Yes' }, { value: 'OFF', label: 'No' }],
   }),
 ] as const;
 

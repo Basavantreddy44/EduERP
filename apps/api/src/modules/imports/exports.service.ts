@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DEPT_TYPE_LABELS, HOLIDAY_TYPE_LABELS, IMPORT_TYPES, PERMISSIONS } from '@eduerp/shared';
+import { DEPT_TYPE_LABELS, EMPLOYEE_TYPE_LABELS, HOLIDAY_TYPE_LABELS, IMPORT_TYPES, PERMISSIONS } from '@eduerp/shared';
 import { Db } from '../../common/prisma.service';
 import { AuditService } from '../../common/audit.service';
 import { AuthContext, scopeFor } from '../../common/auth-context';
@@ -64,6 +64,23 @@ export class ExportsService {
             title: 'Users',
             headers: [...headers('USERS'), 'Last sign-in'],
             rows: rows.flatMap(({ user }) => (user.userRoles.length ? user.userRoles : [{ campusId: null, role: { name: '' } }]).map((r) => [user.fullName, user.email, r.role.name, code(r.campusId), user.lastLoginAt ? user.lastLoginAt.toISOString().slice(0, 10) : ''])),
+          };
+          break;
+        }
+        case 'STAFF': {
+          if (!has(PERMISSIONS.HR_STAFF_READ)) throw Forbidden();
+          const scope = scopeFor(auth, PERMISSIONS.HR_STAFF_READ)!;
+          const rows = await tx.employee.findMany({
+            where: scope.all ? {} : { campusId: { in: scope.campusIds } },
+            orderBy: [{ campusId: 'asc' }, { employeeCode: 'asc' }],
+            include: { department: { select: { code: true } } },
+          });
+          const g: Record<string, string> = { MALE: 'Male', FEMALE: 'Female', OTHER: 'Other' };
+          const d = (x: Date | null) => (x ? x.toISOString().slice(0, 10) : '');
+          t = {
+            title: 'Staff',
+            headers: [...headers('STAFF'), 'Status', 'Last working day'],
+            rows: rows.map((e) => [e.employeeCode, e.firstName, e.lastName ?? '', g[e.gender] ?? e.gender, d(e.dob), e.phone ?? '', e.email ?? '', code(e.campusId), e.department?.code ?? '', e.designation ?? '', EMPLOYEE_TYPE_LABELS[e.employeeType as keyof typeof EMPLOYEE_TYPE_LABELS] ?? e.employeeType, d(e.joiningDate), e.status, d(e.leftOn)]),
           };
           break;
         }

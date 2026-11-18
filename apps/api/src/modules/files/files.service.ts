@@ -56,7 +56,16 @@ export class FilesService {
       if (campusId) throw NotFound('Campus');
       throw Forbidden('scope-insufficient', 'Choose a campus for this document');
     }
+    return this.store(input, blob, auth, client);
+  }
 
+  /**
+   * Stores a file for a caller that has already checked the user may attach it (e.g. a teacher's
+   * study material for their own class). Same type sniffing, size limit and audit as any upload.
+   */
+  async store(input: UploadFileInput, blob: UploadedBlob | undefined, auth: AuthContext, client: ClientInfo) {
+    if (!blob || !blob.size) throw new AppError(HttpStatus.UNPROCESSABLE_ENTITY, 'file-missing', 'Choose a file to upload');
+    const campusId = input.campusId ?? null;
     const mime = sniffMime(blob.buffer);
     if (!mime) throw new AppError(HttpStatus.UNSUPPORTED_MEDIA_TYPE, 'file-type-not-allowed', 'Only PDF, JPEG, PNG and WebP files can be uploaded');
 
@@ -112,6 +121,13 @@ export class FilesService {
 
   async open(id: string, auth: AuthContext) {
     const file = await this.find(id, auth);
+    return { file: view(file), stream: await this.storage.open(file.storageKey) };
+  }
+
+  /** Opens a file of the institution for a caller that has already checked access (e.g. a parent's own child's study material). */
+  async openChecked(id: string, auth: AuthContext) {
+    const file = await this.db.run({ tenantId: auth.tenantId, userId: auth.userId }, (tx) => tx.fileObject.findUnique({ where: { id } }));
+    if (!file || file.status !== 'ACTIVE') throw NotFound('File');
     return { file: view(file), stream: await this.storage.open(file.storageKey) };
   }
 }

@@ -30,7 +30,7 @@ export const MODULES = [
   { code: 'INVENTORY', name: 'Inventory, store & purchase', group: 'Operations' },
   { code: 'COMMUNICATION', name: 'Communication', group: 'Core', core: true },
   { code: 'NEWS_FEED', name: 'News feed', group: 'Engagement' },
-  { code: 'MEETINGS', name: 'Parent-teacher meetings', group: 'Engagement' },
+  { code: 'MEETINGS', name: 'Meetings (parents and staff)', group: 'Engagement' },
   { code: 'EVENTS', name: 'Events & calendar', group: 'Engagement' },
   { code: 'DEPT_REQUESTS', name: 'Department requests', group: 'Operations' },
   { code: 'FRONT_OFFICE', name: 'Front office', group: 'Operations' },

@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import type { PermissionCode } from '@eduerp/shared';
+import type { PermissionCode, PortalMe } from '@eduerp/shared';
 import { api, refreshSession, setAccessToken, setSessionLostHandler, SessionPayload } from './api';
 import { hasDeviceChoice, useI18n } from './i18n';
 
@@ -25,6 +25,9 @@ interface SessionState {
   modules: string[];
   plan: PlanInfo | null;
   hasModule: (code: string) => boolean;
+  /** Parent & student app: the children this login can see (null before loading or outside an institution). */
+  portal: PortalMe | null;
+  refreshPortal: () => Promise<void>;
   session: SessionPayload | null;
   permissions: PermissionEntry[];
   can: (code: PermissionCode, opts?: { allCampuses?: boolean }) => boolean;
@@ -44,6 +47,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [permissions, setPermissions] = useState<PermissionEntry[]>([]);
   const [modules, setModules] = useState<string[]>([]);
   const [plan, setPlan] = useState<PlanInfo | null>(null);
+  const [portal, setPortal] = useState<PortalMe | null>(null);
   const [campusId, setCampusId] = useState<string | null>(null);
   const { lang, setLang } = useI18n();
 
@@ -66,19 +70,23 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setSession(s);
     setCampusId(null);
     if (s.tenantId) {
-      const [p, m] = await Promise.all([
+      const [p, m, pm] = await Promise.all([
         api<{ permissions: PermissionEntry[] }>('/me/permissions'),
         api<{ enabled: string[]; subscription: PlanInfo | null }>('/me/modules').catch(() => ({ enabled: [], subscription: null })),
+        api<PortalMe>('/portal/me').catch(() => null),
       ]);
       setPermissions(p.permissions);
+      setPortal(pm);
       setModules(m.enabled);
       setPlan(m.subscription);
     } else {
       setPermissions([]);
       setModules([]);
       setPlan(null);
+      setPortal(null);
     }
   }, []);
+  const refreshPortal = useCallback(async () => { setPortal(await api<PortalMe>('/portal/me').catch(() => null)); }, []);
 
   useEffect(() => {
     setSessionLostHandler(() => {
@@ -90,7 +98,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       .then(async (s) => {
         if (s) await applySession(s);
       })
-      .finally(() => setLoading(false));
+      .then(() => setLoading(false))
+      .catch(() => {
+        // No network (the request itself failed): show the offline page rather than "signed out".
+        if (!navigator.onLine) window.location.replace('/offline.html');
+        else setLoading(false);
+      });
   }, [applySession, router]);
 
   const value = useMemo<SessionState>(
@@ -101,6 +114,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       modules,
       plan,
       hasModule: (code) => modules.includes(code),
+      portal,
+      refreshPortal,
       campusId,
       setCampusId,
       applySession,
@@ -117,7 +132,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         router.replace('/login');
       },
     }),
-    [loading, session, permissions, modules, plan, campusId, applySession, router],
+    [loading, session, permissions, modules, plan, portal, refreshPortal, campusId, applySession, router],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

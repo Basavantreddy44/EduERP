@@ -42,6 +42,62 @@ const NAV: { section: MessageKey; items: NavItem[] }[] = [
     items: [
       { href: '/students', label: 'nav.studentList', icon: 'cap', permission: PERMISSIONS.STU_STUDENT_READ, module: 'STUDENTS' },
       { href: '/students/promotion', label: 'nav.promotion', icon: 'layers', permission: PERMISSIONS.STU_PROMOTE, module: 'STUDENTS' },
+      { href: '/certificates', label: 'nav.certificates', icon: 'file', permission: PERMISSIONS.CERT_READ, module: 'STUDENTS' },
+    ],
+  },
+  {
+    section: 'nav.attendance',
+    items: [
+      { href: '/attendance', label: 'nav.takeAttendance', icon: 'check', permission: PERMISSIONS.ATT_MARK, module: 'ATTENDANCE' },
+      { href: '/attendance/day', label: 'nav.attendanceDay', icon: 'calendar', permission: PERMISSIONS.ATT_READ, module: 'ATTENDANCE' },
+      { href: '/attendance/reports', label: 'nav.attReports', icon: 'layers', permission: PERMISSIONS.ATT_READ, module: 'ATTENDANCE' },
+      { href: '/attendance/corrections', label: 'nav.attCorrections', icon: 'swap', permission: PERMISSIONS.ATT_READ, module: 'ATTENDANCE' },
+      { href: '/staff-attendance', label: 'nav.staffAttendance', icon: 'users', permission: PERMISSIONS.STAFF_ATT_MARK, module: 'ATTENDANCE' },
+      { href: '/leave', label: 'nav.leave', icon: 'calendar', module: 'ATTENDANCE', anyOf: [PERMISSIONS.LEAVE_SELF, PERMISSIONS.LEAVE_READ, PERMISSIONS.LEAVE_STUDENT, PERMISSIONS.LEAVE_STAFF] },
+      { href: '/attendance/periods', label: 'nav.bellTimings', icon: 'clock', permission: PERMISSIONS.ATT_SETUP, module: 'ATTENDANCE' },
+    ],
+  },
+  {
+    section: 'nav.academics',
+    items: [
+      { href: '/academics/my-week', label: 'nav.myWeek', icon: 'clock', module: 'ACADEMICS', anyOf: [PERMISSIONS.ACAD_TEACH] },
+      { href: '/academics/homework', label: 'nav.homework', icon: 'book', module: 'ACADEMICS', anyOf: [PERMISSIONS.ACAD_READ, PERMISSIONS.ACAD_TEACH] },
+      { href: '/academics/timetable', label: 'nav.timetable', icon: 'grid', permission: PERMISSIONS.ACAD_READ, module: 'ACADEMICS' },
+      { href: '/academics/substitutions', label: 'nav.substitutions', icon: 'swap', permission: PERMISSIONS.ACAD_READ, module: 'ACADEMICS' },
+      { href: '/academics/lessons', label: 'nav.lessons', icon: 'clipboard', module: 'ACADEMICS', anyOf: [PERMISSIONS.ACAD_READ, PERMISSIONS.ACAD_TEACH] },
+      { href: '/academics/materials', label: 'nav.materials', icon: 'book', module: 'ACADEMICS', anyOf: [PERMISSIONS.ACAD_READ, PERMISSIONS.ACAD_TEACH] },
+      { href: '/academics/subjects', label: 'nav.subjects', icon: 'layers', permission: PERMISSIONS.ACAD_READ, module: 'ACADEMICS' },
+    ],
+  },
+  {
+    section: 'nav.exams',
+    items: [
+      { href: '/exams/marks', label: 'nav.markEntry', icon: 'edit', module: 'EXAMS', anyOf: [PERMISSIONS.EXAM_MARKS, PERMISSIONS.EXAM_VERIFY, PERMISSIONS.EXAM_SETUP] },
+      { href: '/exams/results', label: 'nav.results', icon: 'star', permission: PERMISSIONS.EXAM_READ, module: 'EXAMS' },
+      { href: '/exams', label: 'nav.examsList', icon: 'calendar', permission: PERMISSIONS.EXAM_READ, module: 'EXAMS' },
+    ],
+  },
+  {
+    section: 'nav.engagement',
+    items: [
+      { href: '/news', label: 'nav.news', icon: 'mail', permission: PERMISSIONS.FEED_READ, module: 'NEWS_FEED' },
+      { href: '/events', label: 'nav.events', icon: 'calendar', permission: PERMISSIONS.EVENT_READ, module: 'EVENTS' },
+      { href: '/ptm', label: 'nav.ptm', icon: 'users', module: 'MEETINGS', anyOf: [PERMISSIONS.PTM_MANAGE, PERMISSIONS.PTM_TEACH] },
+      { href: '/meetings', label: 'nav.meetings', icon: 'clipboard', permission: PERMISSIONS.MEETING_ATTEND, module: 'MEETINGS' },
+      { href: '/complaints', label: 'nav.complaints', icon: 'shield', module: 'GRIEVANCE', anyOf: [PERMISSIONS.GRIEVANCE_RAISE, PERMISSIONS.GRIEVANCE_HANDLE, PERMISSIONS.GRIEVANCE_MANAGE] },
+    ],
+  },
+  {
+    section: 'nav.operations',
+    items: [
+      { href: '/front-office', label: 'nav.frontOffice', icon: 'building', permission: PERMISSIONS.FRONT_DESK, module: 'FRONT_OFFICE' },
+      { href: '/requests', label: 'nav.requests', icon: 'layers', module: 'DEPT_REQUESTS', anyOf: [PERMISSIONS.DEPT_REQ_RAISE, PERMISSIONS.DEPT_REQ_HANDLE, PERMISSIONS.DEPT_REQ_SETUP] },
+    ],
+  },
+  {
+    section: 'nav.people',
+    items: [
+      { href: '/staff', label: 'nav.staff', icon: 'users', permission: PERMISSIONS.HR_STAFF_READ },
     ],
   },
   {
@@ -52,6 +108,20 @@ const NAV: { section: MessageKey; items: NavItem[] }[] = [
       { href: '/fees/reports', label: 'nav.feeReports', icon: 'layers', permission: PERMISSIONS.FEE_READ, module: 'FEES' },
       { href: '/fees/setup', label: 'nav.feeSetup', icon: 'rupee', permission: PERMISSIONS.FEE_READ, module: 'FEES' },
       { href: '/fees/billing', label: 'nav.billing', icon: 'receipt', permission: PERMISSIONS.FEE_READ, module: 'FEES' },
+    ],
+  },
+  {
+    section: 'nav.transport',
+    items: [
+      { href: '/transport', label: 'nav.buses', icon: 'bus', permission: PERMISSIONS.TRANSPORT_READ, module: 'TRANSPORT' },
+      { href: '/transport/routes', label: 'nav.routes', icon: 'route', permission: PERMISSIONS.TRANSPORT_READ, module: 'TRANSPORT' },
+    ],
+  },
+  {
+    section: 'nav.hostel',
+    items: [
+      { href: '/hostel', label: 'nav.hostels', icon: 'building', permission: PERMISSIONS.HOSTEL_READ, module: 'HOSTEL' },
+      { href: '/hostel/mess', label: 'nav.mess', icon: 'clipboard', permission: PERMISSIONS.HOSTEL_READ, module: 'HOSTEL' },
     ],
   },
   {
@@ -79,7 +149,7 @@ const NAV: { section: MessageKey; items: NavItem[] }[] = [
 const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]!.toUpperCase()).join('');
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
-  const { loading, session, can, hasModule, logout, campusId, setCampusId } = useSession();
+  const { loading, session, can, hasModule, logout, campusId, setCampusId, permissions, portal } = useSession();
   const { t } = useI18n();
   const router = useRouter();
   const path = usePathname();
@@ -95,7 +165,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     if (loading) return;
     if (!session) router.replace('/login');
     else if (!session.tenantId && !isPlatformPath) router.replace(session.user.platformRole ? '/platform/tenants' : '/select-institution');
-  }, [loading, session, isPlatformPath, router]);
+    // Parents and students (no staff role) use their own app.
+    else if (session.tenantId && !permissions.length && portal?.hasPortal) router.replace('/portal');
+  }, [loading, session, isPlatformPath, router, permissions, portal]);
 
   useEffect(() => {
     if (session?.tenantId && canReadCampuses) api<{ id: string; name: string }[]>('/campuses').then(setCampuses).catch(() => setCampuses([]));
@@ -138,6 +210,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         : !!session.tenantId && (!i.permission || can(i.permission)) && (!i.anyOf || i.anyOf.some((p) => can(p))) && (!i.module || hasModule(i.module)),
     ),
   })).filter((g) => g.items.length > 0);
+  // The menu item for this page: the longest link that matches (so /attendance/day is not also "Take attendance").
+  const activeHref = visible.flatMap((g) => g.items.map((i) => i.href)).filter((h) => path === h || path.startsWith(`${h}/`)).sort((a, b) => b.length - a.length)[0];
 
   return (
     <div className={`shell ${navOpen ? 'nav-open' : ''}`}>
@@ -152,7 +226,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <div key={g.section}>
               <div className="side-section">{t(g.section)}</div>
               {g.items.map((i) => (
-                <Link key={i.href} href={i.href} className={`side-link ${path.startsWith(i.href) ? 'active' : ''}`} aria-current={path.startsWith(i.href) ? 'page' : undefined}>
+                <Link key={i.href} href={i.href} className={`side-link ${i.href === activeHref ? 'active' : ''}`} aria-current={i.href === activeHref ? 'page' : undefined}>
                   <Icon name={i.icon} />
                   {t(i.label)}
                   {i.href === '/approvals' && pending > 0 && <span className="side-count" aria-label={t('shell.waiting', { n: pending })}>{pending}</span>}
@@ -182,7 +256,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <div className="top-right">
             {session.tenantId && <NotificationBell tenantId={session.tenantId} />}
             <div className="user-menu" ref={menuRef}>
-              <button className="user-btn" aria-expanded={menuOpen} aria-controls="account-menu" onClick={() => setMenuOpen((v) => !v)}>
+              <button className="user-btn" aria-label={session.user.fullName} aria-expanded={menuOpen} aria-controls="account-menu" onClick={() => setMenuOpen((v) => !v)}>
                 <span className="avatar" aria-hidden>{initials(session.user.fullName)}</span>
                 <span className="user-name">{session.user.fullName}</span>
                 <Icon name="chevronDown" size={16} className="muted" />

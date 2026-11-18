@@ -82,6 +82,25 @@ export const IMPORT_TYPES = {
       { key: 'address', header: 'Address', required: false, example: '12, 4th Cross, Jayanagar, Bengaluru', help: 'Up to 500 characters.' },
     ],
   },
+  STAFF: {
+    type: 'STAFF',
+    label: 'Staff',
+    description: 'Teaching and non-teaching staff. A login can be linked later from the staff page.',
+    columns: [
+      { key: 'employeeCode', header: 'Employee code', required: false, example: 'EMP-0012', help: 'Your existing code. Leave empty to give the next number automatically.' },
+      { key: 'firstName', header: 'First name', required: true, example: 'Priya', help: '1–80 characters.' },
+      { key: 'lastName', header: 'Last name', required: false, example: 'Sharma', help: 'Up to 80 characters.' },
+      { key: 'gender', header: 'Gender', required: true, example: 'Female', help: 'Male, Female or Other.' },
+      { key: 'dob', header: 'Date of birth', required: false, example: '1988-07-21', help: 'YYYY-MM-DD or DD-MM-YYYY.' },
+      { key: 'phone', header: 'Mobile', required: false, example: '9845012345', help: '10-digit mobile.' },
+      { key: 'email', header: 'Email', required: false, example: 'priya.sharma@school.in', help: '' },
+      { key: 'campusCode', header: 'Campus code', required: true, example: 'MAIN', help: 'A campus code from the Help sheet.' },
+      { key: 'departmentCode', header: 'Department code', required: false, example: 'SCI', help: 'A department code from the Help sheet.' },
+      { key: 'designation', header: 'Designation', required: false, example: 'Assistant Teacher', help: 'Up to 80 characters.' },
+      { key: 'employeeType', header: 'Staff type', required: true, example: 'Teaching', help: 'Teaching, Non-teaching, Contract or Visiting.' },
+      { key: 'joiningDate', header: 'Joining date', required: true, example: '2019-06-01', help: 'YYYY-MM-DD or DD-MM-YYYY.' },
+    ],
+  },
 } as const satisfies Record<string, ImportType>;
 
 export type ImportTypeCode = keyof typeof IMPORT_TYPES;

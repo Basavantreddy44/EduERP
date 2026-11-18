@@ -39,8 +39,8 @@ const TONES: Record<string, 'ok' | 'warn' | 'bad' | 'info' | 'muted'> = {
   NEW: 'info', FOLLOW_UP: 'warn', INTERESTED: 'info', CONVERTED: 'ok', LOST: 'muted',
   SUBMITTED: 'info', UNDER_REVIEW: 'info', WAITLISTED: 'warn', ENROLLED: 'ok',
   // students & fees
-  DROPPED: 'bad', TRANSFERRED: 'muted', PASSED_OUT: 'muted', MOVED: 'muted', LEFT: 'muted', PROMOTED: 'ok', DETAINED: 'warn', COMPLETED: 'muted', ISSUED: 'ok',
-  DRAFT: 'info', UNPAID: 'warn', PARTIAL: 'info', WAIVED: 'ok', EXPIRED: 'muted', BOUNCED: 'bad',
+  DROPPED: 'bad', TRANSFERRED: 'muted', PASSED_OUT: 'muted', MOVED: 'muted', LEFT: 'muted', PROMOTED: 'ok', DETAINED: 'warn', COMPLETED: 'muted', ISSUED: 'ok', ON_LEAVE: 'warn', RESIGNED: 'muted', TERMINATED: 'bad',
+  DRAFT: 'info', UNPAID: 'warn', PARTIAL: 'info', WAIVED: 'ok', EXPIRED: 'muted', BOUNCED: 'bad', OVERDUE: 'bad',
 };
 
 export function StatusBadge({ status, label }: { status: string; label?: string }) {

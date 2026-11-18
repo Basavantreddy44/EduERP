@@ -34,6 +34,7 @@ export default function DuesPage() {
   const { opts } = useFeeOptions();
   const canBill = can(PERMISSIONS.FEE_BILL);
   const [f, setF] = useState({ q: '', level: '', minDays: '', sort: 'overdue', page: 1 });
+  useEffect(() => { if (new URLSearchParams(window.location.search).get('overdue') === '1') setF((x) => ({ ...x, minDays: '1' })); }, []); // from the dashboard
   const [text, setText] = useState('');
   const [d, setD] = useState<Dues | null>(null);
   const [selected, setSelected] = useState<string[]>([]);

@@ -61,7 +61,52 @@ import { StudentLifecycleService } from './modules/students/lifecycle.service';
 import { ImportsService } from './modules/imports/imports.service';
 import { ExportsService } from './modules/imports/exports.service';
 import { ExportsController, ImportsController } from './modules/imports/imports.controller';
-import { AnyImporter, DepartmentsImporter, HolidaysImporter, IMPORTERS, UsersImporter } from './modules/imports/importers';
+import { AnyImporter, DepartmentsImporter, HolidaysImporter, IMPORTERS, StaffImporter, UsersImporter } from './modules/imports/importers';
+import { StaffController } from './modules/staff/staff.controller';
+import { AttendanceController } from './modules/attendance/attendance.controller';
+import { AttendanceService } from './modules/attendance/attendance.service';
+import { AttendanceCorrectionsService } from './modules/attendance/corrections.service';
+import { AttendanceReportsController } from './modules/attendance/reports.controller';
+import { AttendanceReportsService } from './modules/attendance/reports.service';
+import { LeaveController, StaffAttendanceController } from './modules/leave/leave.controller';
+import { LeaveService } from './modules/leave/leave.service';
+import { StaffAttendanceService } from './modules/leave/staff-attendance.service';
+import { StaffService } from './modules/staff/staff.service';
+import { DashboardController } from './modules/dashboard/dashboard.controller';
+import { DashboardService } from './modules/dashboard/dashboard.service';
+import { PortalController, StudentPortalAccessController } from './modules/portal/portal.controller';
+import { PortalAccessService } from './modules/portal/portal-access.service';
+import { PortalChildService } from './modules/portal/portal-child.service';
+import { TransportController } from './modules/transport/transport.controller';
+import { TransportFleetService } from './modules/transport/fleet.service';
+import { TransportRoutesService } from './modules/transport/routes.service';
+import { TransportRidersService } from './modules/transport/riders.service';
+import { HostelController } from './modules/hostel/hostel.controller';
+import { HostelSetupService } from './modules/hostel/setup.service';
+import { HostelAllotService } from './modules/hostel/allot.service';
+import { HostelLifeService } from './modules/hostel/life.service';
+import { MessService } from './modules/hostel/mess.service';
+import { AcademicsController } from './modules/academics/academics.controller';
+import { AcademicSubjectsService } from './modules/academics/subjects.service';
+import { TimetableService } from './modules/academics/timetable.service';
+import { HomeworkService } from './modules/academics/homework.service';
+import { ExamsController } from './modules/exams/exams.controller';
+import { ExamSetupService } from './modules/exams/exam-setup.service';
+import { ExamsService } from './modules/exams/exams.service';
+import { ResultsService } from './modules/exams/results.service';
+import { LessonsService } from './modules/academics/lessons.service';
+import { MaterialsService } from './modules/academics/materials.service';
+import { CertificatesService } from './modules/students/certificates.service';
+import { FeedService } from './modules/engagement/feed.service';
+import { EventsService } from './modules/engagement/events.service';
+import { PtmService } from './modules/engagement/ptm.service';
+import { EngagementController, PortalEngagementController } from './modules/engagement/engagement.controller';
+import { MeetingsService } from './modules/engagement/meetings.service';
+import { ComplaintsService } from './modules/engagement/complaints.service';
+import { FrontOfficeService } from './modules/engagement/front-office.service';
+import { DeptRequestsService } from './modules/engagement/requests.service';
+import { ComplaintsController, DeptRequestsController, FrontOfficeController, MeetingsController, PortalComplaintsController } from './modules/engagement/engagement2.controller';
+import { CertificatesController, CertificateVerifyController } from './modules/students/certificates.controller';
 
 const isTest = process.env.NODE_ENV === 'test';
 
@@ -106,6 +151,11 @@ const isTest = process.env.NODE_ENV === 'test';
     AdmissionsController,
     StudentsController,
     StudentLifecycleController,
+    StaffController,
+    AttendanceController,
+    AttendanceReportsController,
+    LeaveController,
+    StaffAttendanceController,
     FeeSetupController,
     FeeBillingController,
     FeeCollectionController,
@@ -113,6 +163,22 @@ const isTest = process.env.NODE_ENV === 'test';
     PublicPayController,
     PaymentWebhookController,
     FeeDuesController,
+    DashboardController,
+    StudentPortalAccessController,
+    PortalController,
+    TransportController,
+    HostelController,
+    AcademicsController,
+    ExamsController,
+    CertificatesController,
+    CertificateVerifyController,
+    EngagementController,
+    PortalEngagementController,
+    MeetingsController,
+    ComplaintsController,
+    FrontOfficeController,
+    DeptRequestsController,
+    PortalComplaintsController,
   ],
   providers: [
     Db,
@@ -137,7 +203,7 @@ const isTest = process.env.NODE_ENV === 'test';
     {
       provide: IMPORTERS,
       useFactory: (...i: AnyImporter[]) => i,
-      inject: [DepartmentsImporter, HolidaysImporter, UsersImporter, StudentsImporter],
+      inject: [DepartmentsImporter, HolidaysImporter, UsersImporter, StudentsImporter, StaffImporter],
     },
     ImportsService,
     ExportsService,
@@ -145,6 +211,13 @@ const isTest = process.env.NODE_ENV === 'test';
     AdmissionsService,
     StudentsService,
     StudentLifecycleService,
+    StaffService,
+    AttendanceService,
+    AttendanceCorrectionsService,
+    AttendanceReportsService,
+    LeaveService,
+    StaffAttendanceService,
+    StaffImporter,
     FeeSetupService,
     FeeBillingService,
     FeeCollectionService,
@@ -152,6 +225,32 @@ const isTest = process.env.NODE_ENV === 'test';
     { provide: PAYMENT_GATEWAY, useFactory: createGateway },
     LateFeeService,
     FeeDuesService,
+    DashboardService,
+    PortalAccessService,
+    PortalChildService,
+    TransportFleetService,
+    TransportRoutesService,
+    TransportRidersService,
+    HostelSetupService,
+    HostelAllotService,
+    HostelLifeService,
+    AcademicSubjectsService,
+    TimetableService,
+    HomeworkService,
+    ExamSetupService,
+    ExamsService,
+    ResultsService,
+    LessonsService,
+    MaterialsService,
+    CertificatesService,
+    FeedService,
+    EventsService,
+    PtmService,
+    MeetingsService,
+    ComplaintsService,
+    FrontOfficeService,
+    DeptRequestsService,
+    MessService,
     StudentsImporter,
     { provide: APP_INTERCEPTOR, useClass: IdempotencyInterceptor },
     { provide: APP_GUARD, useClass: AccessGuard },

@@ -55,7 +55,10 @@ function ApplicationsInner() {
   const canEnrol = can(PERMISSIONS.ADM_ENROL);
 
   const [data, setData] = useState<{ rows: Row[]; summary: { byStatus: Record<string, number> } } | null>(null);
-  const [filter, setFilter] = useState<Filter>('ALL');
+  const [filter, setFilter] = useState<Filter>(() => {
+    const s = params.get('status') as Filter | null; // from the dashboard
+    return s && FILTERS.includes(s) ? s : 'ALL';
+  });
   const [query, setQuery] = useState('');
   const load = useCallback(() => {
     api<typeof data>(`/admissions/applications${campusId ? `?campusId=${campusId}` : ''}`).then(setData).catch(() => setData({ rows: [], summary: { byStatus: {} } }));

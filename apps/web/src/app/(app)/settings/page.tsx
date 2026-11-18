@@ -19,6 +19,7 @@ interface Row {
   campusValue: unknown;
   value: unknown;
   source: 'CAMPUS' | 'INSTITUTION' | 'DEFAULT';
+  options: { value: string; label: string }[] | null;
 }
 
 type Quiet = { start: string; end: string } | null;
@@ -33,6 +34,13 @@ function Editor({ row, value, onChange, disabled }: { row: Row; value: unknown; 
       <select id={id} value={String(value)} onChange={(e) => onChange(e.target.value)} disabled={disabled}>
         <option value="en">English</option>
         <option value="kn">ಕನ್ನಡ (Kannada)</option>
+      </select>
+    );
+  }
+  if (row.options) {
+    return (
+      <select id={id} value={String(value)} onChange={(e) => onChange(e.target.value)} disabled={disabled}>
+        {row.options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
     );
   }

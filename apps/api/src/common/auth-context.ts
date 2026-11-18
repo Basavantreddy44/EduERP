@@ -15,6 +15,8 @@ export interface AuthContext extends TokenIdentity {
   platformRole: string | null;
   tenantStatus: string | null;
   permissions: Map<PermissionCode, CampusScope>;
+  /** Portal routes only: students this login may see (own children as a guardian, and themself as a student). */
+  portalStudentIds?: string[];
 }
 
 export function scopeFor(auth: AuthContext, code: PermissionCode): CampusScope | null {

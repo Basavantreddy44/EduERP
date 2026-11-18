@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { z } from 'zod';
 import {
-  DEPT_TYPE_LABELS, DEPT_TYPES, HOLIDAY_TYPE_LABELS, HOLIDAY_TYPES, IMPORT_TYPES, ImportTypeCode, ModuleCode, PERMISSIONS, PermissionCode,
-  createDepartmentSchema, createHolidaySchema, inviteUserSchema,
+  DEPT_TYPE_LABELS, DEPT_TYPES, EMPLOYEE_TYPE_LABELS, EMPLOYEE_TYPES, GENDERS, HOLIDAY_TYPE_LABELS, HOLIDAY_TYPES, IMPORT_TYPES, ImportTypeCode, ModuleCode, PERMISSIONS, PermissionCode,
+  CreateEmployeeInput, createDepartmentSchema, createEmployeeSchema, createHolidaySchema, inviteUserSchema,
 } from '@eduerp/shared';
 import { Prisma } from '@eduerp/db';
 import type { Tx } from '../../common/prisma.service';
@@ -10,6 +10,7 @@ import { AuditService } from '../../common/audit.service';
 import { AuthContext, CampusScope, canAccessCampus, scopeFor } from '../../common/auth-context';
 import type { ClientInfo } from '../../common/decorators';
 import { UsersService } from '../users/users.service';
+import { StaffService } from '../staff/staff.service';
 
 /** Lookups loaded once per validation run. */
 export interface ImportContext {
@@ -217,6 +218,82 @@ export class UsersImporter implements Importer<UserRow> {
 
   async write(tx: Tx, row: UserRow, auth: AuthContext, client: ClientInfo) {
     return (await this.users.addMember(tx, row, auth, client)).userId;
+  }
+}
+
+// ───────────── Staff ─────────────
+
+const GENDER_LABELS: Record<(typeof GENDERS)[number], string> = { MALE: 'Male', FEMALE: 'Female', OTHER: 'Other' };
+
+@Injectable()
+export class StaffImporter implements Importer<CreateEmployeeInput> {
+  readonly type = 'STAFF' as const;
+  readonly permission = PERMISSIONS.HR_STAFF_MANAGE;
+  constructor(private readonly staff: StaffService) {}
+
+  async helpLists(tx: Tx) {
+    const depts = await tx.department.findMany({ where: { status: 'ACTIVE' }, orderBy: { code: 'asc' }, select: { code: true, name: true, campus: { select: { code: true } } } });
+    return [
+      await campusHelp(tx),
+      { title: 'Department codes', values: depts.map((d) => `${d.code} — ${d.name}${d.campus ? ` (${d.campus.code} only)` : ''}`) },
+      { title: 'Staff types', values: EMPLOYEE_TYPES.map((t) => EMPLOYEE_TYPE_LABELS[t]) },
+    ];
+  }
+
+  async prepare(tx: Tx, auth: AuthContext) {
+    const ctx = await baseContext(tx, auth, this.permission);
+    ctx.depts = await tx.department.findMany({ where: { status: 'ACTIVE' }, select: { id: true, code: true, campusId: true } });
+    const emps = await tx.employee.findMany({ select: { employeeCode: true, phone: true, status: true } });
+    ctx.codes = new Set(emps.map((e) => e.employeeCode.toUpperCase()));
+    ctx.phones = new Set(emps.filter((e) => e.phone && ['ACTIVE', 'ON_LEAVE'].includes(e.status)).map((e) => e.phone));
+    return ctx;
+  }
+
+  check(v: Record<string, string>, ctx: ImportContext, seen: Set<string>) {
+    const errors: string[] = [];
+    let campusId: string | null | undefined;
+    if ((v.campusCode ?? '').trim()) campusId = campusFrom(v.campusCode, ctx, errors);
+    else errors.push('Campus code: required');
+    const gender = pickEnum(v.gender ?? '', GENDERS, GENDER_LABELS);
+    if (!gender) errors.push('Gender: use Male, Female or Other');
+    const employeeType = pickEnum(v.employeeType ?? '', EMPLOYEE_TYPES, EMPLOYEE_TYPE_LABELS);
+    if (!employeeType) errors.push('Staff type: use Teaching, Non-teaching, Contract or Visiting');
+    const joining = v.joiningDate ? parseDate(v.joiningDate) : null;
+    if (!joining) errors.push(`Joining date: "${v.joiningDate ?? ''}" is not a date (use YYYY-MM-DD or DD-MM-YYYY)`);
+    const dob = v.dob ? parseDate(v.dob) : null;
+    if (v.dob && !dob) errors.push(`Date of birth: "${v.dob}" is not a date`);
+    let departmentId: string | null = null;
+    if ((v.departmentCode ?? '').trim()) {
+      const code = v.departmentCode.trim().toUpperCase();
+      const d = (ctx.depts as { id: string; code: string; campusId: string | null }[]).find((x) => x.code.toUpperCase() === code && (!x.campusId || x.campusId === campusId));
+      if (!d) errors.push(`Department code: "${v.departmentCode}" does not exist for this campus`);
+      else departmentId = d.id;
+    }
+    const phone = (v.phone ?? '').replace(/\D/g, '').slice(-10);
+    const parsed = createEmployeeSchema.safeParse({
+      campusId: campusId ?? '00000000-0000-0000-0000-000000000000', employeeCode: (v.employeeCode ?? '').trim() || null, firstName: v.firstName, lastName: v.lastName || null,
+      gender: gender ?? 'OTHER', dob, phone: phone || null, email: (v.email ?? '').trim() || null, departmentId, designation: (v.designation ?? '').trim() || null,
+      employeeType: employeeType ?? 'TEACHING', joiningDate: joining ?? '2000-01-01',
+    });
+    if (!parsed.success) errors.push(...zodErrors(parsed.error, labelsOf('STAFF')));
+    if (parsed.success) {
+      const code = parsed.data.employeeCode;
+      if (code) {
+        if ((ctx.codes as Set<string>).has(code)) errors.push(`Employee code: ${code} is already used`);
+        else if (seen.has(`c|${code}`)) errors.push(`Employee code: ${code} appears twice in this file`);
+        seen.add(`c|${code}`);
+      }
+      if (parsed.data.phone) {
+        if ((ctx.phones as Set<string>).has(parsed.data.phone)) errors.push(`Mobile: ${parsed.data.phone} is already used by another staff member`);
+        else if (seen.has(`p|${parsed.data.phone}`)) errors.push(`Mobile: ${parsed.data.phone} appears twice in this file`);
+        seen.add(`p|${parsed.data.phone}`);
+      }
+    }
+    return errors.length ? { errors } : { row: parsed.data!, errors };
+  }
+
+  async write(tx: Tx, row: CreateEmployeeInput, auth: AuthContext, client: ClientInfo) {
+    return (await this.staff.createInTx(tx, row, auth, client, 'Bulk import')).id;
   }
 }
 
