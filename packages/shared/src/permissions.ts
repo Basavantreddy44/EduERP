@@ -86,6 +86,12 @@ export const PERMISSIONS = {
   ACC_BANK: 'accounts.bank',
   ACC_CLOSE: 'accounts.close',
   ACC_REVEAL: 'accounts.reveal',
+  HR_PROFILE_READ: 'hr.profile.read',
+  HR_PROFILE_MANAGE: 'hr.profile.manage',
+  HR_SETUP: 'hr.setup',
+  HR_EXIT: 'hr.exit.manage',
+  HR_CLEARANCE: 'hr.exit.clear',
+  HR_REVEAL: 'hr.reveal',
 } as const;
 
 export type PermissionCode = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -174,6 +180,12 @@ export const PERMISSION_CATALOGUE: { code: PermissionCode; module: string; descr
   { code: PERMISSIONS.ACC_BANK, module: 'ACCOUNTS', description: 'Bank statements and reconciliation' },
   { code: PERMISSIONS.ACC_CLOSE, module: 'ACCOUNTS', description: 'Lock months and close the financial year' },
   { code: PERMISSIONS.ACC_REVEAL, module: 'ACCOUNTS', description: 'See full bank account numbers and PAN (recorded in the audit log)' },
+  { code: PERMISSIONS.HR_PROFILE_READ, module: 'HR_PAYROLL', description: 'Staff profiles, shifts and leave balances' },
+  { code: PERMISSIONS.HR_PROFILE_MANAGE, module: 'HR_PAYROLL', description: 'Edit staff profiles, qualifications and experience' },
+  { code: PERMISSIONS.HR_SETUP, module: 'HR_PAYROLL', description: 'Designations, shifts, leave allowances and carry-forward' },
+  { code: PERMISSIONS.HR_EXIT, module: 'HR_PAYROLL', description: 'Staff exits: start, close, cancel' },
+  { code: PERMISSIONS.HR_CLEARANCE, module: 'HR_PAYROLL', description: 'Clear any no-dues section of a staff exit' },
+  { code: PERMISSIONS.HR_REVEAL, module: 'HR_PAYROLL', description: 'See staff PAN and bank account numbers in full (recorded in the audit log)' },
 ];
 
 /** A teacher: own classes (CD-73), attendance, homework, marks, parents, staff meetings, complaints and requests. */
@@ -190,10 +202,14 @@ export const SYSTEM_ROLES: { code: string; name: string; permissions: Permission
   { code: 'TEACHING_STAFF', name: 'Teacher', permissions: TEACHER_PERMS },
   {
     code: 'DEPT_HEAD', name: 'Head of Department', permissions: [...TEACHER_PERMS, PERMISSIONS.ACAD_READ, PERMISSIONS.STU_STUDENT_READ, PERMISSIONS.HR_STAFF_READ, PERMISSIONS.LEAVE_READ, PERMISSIONS.EXAM_VERIFY,
-      PERMISSIONS.FEED_MODERATE, PERMISSIONS.MEETING_MANAGE, PERMISSIONS.GRIEVANCE_MANAGE, PERMISSIONS.FRONT_APPROVE, PERMISSIONS.DEPT_REQ_HANDLE],
+      PERMISSIONS.FEED_MODERATE, PERMISSIONS.MEETING_MANAGE, PERMISSIONS.GRIEVANCE_MANAGE, PERMISSIONS.FRONT_APPROVE, PERMISSIONS.DEPT_REQ_HANDLE, PERMISSIONS.HR_PROFILE_READ],
   },
   { code: 'EXAM_CELL', name: 'Exam cell', permissions: [PERMISSIONS.EXAM_READ, PERMISSIONS.EXAM_SETUP, PERMISSIONS.EXAM_VERIFY, PERMISSIONS.EXAM_PUBLISH, PERMISSIONS.ACAD_READ, PERMISSIONS.STU_STUDENT_READ, PERMISSIONS.MEETING_ATTEND, PERMISSIONS.LEAVE_SELF, PERMISSIONS.DEPT_REQ_RAISE] },
   { code: 'FRONT_DESK', name: 'Front desk', permissions: [PERMISSIONS.FRONT_DESK, PERMISSIONS.ADM_ENQUIRY_MANAGE, PERMISSIONS.MEETING_ATTEND, PERMISSIONS.GRIEVANCE_RAISE, PERMISSIONS.DEPT_REQ_RAISE, PERMISSIONS.DEPT_REQ_HANDLE, PERMISSIONS.LEAVE_SELF, PERMISSIONS.FEED_READ, PERMISSIONS.EVENT_READ] },
+  {
+    code: 'HR_OFFICER', name: 'HR officer', permissions: [PERMISSIONS.ORG_CAMPUS_READ, PERMISSIONS.ORG_ACADEMIC_READ, PERMISSIONS.HR_STAFF_READ, PERMISSIONS.HR_STAFF_MANAGE, PERMISSIONS.HR_PROFILE_READ, PERMISSIONS.HR_PROFILE_MANAGE, PERMISSIONS.HR_SETUP, PERMISSIONS.HR_EXIT, PERMISSIONS.HR_CLEARANCE,
+      PERMISSIONS.LEAVE_READ, PERMISSIONS.LEAVE_STAFF, PERMISSIONS.LEAVE_SELF, PERMISSIONS.STAFF_ATT_MARK, PERMISSIONS.MEETING_ATTEND, PERMISSIONS.DEPT_REQ_RAISE, PERMISSIONS.FEED_READ, PERMISSIONS.EVENT_READ],
+  },
   {
     code: 'ACCOUNTANT', name: 'Accountant', permissions: [PERMISSIONS.ORG_CAMPUS_READ, PERMISSIONS.ACC_READ, PERMISSIONS.ACC_ENTRY, PERMISSIONS.ACC_SETUP, PERMISSIONS.ACC_BANK, PERMISSIONS.ACC_CLOSE, PERMISSIONS.FEE_READ, PERMISSIONS.FEE_BILL, PERMISSIONS.FEE_COLLECT,
       PERMISSIONS.MEETING_ATTEND, PERMISSIONS.LEAVE_SELF, PERMISSIONS.DEPT_REQ_RAISE, PERMISSIONS.DEPT_REQ_HANDLE, PERMISSIONS.FEED_READ, PERMISSIONS.EVENT_READ],

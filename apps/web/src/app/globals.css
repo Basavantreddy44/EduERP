@@ -1967,3 +1967,12 @@ a.ecal-chip:hover { filter: brightness(.96); }
   .acc-recon-line { flex-direction: column; }
   .acc-report-bar { flex-direction: column; align-items: stretch; }
 }
+
+/* ───────────── Phase 14: HR ───────────── */
+.hr-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.hr-grid > section { margin-bottom: 0; }
+.hr-grid .kv { margin-bottom: 0; }
+.hr-balances td.num { white-space: nowrap; }
+.hr-balances td.num strong { font-size: 1.1em; }
+.hr-num { width: 70px; text-align: right; }
+@media (max-width: 860px) { .hr-grid { grid-template-columns: 1fr; } }

@@ -144,7 +144,8 @@ export class LeaveService implements OnModuleInit {
       const year = await tx.academicYear.findFirst({ where: { startDate: { lte: day(input.fromDate) }, endDate: { gte: day(input.fromDate) } }, select: { id: true, name: true } });
       if (type.daysPerYear !== null) {
         const used = await this.usedDays(tx, who.kind, who.id, type.id, year?.id ?? null);
-        const left = Number(type.daysPerYear) - used.approved - used.pending;
+        const adj = who.kind === 'EMPLOYEE' && year ? Number((await tx.leaveBalanceAdjustment.aggregate({ where: { employeeId: who.id, leaveTypeId: type.id, academicYearId: year.id }, _sum: { days: true } }))._sum.days ?? 0) : 0;
+        const left = Number(type.daysPerYear) + adj - used.approved - used.pending;
         if (days > left) throw unprocessable('leave-balance', `Only ${Math.max(left, 0)} day(s) of ${type.name} left${year ? ` in ${year.name}` : ''} (${used.approved} taken, ${used.pending} waiting)`, 'toDate');
       }
 
@@ -228,7 +229,10 @@ export class LeaveService implements OnModuleInit {
       const out = [];
       for (const t of types) {
         const used = await this.usedDays(tx, kind, who.id, t.id, year?.id ?? null);
-        out.push({ id: t.id, name: t.name, code: t.code, isPaid: t.isPaid, allowed: num(t.daysPerYear), taken: used.approved, waiting: used.pending, left: t.daysPerYear === null ? null : Number(t.daysPerYear) - used.approved - used.pending });
+        // Staff: HR adjustments (opening, carry-forward, encashment) count towards what is allowed.
+        const adj = kind === 'EMPLOYEE' && year && t.daysPerYear !== null ? Number((await tx.leaveBalanceAdjustment.aggregate({ where: { employeeId: who.id, leaveTypeId: t.id, academicYearId: year.id }, _sum: { days: true } }))._sum.days ?? 0) : 0;
+        const allowed = t.daysPerYear === null ? null : Number(t.daysPerYear) + adj;
+        out.push({ id: t.id, name: t.name, code: t.code, isPaid: t.isPaid, allowed, taken: used.approved, waiting: used.pending, left: allowed === null ? null : allowed - used.approved - used.pending });
       }
       return { applicant: { id: who.id, name: who.label, code: who.code, campusId: who.campusId }, year: year?.name ?? null, types: out };
     });

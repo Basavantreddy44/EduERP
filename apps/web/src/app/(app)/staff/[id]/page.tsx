@@ -3,7 +3,8 @@
 import { FormEvent, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { EMPLOYEE_STATUSES, LEFT_STATUSES, changeEmployeeStatusSchema } from '@eduerp/shared';
+import { EMPLOYEE_STATUSES, LEFT_STATUSES, PERMISSIONS, changeEmployeeStatusSchema } from '@eduerp/shared';
+import { useSession } from '@/lib/session';
 import { api } from '@/lib/api';
 import { FieldErrors, apiErrors, validate } from '@/lib/form';
 import { useI18n } from '@/lib/i18n';
@@ -21,6 +22,8 @@ interface LoginOption { id: string; fullName: string; email: string | null }
 
 /** Staff profile (M3.1): details, edit, status (leaving with the last working day), link to a login. */
 export default function StaffProfilePage() {
+  const { can, hasModule } = useSession();
+  const hrLink = hasModule('HR_PAYROLL') && can(PERMISSIONS.HR_PROFILE_READ);
   const { id } = useParams<{ id: string }>();
   const { t } = useI18n();
   const toast = useToast();
@@ -62,6 +65,7 @@ export default function StaffProfilePage() {
             <li><StatusBadge status={s.status} label={t(`staff.status.${s.status}` as MessageKey)} /></li>
           </ul>
         </div>
+        {hrLink && <div className="profile-actions"><Link className="btn" href={`/hr/staff/${s.id}`}><Icon name="clipboard" size={16} /> {t('hr.profileBtn')}</Link></div>}
         {s.canManage && (
           <div className="profile-actions">
             <button type="button" className="btn" onClick={() => open('edit')}><Icon name="edit" size={16} /> {t('staff.edit')}</button>

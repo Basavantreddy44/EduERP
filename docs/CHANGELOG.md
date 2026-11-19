@@ -1,5 +1,14 @@
 # Changelog
 
+## [Unreleased] — 2026-11-19 (Phase 14 HR)
+### Added
+- Full staff profiles: personal, statutory (PAN encrypted, Aadhaar last 4 only, UAN, PF, ESI) and salary bank details, qualifications and experience; "My profile" for every staff member.
+- Designations (existing job titles carried over automatically).
+- Shifts, with late and half-day worked out from check-in times on staff attendance.
+- Leave balances with opening balances, carry-forward (up to a limit), encashment and corrections; the leave form uses the same balance.
+- Staff exits with handover, no-dues clearance by section and closing (login removed, settlement kept for payroll).
+- Built-in role: HR officer.
+
 ## [Unreleased] — 2026-11-19 (Phase 13 Accounts)
 ### Added
 - Full accounting: chart of accounts editor, cost centres, bank accounts, opening balances, month lock and year close.

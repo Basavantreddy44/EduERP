@@ -1698,6 +1698,7 @@ model Employee {
   email        String?   @db.VarChar(150)
   departmentId String?   @map("department_id") @db.Uuid
   designation  String?   @db.VarChar(80)
+  designationId String?  @map("designation_id") @db.Uuid
   employeeType String    @map("employee_type") @db.VarChar(20)
   joiningDate  DateTime  @map("joining_date") @db.Date
   leftOn       DateTime? @map("left_on") @db.Date
@@ -1834,6 +1835,7 @@ model LeaveType {
   appliesTo   String   @map("applies_to") @db.VarChar(10)
   isPaid      Boolean  @default(true) @map("is_paid")
   daysPerYear Decimal? @map("days_per_year") @db.Decimal(5, 1)
+  carryForwardMax Decimal? @map("carry_forward_max") @db.Decimal(5, 1)
   status      String   @default("ACTIVE") @db.VarChar(20)
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
@@ -1890,6 +1892,7 @@ model StaffAttendance {
   status         String   @db.VarChar(10)
   checkIn        String?  @map("check_in") @db.VarChar(5)
   checkOut       String?  @map("check_out") @db.VarChar(5)
+  lateMinutes    Int?     @map("late_minutes") @db.SmallInt
   remarks        String?  @db.VarChar(200)
   source         String   @default("MANUAL") @db.VarChar(10)
   markedBy       String?  @map("marked_by") @db.Uuid
@@ -3987,4 +3990,166 @@ model BankReconciliation {
   @@unique([tenantId, journalLineId])
   @@index([tenantId, statementLineId])
   @@map("bank_reconciliations")
+}
+
+// ───────────── Phase 14: HR (B4 §2) ─────────────
+
+model Designation {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  code      String   @db.VarChar(20)
+  name      String   @db.VarChar(100)
+  category  String   @db.VarChar(20)
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, code])
+  @@unique([tenantId, name])
+  @@map("designations")
+}
+
+/// Full staff profile (1:1 with employees). PAN and bank number only encrypted (CD-84).
+model EmployeeDetail {
+  id                    String    @id @default(uuid()) @db.Uuid
+  tenantId              String    @map("tenant_id") @db.Uuid
+  employeeId            String    @map("employee_id") @db.Uuid
+  fatherOrSpouseName    String?   @map("father_or_spouse_name") @db.VarChar(150)
+  maritalStatus         String?   @map("marital_status") @db.VarChar(10)
+  bloodGroup            String?   @map("blood_group") @db.VarChar(3)
+  permanentAddress      String?   @map("permanent_address") @db.VarChar(500)
+  currentAddress        String?   @map("current_address") @db.VarChar(500)
+  emergencyContactName  String?   @map("emergency_contact_name") @db.VarChar(150)
+  emergencyContactPhone String?   @map("emergency_contact_phone") @db.VarChar(15)
+  panEnc                String?   @map("pan_enc") @db.VarChar(200)
+  panLast4              String?   @map("pan_last4") @db.VarChar(4)
+  aadhaarLast4          String?   @map("aadhaar_last4") @db.VarChar(4)
+  uanNo                 String?   @map("uan_no") @db.VarChar(12)
+  pfNo                  String?   @map("pf_no") @db.VarChar(30)
+  esiNo                 String?   @map("esi_no") @db.VarChar(17)
+  bankName              String?   @map("bank_name") @db.VarChar(100)
+  bankAccountEnc        String?   @map("bank_account_enc") @db.VarChar(200)
+  bankAccountLast4      String?   @map("bank_account_last4") @db.VarChar(4)
+  ifsc                  String?   @db.VarChar(11)
+  shiftId               String?   @map("shift_id") @db.Uuid
+  reportingToId         String?   @map("reporting_to_id") @db.Uuid
+  confirmationDate      DateTime? @map("confirmation_date") @db.Date
+  probationEndDate      DateTime? @map("probation_end_date") @db.Date
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  updatedBy             String?   @map("updated_by") @db.Uuid
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, employeeId])
+  @@index([tenantId, shiftId])
+  @@map("employee_details")
+}
+
+model EmployeeQualification {
+  id                String   @id @default(uuid()) @db.Uuid
+  tenantId          String   @map("tenant_id") @db.Uuid
+  employeeId        String   @map("employee_id") @db.Uuid
+  qualification     String   @db.VarChar(100)
+  institution       String   @db.VarChar(200)
+  yearOfPassing     Int      @map("year_of_passing") @db.SmallInt
+  percentage        Decimal? @db.Decimal(5, 2)
+  certificateFileId String?  @map("certificate_file_id") @db.Uuid
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, employeeId])
+  @@map("employee_qualifications")
+}
+
+model EmployeeExperience {
+  id           String   @id @default(uuid()) @db.Uuid
+  tenantId     String   @map("tenant_id") @db.Uuid
+  employeeId   String   @map("employee_id") @db.Uuid
+  organisation String   @db.VarChar(200)
+  designation  String   @db.VarChar(100)
+  fromDate     DateTime @map("from_date") @db.Date
+  toDate       DateTime @map("to_date") @db.Date
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, employeeId])
+  @@map("employee_experiences")
+}
+
+model Shift {
+  id                  String   @id @default(uuid()) @db.Uuid
+  tenantId            String   @map("tenant_id") @db.Uuid
+  campusId            String   @map("campus_id") @db.Uuid
+  name                String   @db.VarChar(50)
+  startTime           String   @map("start_time") @db.VarChar(5)
+  endTime             String   @map("end_time") @db.VarChar(5)
+  lateAfterMinutes    Int      @map("late_after_minutes") @db.SmallInt
+  halfDayAfterMinutes Int      @map("half_day_after_minutes") @db.SmallInt
+  isActive            Boolean  @default(true) @map("is_active")
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, campusId, name])
+  @@map("shifts")
+}
+
+/// Leave balance changes besides the yearly allowance and approved leave: opening, carry-forward, encashment, adjustment.
+model LeaveBalanceAdjustment {
+  id             String   @id @default(uuid()) @db.Uuid
+  tenantId       String   @map("tenant_id") @db.Uuid
+  employeeId     String   @map("employee_id") @db.Uuid
+  leaveTypeId    String   @map("leave_type_id") @db.Uuid
+  academicYearId String   @map("academic_year_id") @db.Uuid
+  kind           String   @db.VarChar(15)
+  days           Decimal  @db.Decimal(5, 1)
+  reason         String   @db.VarChar(300)
+  createdBy      String   @map("created_by") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, employeeId, leaveTypeId, academicYearId])
+  @@map("leave_balance_adjustments")
+}
+
+model EmployeeExit {
+  id               String    @id @default(uuid()) @db.Uuid
+  tenantId         String    @map("tenant_id") @db.Uuid
+  employeeId       String    @map("employee_id") @db.Uuid
+  exitType         String    @map("exit_type") @db.VarChar(15)
+  resignationDate  DateTime  @map("resignation_date") @db.Date
+  lastWorkingDate  DateTime  @map("last_working_date") @db.Date
+  reason           String    @db.VarChar(500)
+  handoverToId     String?   @map("handover_to_id") @db.Uuid
+  settlementAmount Decimal?  @map("settlement_amount") @db.Decimal(14, 2)
+  status           String    @db.VarChar(15)
+  remarks          String?   @db.VarChar(300)
+  initiatedBy      String    @map("initiated_by") @db.Uuid
+  closedBy         String?   @map("closed_by") @db.Uuid
+  closedAt         DateTime? @map("closed_at") @db.Timestamptz(6)
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  clearances ExitClearance[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, status])
+  @@map("employee_exits")
+}
+
+model ExitClearance {
+  id         String    @id @default(uuid()) @db.Uuid
+  tenantId   String    @map("tenant_id") @db.Uuid
+  exitId     String    @map("exit_id") @db.Uuid
+  section    String    @db.VarChar(10)
+  status     String    @default("PENDING") @db.VarChar(10)
+  dueAmount  Decimal   @default(0) @map("due_amount") @db.Decimal(14, 2)
+  remarks    String?   @db.VarChar(300)
+  clearedBy  String?   @map("cleared_by") @db.Uuid
+  clearedAt  DateTime? @map("cleared_at") @db.Timestamptz(6)
+
+  exit EmployeeExit @relation(fields: [tenantId, exitId], references: [tenantId, id])
+
+  @@unique([tenantId, id])
+  @@unique([exitId, section])
+  @@map("exit_clearances")
 }

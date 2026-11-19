@@ -101,6 +101,15 @@ const NAV: { section: MessageKey; items: NavItem[] }[] = [
     ],
   },
   {
+    section: 'nav.hr',
+    items: [
+      { href: '/hr/my-profile', label: 'nav.hrMine', icon: 'clipboard', module: 'HR_PAYROLL' },
+      { href: '/hr/leave-balances', label: 'nav.hrLeave', icon: 'calendar', module: 'HR_PAYROLL', anyOf: [PERMISSIONS.HR_PROFILE_READ, PERMISSIONS.HR_SETUP] },
+      { href: '/hr/exits', label: 'nav.hrExits', icon: 'logout', module: 'HR_PAYROLL', anyOf: [PERMISSIONS.HR_EXIT, PERMISSIONS.HR_CLEARANCE, PERMISSIONS.ACC_ENTRY, PERMISSIONS.HOSTEL_MANAGE] },
+      { href: '/hr/setup', label: 'nav.hrSetup', icon: 'settings', module: 'HR_PAYROLL', anyOf: [PERMISSIONS.HR_SETUP, PERMISSIONS.HR_PROFILE_READ] },
+    ],
+  },
+  {
     section: 'nav.fees',
     items: [
       { href: '/fees/collect', label: 'nav.collect', icon: 'receipt', permission: PERMISSIONS.FEE_COLLECT, module: 'FEES' },

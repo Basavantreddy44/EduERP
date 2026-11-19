@@ -107,6 +107,10 @@ import { FrontOfficeService } from './modules/engagement/front-office.service';
 import { DeptRequestsService } from './modules/engagement/requests.service';
 import { ComplaintsController, DeptRequestsController, FrontOfficeController, MeetingsController, PortalComplaintsController } from './modules/engagement/engagement2.controller';
 import { AccountsController } from './modules/accounts/accounts.controller';
+import { HrController } from './modules/hr/hr.controller';
+import { HrService } from './modules/hr/hr.service';
+import { LeaveBalancesService } from './modules/hr/leave-balances.service';
+import { ExitsService } from './modules/hr/exits.service';
 import { AccountsSetupService } from './modules/accounts/setup.service';
 import { VendorsService } from './modules/accounts/vendors.service';
 import { AccountPaymentsService } from './modules/accounts/payments.service';
@@ -186,6 +190,7 @@ const isTest = process.env.NODE_ENV === 'test';
     DeptRequestsController,
     PortalComplaintsController,
     AccountsController,
+    HrController,
   ],
   providers: [
     Db,
@@ -262,6 +267,9 @@ const isTest = process.env.NODE_ENV === 'test';
     AccountPaymentsService,
     BankReconService,
     AccountsReportsService,
+    HrService,
+    LeaveBalancesService,
+    ExitsService,
     MessService,
     StudentsImporter,
     { provide: APP_INTERCEPTOR, useClass: IdempotencyInterceptor },
