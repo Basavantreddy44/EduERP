@@ -1976,3 +1976,61 @@ a.ecal-chip:hover { filter: brightness(.96); }
 .hr-balances td.num strong { font-size: 1.1em; }
 .hr-num { width: 70px; text-align: right; }
 @media (max-width: 860px) { .hr-grid { grid-template-columns: 1fr; } }
+
+/* ───────────── Phase 15: Payroll ───────────── */
+.notice.notice-warn { background: var(--warn-bg); color: #864c0e; border-color: #f0d9b5; }
+.notice.notice-info { background: var(--info-bg); color: var(--info); }
+.section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.tabs .count { display: inline-grid; place-items: center; min-width: 20px; height: 20px; margin-left: 4px; padding: 0 6px; border-radius: 999px; background: var(--surface-2); font-size: 12px; }
+.pay-stats { margin-bottom: 8px; }
+.pay-trail { margin: 4px 0 14px; }
+.pay-toggle { margin-top: 10px; }
+.pay-kinds { align-items: center; gap: 8px; }
+.pay-kinds .chip { cursor: pointer; }
+.pay-kinds .chip.on { background: var(--navy); border-color: var(--navy); color: #fff; }
+.pay-kinds .row-actions { margin-left: auto; }
+.pay-breakdown { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(180px, .8fr); gap: 16px 22px; align-items: start; }
+.pay-col { display: grid; gap: 6px; }
+.pay-col-title { margin: 0; font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.pay-lines { display: grid; gap: 4px; margin: 0; }
+.pay-lines > div { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; border-bottom: 1px dashed var(--border); }
+.pay-lines dt { color: var(--text); }
+.pay-lines dd { margin: 0; font-variant-numeric: tabular-nums; }
+.pay-col-total { display: flex; justify-content: space-between; gap: 12px; margin: 4px 0 0; padding-top: 6px; border-top: 2px solid var(--border-strong); }
+.pay-net { display: grid; gap: 4px; padding: 14px 16px; border-radius: 12px; background: var(--midnight, #0a1430); color: #fff; }
+.pay-net strong { font: 600 26px var(--font-display), Georgia, serif; color: var(--gold, #d4a94c); font-variant-numeric: lining-nums tabular-nums; }
+.pay-net .muted { color: rgba(255, 255, 255, .75); }
+.pay-preview { display: grid; gap: 12px; margin-top: 8px; padding-top: 12px; border-top: 1px solid var(--border); }
+.pay-preview > .btn { justify-self: start; }
+.pay-values { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px 14px; }
+.pay-values legend { grid-column: 1 / -1; }
+.pay-values > .muted { grid-column: 1 / -1; }
+.pay-structs { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+.pay-struct-items { display: grid; gap: 6px; }
+.pay-struct-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 40px; border-bottom: 1px dashed var(--border); }
+.pay-struct-val { display: inline-flex; align-items: center; gap: 6px; }
+.pay-struct-val input { width: 110px; text-align: right; }
+.pay-slips td .sub-line { max-width: 460px; }
+.pay-mine { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.pay-mine li { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 16px; padding: 14px 16px; }
+.pay-mine-amt { display: grid; justify-items: end; }
+.pay-mine-amt strong { font-size: 18px; color: var(--midnight, #0a1430); font-variant-numeric: tabular-nums; }
+.payslip-who { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.payslip-lines th, .payslip-lines td { padding: 7px 8px; }
+.payslip-lines tfoot th, .payslip-lines tfoot td { border-top: 2px solid var(--navy); font-weight: 700; }
+.payslip-net { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 16px 0 6px; padding: 12px 16px; border-radius: 10px; background: var(--surface-2); }
+.payslip-net strong { font: 600 24px var(--font-display), Georgia, serif; color: var(--midnight, #0a1430); font-variant-numeric: lining-nums tabular-nums; }
+.payslip-notes p { margin: 4px 0; }
+@media (max-width: 900px) {
+  .pay-breakdown { grid-template-columns: 1fr 1fr; }
+  .pay-net { grid-column: 1 / -1; }
+}
+@media (max-width: 640px) {
+  .pay-breakdown { grid-template-columns: 1fr; }
+  .payslip-who { grid-template-columns: 1fr 1fr; }
+  .pay-mine li { grid-template-columns: 1fr auto; }
+  .pay-mine li .btn { grid-column: 1 / -1; justify-self: start; }
+  .pay-kinds .row-actions { margin-left: 0; }
+}
+@media print { .payslip-page { page: payslip; } .payslip-page .receipt { padding: 0; } }
+@page payslip { size: A4; margin: 14mm; }

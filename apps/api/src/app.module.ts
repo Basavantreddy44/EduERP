@@ -109,6 +109,10 @@ import { ComplaintsController, DeptRequestsController, FrontOfficeController, Me
 import { AccountsController } from './modules/accounts/accounts.controller';
 import { HrController } from './modules/hr/hr.controller';
 import { HrService } from './modules/hr/hr.service';
+import { PayrollController } from './modules/payroll/payroll.controller';
+import { PayrollSetupService } from './modules/payroll/payroll-setup.service';
+import { PayrollRunsService } from './modules/payroll/payroll-runs.service';
+import { PayrollExtraService } from './modules/payroll/payroll-extra.service';
 import { LeaveBalancesService } from './modules/hr/leave-balances.service';
 import { ExitsService } from './modules/hr/exits.service';
 import { AccountsSetupService } from './modules/accounts/setup.service';
@@ -191,6 +195,7 @@ const isTest = process.env.NODE_ENV === 'test';
     PortalComplaintsController,
     AccountsController,
     HrController,
+    PayrollController,
   ],
   providers: [
     Db,
@@ -268,6 +273,9 @@ const isTest = process.env.NODE_ENV === 'test';
     BankReconService,
     AccountsReportsService,
     HrService,
+    PayrollSetupService,
+    PayrollRunsService,
+    PayrollExtraService,
     LeaveBalancesService,
     ExitsService,
     MessService,

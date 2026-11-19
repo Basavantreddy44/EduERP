@@ -110,6 +110,16 @@ const NAV: { section: MessageKey; items: NavItem[] }[] = [
     ],
   },
   {
+    section: 'nav.payroll',
+    items: [
+      { href: '/payroll/my-payslips', label: 'nav.payMine', icon: 'receipt', module: 'HR_PAYROLL' },
+      { href: '/payroll/runs', label: 'nav.payRuns', icon: 'rupee', module: 'HR_PAYROLL', anyOf: [PERMISSIONS.PAYROLL_RUN, PERMISSIONS.PAYROLL_PAY, PERMISSIONS.PAYROLL_REPORTS] },
+      { href: '/payroll/salaries', label: 'nav.paySalaries', icon: 'users', module: 'HR_PAYROLL', permission: PERMISSIONS.PAYROLL_SALARY_READ },
+      { href: '/payroll/loans', label: 'nav.payLoans', icon: 'layers', module: 'HR_PAYROLL', anyOf: [PERMISSIONS.PAYROLL_LOAN] },
+      { href: '/payroll/setup', label: 'nav.paySetup', icon: 'settings', module: 'HR_PAYROLL', anyOf: [PERMISSIONS.PAYROLL_SETUP, PERMISSIONS.PAYROLL_SALARY_READ] },
+    ],
+  },
+  {
     section: 'nav.fees',
     items: [
       { href: '/fees/collect', label: 'nav.collect', icon: 'receipt', permission: PERMISSIONS.FEE_COLLECT, module: 'FEES' },

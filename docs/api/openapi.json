@@ -1942,6 +1942,8 @@
                       "VENDOR_PAYMENT",
                       "VOUCHER",
                       "JOURNAL",
+                      "PAYROLL_RUN",
+                      "STAFF_LOAN",
                       "TEST"
                     ]
                   },
@@ -2716,6 +2718,8 @@
                       "ACCOUNT_VOUCHER",
                       "PERIOD_UNLOCK",
                       "PURCHASE_ORDER",
+                      "PAYROLL_RUN",
+                      "STAFF_LOAN",
                       "TEST"
                     ]
                   },
@@ -2882,6 +2886,8 @@
                 "ACCOUNT_VOUCHER",
                 "PERIOD_UNLOCK",
                 "PURCHASE_ORDER",
+                "PAYROLL_RUN",
+                "STAFF_LOAN",
                 "TEST"
               ]
             }
@@ -42228,6 +42234,2744 @@
           "code": "hr.exit.manage"
         },
         "description": "Access: permission `hr.exit.manage` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/payroll/components": {
+      "get": {
+        "operationId": "PayrollController_components",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "payroll.salary.read"
+        },
+        "description": "Access: permission `payroll.salary.read` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "PayrollController_addComponent",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input failed validation; `errors` lists each field",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "payroll.setup"
+        },
+        "description": "Access: permission `payroll.setup` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "allOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^[A-Z][A-Z0-9_]{0,19}$"
+                      }
+                    ]
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 100
+                  },
+                  "componentType": {
+                    "type": "string",
+                    "enum": [
+                      "EARNING",
+                      "DEDUCTION",
+                      "EMPLOYER"
+                    ]
+                  },
+                  "calcType": {
+                    "type": "string",
+                    "enum": [
+                      "FIXED",
+                      "PERCENT_OF_BASIC",
+                      "PERCENT_OF_GROSS",
+                      "BALANCE",
+                      "FORMULA",
+                      "STATUTORY"
+                    ]
+                  },
+                  "statutoryKind": {
+                    "type": "string",
+                    "enum": [
+                      "PF",
+                      "ESI",
+                      "PT",
+                      "TDS",
+                      "LOAN"
+                    ],
+                    "nullable": true
+                  },
+                  "formula": {
+                    "type": "string",
+                    "maxLength": 300,
+                    "nullable": true
+                  },
+                  "isTaxable": {
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "affectedByLop": {
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "isPfWage": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "accountId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true
+                  },
+                  "sortOrder": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 999,
+                    "default": 0
+                  },
+                  "isActive": {
+                    "type": "boolean",
+                    "default": true
+                  }
+                },
+                "required": [
+                  "code",
+                  "name",
+                  "componentType",
+                  "calcType"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payroll/components/{id}": {
+      "put": {
+        "operationId": "PayrollController_editComponent",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input failed validation; `errors` lists each field",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "payroll.setup"
+        },
+        "description": "Access: permission `payroll.setup` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "allOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^[A-Z][A-Z0-9_]{0,19}$"
+                      }
+                    ]
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 100
+                  },
+                  "componentType": {
+                    "type": "string",
+                    "enum": [
+                      "EARNING",
+                      "DEDUCTION",
+                      "EMPLOYER"
+                    ]
+                  },
+                  "calcType": {
+                    "type": "string",
+                    "enum": [
+                      "FIXED",
+                      "PERCENT_OF_BASIC",
+                      "PERCENT_OF_GROSS",
+                      "BALANCE",
+                      "FORMULA",
+                      "STATUTORY"
+                    ]
+                  },
+                  "statutoryKind": {
+                    "type": "string",
+                    "enum": [
+                      "PF",
+                      "ESI",
+                      "PT",
+                      "TDS",
+                      "LOAN"
+                    ],
+                    "nullable": true
+                  },
+                  "formula": {
+                    "type": "string",
+                    "maxLength": 300,
+                    "nullable": true
+                  },
+                  "isTaxable": {
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "affectedByLop": {
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "isPfWage": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "accountId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true
+                  },
+                  "sortOrder": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 999,
+                    "default": 0
+                  },
+                  "isActive": {
+                    "type": "boolean",
+                    "default": true
+                  }
+                },
+                "required": [
+                  "code",
+                  "name",
+                  "componentType",
+                  "calcType"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payroll/structures": {
+      "get": {
+        "operationId": "PayrollController_structures",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "payroll.salary.read"
+        },
+        "description": "Access: permission `payroll.salary.read` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "PayrollController_addStructure",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input failed validation; `errors` lists each field",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "payroll.setup"
+        },
+        "description": "Access: permission `payroll.setup` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 100
+                  },
+                  "designationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true
+                  },
+                  "isActive": {
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "componentId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "value": {
+                          "anyOf": [
+                            {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 99999999
+                            },
+                            {
+                              "enum": [
+                                "null"
+                              ],
+                              "nullable": true
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "componentId"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "minItems": 1,
+                    "maxItems": 40
+                  }
+                },
+                "required": [
+                  "name",
+                  "items"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payroll/structures/{id}": {
+      "put": {
+        "operationId": "PayrollController_editStructure",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input failed validation; `errors` lists each field",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "payroll.setup"
+        },
+        "description": "Access: permission `payroll.setup` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 100
+                  },
+                  "designationId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true
+                  },
+                  "isActive": {
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "componentId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "value": {
+                          "anyOf": [
+                            {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 99999999
+                            },
+                            {
+                              "enum": [
+                                "null"
+                              ],
+                              "nullable": true
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "componentId"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "minItems": 1,
+                    "maxItems": 40
+                  }
+                },
+                "required": [
+                  "name",
+                  "items"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payroll/statutory-rules": {
+      "get": {
+        "operationId": "PayrollController_rules",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "payroll.salary.read"
+        },
+        "description": "Access: permission `payroll.salary.read` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "PayrollController_addRule",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input failed validation; `errors` lists each field",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "payroll.setup"
+        },
+        "description": "Access: permission `payroll.setup` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ruleType": {
+                    "type": "string",
+                    "enum": [
+                      "PF",
+                      "ESI",
+                      "PT",
+                      "TDS",
+                      "TDS_STD_DEDUCTION",
+                      "TDS_REBATE",
+                      "TDS_CESS"
+                    ]
+                  },
+                  "stateCode": {
+                    "type": "string",
+                    "pattern": "^\\d{2}$",
+                    "nullable": true
+                  },
+                  "slabFrom": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ],
+                    "nullable": true
+                  },
+                  "slabTo": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ],
+                    "nullable": true
+                  },
+                  "employeeRate": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100,
+                    "nullable": true
+                  },
+                  "employerRate": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100,
+                    "nullable": true
+                  },
+                  "fixedAmount": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ],
+                    "nullable": true
+                  },
+                  "wageCeiling": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ],
+                    "nullable": true
+                  },
+                  "onlyMonth": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 12,
+                    "nullable": true
+                  },
+                  "effectiveFrom": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "effectiveTo": {
+                    "type": "string",
+                    "format": "date",
+                    "nullable": true
+                  },
+                  "notes": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "ruleType",
+                  "effectiveFrom"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payroll/statutory-rules/{id}": {
+      "put": {
+        "operationId": "PayrollController_editRule",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input failed validation; `errors` lists each field",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "payroll.setup"
+        },
+        "description": "Access: permission `payroll.setup` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "ruleType": {
+                    "type": "string",
+                    "enum": [
+                      "PF",
+                      "ESI",
+                      "PT",
+                      "TDS",
+                      "TDS_STD_DEDUCTION",
+                      "TDS_REBATE",
+                      "TDS_CESS"
+                    ]
+                  },
+                  "stateCode": {
+                    "type": "string",
+                    "pattern": "^\\d{2}$",
+                    "nullable": true
+                  },
+                  "slabFrom": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ],
+                    "nullable": true
+                  },
+                  "slabTo": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ],
+                    "nullable": true
+                  },
+                  "employeeRate": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100,
+                    "nullable": true
+                  },
+                  "employerRate": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100,
+                    "nullable": true
+                  },
+                  "fixedAmount": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ],
+                    "nullable": true
+                  },
+                  "wageCeiling": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ],
+                    "nullable": true
+                  },
+                  "onlyMonth": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 12,
+                    "nullable": true
+                  },
+                  "effectiveFrom": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "effectiveTo": {
+                    "type": "string",
+                    "format": "date",
+                    "nullable": true
+                  },
+                  "notes": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "ruleType",
+                  "effectiveFrom"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payroll/salaries": {
+      "get": {
+        "operationId": "PayrollController_salaries",
+        "parameters": [
+          {
+            "name": "campusId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input failed validation; `errors` lists each field",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "payroll.salary.read"
+        },
+        "description": "Access: permission `payroll.salary.read` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "PayrollController_assign",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input failed validation; `errors` lists each field",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "payroll.salary.manage"
+        },
+        "description": "Access: permission `payroll.salary.manage` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "employeeId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "structureId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "monthlyGross": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "effectiveFrom": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "pfApplicable": {
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "esiApplicable": {
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "ptApplicable": {
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "tdsMonthlyOverride": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ],
+                    "nullable": true
+                  },
+                  "overrides": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "componentId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "value": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 99999999
+                        }
+                      },
+                      "required": [
+                        "componentId",
+                        "value"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "maxItems": 40,
+                    "default": []
+                  },
+                  "remarks": {
+                    "type": "string",
+                    "maxLength": 300,
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "employeeId",
+                  "structureId",
+                  "monthlyGross",
+                  "effectiveFrom"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payroll/salaries/{employeeId}": {
+      "get": {
+        "operationId": "PayrollController_salary",
+        "parameters": [
+          {
+            "name": "employeeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "payroll.salary.read"
+        },
+        "description": "Access: permission `payroll.salary.read` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/payroll/salaries/preview": {
+      "post": {
+        "operationId": "PayrollController_preview",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input failed validation; `errors` lists each field",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "payroll.salary.manage"
+        },
+        "description": "Access: permission `payroll.salary.manage` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "employeeId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "structureId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "monthlyGross": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "effectiveFrom": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "pfApplicable": {
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "esiApplicable": {
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "ptApplicable": {
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "tdsMonthlyOverride": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ],
+                    "nullable": true
+                  },
+                  "overrides": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "componentId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "value": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 99999999
+                        }
+                      },
+                      "required": [
+                        "componentId",
+                        "value"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "maxItems": 40,
+                    "default": []
+                  },
+                  "remarks": {
+                    "type": "string",
+                    "maxLength": 300,
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "employeeId",
+                  "structureId",
+                  "monthlyGross",
+                  "effectiveFrom"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payroll/salaries/{employeeId}/opening": {
+      "put": {
+        "operationId": "PayrollController_opening",
+        "parameters": [
+          {
+            "name": "employeeId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input failed validation; `errors` lists each field",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "payroll.salary.manage"
+        },
+        "description": "Access: permission `payroll.salary.manage` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fy": {
+                    "type": "string",
+                    "pattern": "^\\d{4}-\\d{2}$"
+                  },
+                  "taxablePaid": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "tdsDeducted": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "remarks": {
+                    "type": "string",
+                    "maxLength": 300,
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "fy",
+                  "taxablePaid",
+                  "tdsDeducted"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payroll/accounts": {
+      "get": {
+        "operationId": "PayrollController_accounts",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "payroll.setup"
+        },
+        "description": "Access: permission `payroll.setup` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/payroll/bank-accounts": {
+      "get": {
+        "operationId": "PayrollController_bankAccounts",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "member"
+        },
+        "description": "Access: any active member of the institution in the token.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/payroll/runs": {
+      "get": {
+        "operationId": "PayrollController_runList",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "DRAFT",
+                "CALCULATED",
+                "PENDING_APPROVAL",
+                "APPROVED",
+                "PAID",
+                "CANCELLED"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input failed validation; `errors` lists each field",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "member"
+        },
+        "description": "Access: any active member of the institution in the token.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "PayrollController_createRun",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input failed validation; `errors` lists each field",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "payroll.run"
+        },
+        "description": "Access: permission `payroll.run` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "campusId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "month": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 12
+                  },
+                  "year": {
+                    "type": "integer",
+                    "minimum": 2020,
+                    "maximum": 2100
+                  }
+                },
+                "required": [
+                  "campusId",
+                  "month",
+                  "year"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payroll/runs/{id}": {
+      "get": {
+        "operationId": "PayrollController_run",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "member"
+        },
+        "description": "Access: any active member of the institution in the token.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/payroll/runs/{id}/calculate": {
+      "post": {
+        "operationId": "PayrollController_calculate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "payroll.run"
+        },
+        "description": "Access: permission `payroll.run` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/payroll/runs/{id}/adjustments": {
+      "post": {
+        "operationId": "PayrollController_addAdjustment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input failed validation; `errors` lists each field",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "payroll.run"
+        },
+        "description": "Access: permission `payroll.run` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "employeeId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "itemType": {
+                    "type": "string",
+                    "enum": [
+                      "EARNING",
+                      "DEDUCTION"
+                    ]
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 100
+                  },
+                  "amount": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "isTaxable": {
+                    "type": "boolean",
+                    "default": true
+                  }
+                },
+                "required": [
+                  "employeeId",
+                  "itemType",
+                  "label",
+                  "amount"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payroll/runs/{id}/adjustments/{aid}": {
+      "delete": {
+        "operationId": "PayrollController_removeAdjustment",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "aid",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "payroll.run"
+        },
+        "description": "Access: permission `payroll.run` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/payroll/runs/{id}/submit": {
+      "post": {
+        "operationId": "PayrollController_submit",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "payroll.run"
+        },
+        "description": "Access: permission `payroll.run` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/payroll/runs/{id}/cancel": {
+      "post": {
+        "operationId": "PayrollController_cancel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "payroll.run"
+        },
+        "description": "Access: permission `payroll.run` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/payroll/runs/{id}/bank-file": {
+      "post": {
+        "operationId": "PayrollController_bankFile",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "payroll.pay"
+        },
+        "description": "Access: permission `payroll.pay` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/payroll/runs/{id}/pay": {
+      "post": {
+        "operationId": "PayrollController_pay",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input failed validation; `errors` lists each field",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "payroll.pay"
+        },
+        "description": "Access: permission `payroll.pay` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "paidOn": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "bankAccountId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "paidOn",
+                  "bankAccountId"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payroll/runs/{id}/report": {
+      "get": {
+        "operationId": "PayrollController_report",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "register",
+                "pf",
+                "esi",
+                "pt",
+                "tds"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input failed validation; `errors` lists each field",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "member"
+        },
+        "description": "Access: any active member of the institution in the token.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/payroll/my-payslips": {
+      "get": {
+        "operationId": "PayrollController_myPayslips",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "member"
+        },
+        "description": "Access: any active member of the institution in the token.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/payroll/payslips/{id}": {
+      "get": {
+        "operationId": "PayrollController_payslip",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "member"
+        },
+        "description": "Access: any active member of the institution in the token.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/payroll/loans": {
+      "get": {
+        "operationId": "PayrollController_loans",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING_APPROVAL",
+                "ACTIVE",
+                "CLOSED",
+                "REJECTED",
+                "CANCELLED"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input failed validation; `errors` lists each field",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "member"
+        },
+        "description": "Access: any active member of the institution in the token.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "PayrollController_addLoan",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input failed validation; `errors` lists each field",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "payroll.loan.manage"
+        },
+        "description": "Access: permission `payroll.loan.manage` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "employeeId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "loanType": {
+                    "type": "string",
+                    "enum": [
+                      "ADVANCE",
+                      "LOAN"
+                    ]
+                  },
+                  "amount": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "emiAmount": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "startMonth": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 12
+                  },
+                  "startYear": {
+                    "type": "integer",
+                    "minimum": 2020,
+                    "maximum": 2100
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 300
+                  },
+                  "disbursedOn": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "CASH",
+                      "CHEQUE",
+                      "NEFT",
+                      "RTGS",
+                      "UPI"
+                    ]
+                  },
+                  "bankAccountId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "employeeId",
+                  "loanType",
+                  "amount",
+                  "emiAmount",
+                  "startMonth",
+                  "startYear",
+                  "reason",
+                  "disbursedOn",
+                  "mode"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/payroll/settlement/{exitId}": {
+      "get": {
+        "operationId": "PayrollController_settlement",
+        "parameters": [
+          {
+            "name": "exitId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Payroll"
+        ],
+        "x-access": {
+          "kind": "member"
+        },
+        "description": "Access: any active member of the institution in the token.",
         "security": [
           {
             "bearer": []

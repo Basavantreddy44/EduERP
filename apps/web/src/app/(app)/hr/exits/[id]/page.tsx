@@ -33,7 +33,8 @@ export default function ExitPage() {
   const [settle, setSettle] = useState({ settlementAmount: '', remarks: '' });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const load = useCallback(() => { api<View>(`/hr/exits/${id}`).then(setV).catch(() => setMissing(true)); }, [id]);
+  const [ws, setWs] = useState<{ lines: { label: string; amount: string; sign: 1 | -1; note?: string }[]; total: string; notes: string[] } | null>(null);
+  const load = useCallback(() => { api<View>(`/hr/exits/${id}`).then(setV).catch(() => setMissing(true)); api<NonNullable<typeof ws>>(`/payroll/settlement/${id}`).then(setWs).catch(() => setWs(null)); }, [id]);
   useEffect(load, [load]);
   const call = async (path: string, body: unknown, done: string) => {
     setBusy(true); setError(null);
@@ -71,6 +72,15 @@ export default function ExitPage() {
         </ul>
         {v.status === 'INITIATED' && !pending.length && !v.canClose && <p className="muted small">{t('hr.x.closeAfter', { d: d(v.lastWorkingDate) })}</p>}
       </section>
+      {ws && v.status === 'INITIATED' && (
+        <section className="card p12-block" aria-labelledby="x-ws">
+          <h2 id="x-ws" className="section-title">{t('pay.ws.title')}</h2>
+          <dl className="pay-lines">{ws.lines.map((l) => <div key={l.label}><dt>{l.label}{l.note && <span className="sub-line muted small">{l.note}</span>}</dt><dd className="num">{l.sign < 0 ? '− ' : ''}{rupees(l.amount, { paise: true })}</dd></div>)}</dl>
+          <p className="pay-col-total"><span>{Number(ws.total) < 0 ? t('pay.ws.toRecover') : t('pay.ws.toPay')}</span><strong className="num">{rupees(String(Math.abs(Number(ws.total))), { paise: true })}</strong></p>
+          {ws.notes.map((n) => <p key={n} className="muted small"><Icon name="info" size={14} /> {n}</p>)}
+          {v.canClose && Number(ws.total) > 0 && <button type="button" className="btn btn-sm" onClick={() => { setSettle({ settlementAmount: ws.total, remarks: t('pay.ws.remark') }); setError(null); setClosing(true); }}>{t('pay.ws.use')}</button>}
+        </section>
+      )}
       <Modal open={!!clear} onClose={() => setClear(null)} title={t('hr.x.clearTitle', { s: clear ? t(`hr.sec.${clear}` as MessageKey) : '' })} subtitle={t('hr.x.clearSub')} onSubmit={(e: FormEvent) => { e.preventDefault(); void call(`clear/${clear}`, cf, t('hr.x.clearedToast')).then((ok) => ok && setClear(null)); }} submitLabel={t('hr.x.clear')} busy={busy} error={error}>
         <div className="grid-2"><Field id="cf-due" label={t('hr.x.dueAmount')} hint={t('hr.x.dueHint')}><input id="cf-due" inputMode="decimal" value={cf.dueAmount} onChange={(e) => setCf((f) => ({ ...f, dueAmount: e.target.value }))} /></Field><Field id="cf-rem" label={t('ac2.notes')}><input id="cf-rem" value={cf.remarks} onChange={(e) => setCf((f) => ({ ...f, remarks: e.target.value }))} /></Field></div>
       </Modal>

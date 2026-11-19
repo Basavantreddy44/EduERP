@@ -25,3 +25,4 @@ export * from './engagement';
 export * from './engagement2';
 export * from './accounts2';
 export * from './hr';
+export * from './payroll';

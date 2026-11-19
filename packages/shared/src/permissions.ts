@@ -92,6 +92,13 @@ export const PERMISSIONS = {
   HR_EXIT: 'hr.exit.manage',
   HR_CLEARANCE: 'hr.exit.clear',
   HR_REVEAL: 'hr.reveal',
+  PAYROLL_SETUP: 'payroll.setup',
+  PAYROLL_SALARY_READ: 'payroll.salary.read',
+  PAYROLL_SALARY: 'payroll.salary.manage',
+  PAYROLL_RUN: 'payroll.run',
+  PAYROLL_PAY: 'payroll.pay',
+  PAYROLL_LOAN: 'payroll.loan.manage',
+  PAYROLL_REPORTS: 'payroll.reports',
 } as const;
 
 export type PermissionCode = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -186,6 +193,13 @@ export const PERMISSION_CATALOGUE: { code: PermissionCode; module: string; descr
   { code: PERMISSIONS.HR_EXIT, module: 'HR_PAYROLL', description: 'Staff exits: start, close, cancel' },
   { code: PERMISSIONS.HR_CLEARANCE, module: 'HR_PAYROLL', description: 'Clear any no-dues section of a staff exit' },
   { code: PERMISSIONS.HR_REVEAL, module: 'HR_PAYROLL', description: 'See staff PAN and bank account numbers in full (recorded in the audit log)' },
+  { code: PERMISSIONS.PAYROLL_SETUP, module: 'HR_PAYROLL', description: 'Salary components, structures and statutory rules' },
+  { code: PERMISSIONS.PAYROLL_SALARY_READ, module: 'HR_PAYROLL', description: 'See staff salaries' },
+  { code: PERMISSIONS.PAYROLL_SALARY, module: 'HR_PAYROLL', description: 'Set and revise staff salaries' },
+  { code: PERMISSIONS.PAYROLL_RUN, module: 'HR_PAYROLL', description: 'Prepare monthly payroll runs (calculate, one-off lines, submit, cancel)' },
+  { code: PERMISSIONS.PAYROLL_PAY, module: 'HR_PAYROLL', description: 'Download the salary bank file and record salaries as paid' },
+  { code: PERMISSIONS.PAYROLL_LOAN, module: 'HR_PAYROLL', description: 'Staff loans and salary advances' },
+  { code: PERMISSIONS.PAYROLL_REPORTS, module: 'HR_PAYROLL', description: 'Payroll register and PF / ESI / PT / TDS statements' },
 ];
 
 /** A teacher: own classes (CD-73), attendance, homework, marks, parents, staff meetings, complaints and requests. */
@@ -208,10 +222,11 @@ export const SYSTEM_ROLES: { code: string; name: string; permissions: Permission
   { code: 'FRONT_DESK', name: 'Front desk', permissions: [PERMISSIONS.FRONT_DESK, PERMISSIONS.ADM_ENQUIRY_MANAGE, PERMISSIONS.MEETING_ATTEND, PERMISSIONS.GRIEVANCE_RAISE, PERMISSIONS.DEPT_REQ_RAISE, PERMISSIONS.DEPT_REQ_HANDLE, PERMISSIONS.LEAVE_SELF, PERMISSIONS.FEED_READ, PERMISSIONS.EVENT_READ] },
   {
     code: 'HR_OFFICER', name: 'HR officer', permissions: [PERMISSIONS.ORG_CAMPUS_READ, PERMISSIONS.ORG_ACADEMIC_READ, PERMISSIONS.HR_STAFF_READ, PERMISSIONS.HR_STAFF_MANAGE, PERMISSIONS.HR_PROFILE_READ, PERMISSIONS.HR_PROFILE_MANAGE, PERMISSIONS.HR_SETUP, PERMISSIONS.HR_EXIT, PERMISSIONS.HR_CLEARANCE,
+      PERMISSIONS.PAYROLL_SETUP, PERMISSIONS.PAYROLL_SALARY_READ, PERMISSIONS.PAYROLL_SALARY, PERMISSIONS.PAYROLL_RUN, PERMISSIONS.PAYROLL_LOAN, PERMISSIONS.PAYROLL_REPORTS,
       PERMISSIONS.LEAVE_READ, PERMISSIONS.LEAVE_STAFF, PERMISSIONS.LEAVE_SELF, PERMISSIONS.STAFF_ATT_MARK, PERMISSIONS.MEETING_ATTEND, PERMISSIONS.DEPT_REQ_RAISE, PERMISSIONS.FEED_READ, PERMISSIONS.EVENT_READ],
   },
   {
-    code: 'ACCOUNTANT', name: 'Accountant', permissions: [PERMISSIONS.ORG_CAMPUS_READ, PERMISSIONS.ACC_READ, PERMISSIONS.ACC_ENTRY, PERMISSIONS.ACC_SETUP, PERMISSIONS.ACC_BANK, PERMISSIONS.ACC_CLOSE, PERMISSIONS.FEE_READ, PERMISSIONS.FEE_BILL, PERMISSIONS.FEE_COLLECT,
+    code: 'ACCOUNTANT', name: 'Accountant', permissions: [PERMISSIONS.ORG_CAMPUS_READ, PERMISSIONS.ACC_READ, PERMISSIONS.ACC_ENTRY, PERMISSIONS.ACC_SETUP, PERMISSIONS.ACC_BANK, PERMISSIONS.ACC_CLOSE, PERMISSIONS.FEE_READ, PERMISSIONS.FEE_BILL, PERMISSIONS.FEE_COLLECT, PERMISSIONS.PAYROLL_PAY, PERMISSIONS.PAYROLL_REPORTS,
       PERMISSIONS.MEETING_ATTEND, PERMISSIONS.LEAVE_SELF, PERMISSIONS.DEPT_REQ_RAISE, PERMISSIONS.DEPT_REQ_HANDLE, PERMISSIONS.FEED_READ, PERMISSIONS.EVENT_READ],
   },
 ];

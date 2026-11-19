@@ -15,7 +15,7 @@ export const todayIST = () => day(new Date(Date.now() + 330 * 60_000).toISOStrin
 export const yearLabelOf = (name: string) => name.replace(/[^A-Za-z0-9-]/g, '').slice(0, 10);
 
 /** Default series created on first use, so a new school can start without set-up. */
-const DEFAULT_PREFIX: Partial<Record<DocType, string>> = { ENQUIRY: 'ENQ', APPLICATION: 'APP', ADMISSION: 'ADM', INVOICE: 'INV', RECEIPT: 'RCT', JOURNAL: 'JV', COMPLAINT: 'CMP', DEPT_REQUEST: 'REQ', GATE_PASS: 'GP', VISITOR_PASS: 'VP', VENDOR: 'VEN', VENDOR_BILL: 'BILL', VENDOR_PAYMENT: 'PAY', VOUCHER: 'VCH' };
+const DEFAULT_PREFIX: Partial<Record<DocType, string>> = { ENQUIRY: 'ENQ', APPLICATION: 'APP', ADMISSION: 'ADM', INVOICE: 'INV', RECEIPT: 'RCT', JOURNAL: 'JV', COMPLAINT: 'CMP', DEPT_REQUEST: 'REQ', GATE_PASS: 'GP', VISITOR_PASS: 'VP', VENDOR: 'VEN', VENDOR_BILL: 'BILL', VENDOR_PAYMENT: 'PAY', VOUCHER: 'VCH', PAYROLL_RUN: 'PR', STAFF_LOAN: 'LN' };
 
 /** Allocates the next number (gapless, inside the caller's transaction), creating the default series on first use. */
 export async function allocateNo(numbering: NumberingService, tx: Tx, docType: DocType, campusId: string, yearName: string, userId: string | null) {

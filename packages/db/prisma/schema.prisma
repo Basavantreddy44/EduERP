@@ -4153,3 +4153,274 @@ model ExitClearance {
   @@unique([exitId, section])
   @@map("exit_clearances")
 }
+
+// ───────────── Phase 15: Payroll (B4 §3) ─────────────
+
+model SalaryComponent {
+  id                 String   @id @default(uuid()) @db.Uuid
+  tenantId           String   @map("tenant_id") @db.Uuid
+  code               String   @db.VarChar(20)
+  name               String   @db.VarChar(100)
+  componentType      String   @map("component_type") @db.VarChar(10)
+  calcType           String   @map("calc_type") @db.VarChar(20)
+  statutoryKind      String?  @map("statutory_kind") @db.VarChar(5)
+  formula            String?  @db.VarChar(300)
+  isTaxable          Boolean  @default(true) @map("is_taxable")
+  affectedByLop      Boolean  @default(true) @map("affected_by_lop")
+  isPfWage           Boolean  @default(false) @map("is_pf_wage")
+  accountId          String?  @map("account_id") @db.Uuid
+  liabilityAccountId String?  @map("liability_account_id") @db.Uuid
+  sortOrder          Int      @default(0) @map("sort_order") @db.SmallInt
+  isSystem           Boolean  @default(false) @map("is_system")
+  isActive           Boolean  @default(true) @map("is_active")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, code])
+  @@map("salary_components")
+}
+
+model SalaryStructure {
+  id            String   @id @default(uuid()) @db.Uuid
+  tenantId      String   @map("tenant_id") @db.Uuid
+  name          String   @db.VarChar(100)
+  designationId String?  @map("designation_id") @db.Uuid
+  isActive      Boolean  @default(true) @map("is_active")
+  createdBy     String?  @map("created_by") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  items SalaryStructureItem[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, name])
+  @@map("salary_structures")
+}
+
+model SalaryStructureItem {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.Uuid
+  structureId String   @map("structure_id") @db.Uuid
+  componentId String   @map("component_id") @db.Uuid
+  value       Decimal? @db.Decimal(14, 2)
+
+  structure SalaryStructure @relation(fields: [tenantId, structureId], references: [tenantId, id])
+
+  @@unique([tenantId, id])
+  @@unique([structureId, componentId])
+  @@map("salary_structure_items")
+}
+
+model EmployeeSalary {
+  id                 String    @id @default(uuid()) @db.Uuid
+  tenantId           String    @map("tenant_id") @db.Uuid
+  employeeId         String    @map("employee_id") @db.Uuid
+  structureId        String    @map("structure_id") @db.Uuid
+  monthlyGross       Decimal   @map("monthly_gross") @db.Decimal(14, 2)
+  effectiveFrom      DateTime  @map("effective_from") @db.Date
+  effectiveTo        DateTime? @map("effective_to") @db.Date
+  pfApplicable       Boolean   @default(true) @map("pf_applicable")
+  esiApplicable      Boolean   @default(true) @map("esi_applicable")
+  ptApplicable       Boolean   @default(true) @map("pt_applicable")
+  tdsMonthlyOverride Decimal?  @map("tds_monthly_override") @db.Decimal(14, 2)
+  remarks            String?   @db.VarChar(300)
+  createdBy          String    @map("created_by") @db.Uuid
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  overrides EmployeeSalaryComponent[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, employeeId, effectiveFrom])
+  @@map("employee_salary_assignments")
+}
+
+model EmployeeSalaryComponent {
+  id           String  @id @default(uuid()) @db.Uuid
+  tenantId     String  @map("tenant_id") @db.Uuid
+  assignmentId String  @map("assignment_id") @db.Uuid
+  componentId  String  @map("component_id") @db.Uuid
+  value        Decimal @db.Decimal(14, 2)
+
+  assignment EmployeeSalary @relation(fields: [tenantId, assignmentId], references: [tenantId, id])
+
+  @@unique([tenantId, id])
+  @@unique([assignmentId, componentId])
+  @@map("employee_salary_components")
+}
+
+model StatutoryRule {
+  id            String    @id @default(uuid()) @db.Uuid
+  tenantId      String    @map("tenant_id") @db.Uuid
+  ruleType      String    @map("rule_type") @db.VarChar(20)
+  stateCode     String?   @map("state_code") @db.VarChar(5)
+  slabFrom      Decimal?  @map("slab_from") @db.Decimal(14, 2)
+  slabTo        Decimal?  @map("slab_to") @db.Decimal(14, 2)
+  employeeRate  Decimal?  @map("employee_rate") @db.Decimal(7, 4)
+  employerRate  Decimal?  @map("employer_rate") @db.Decimal(7, 4)
+  fixedAmount   Decimal?  @map("fixed_amount") @db.Decimal(14, 2)
+  wageCeiling   Decimal?  @map("wage_ceiling") @db.Decimal(14, 2)
+  onlyMonth     Int?      @map("only_month") @db.SmallInt
+  effectiveFrom DateTime  @map("effective_from") @db.Date
+  effectiveTo   DateTime? @map("effective_to") @db.Date
+  notes         String?   @db.VarChar(200)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, ruleType, effectiveFrom])
+  @@map("statutory_rules")
+}
+
+model PayrollRun {
+  id                    String    @id @default(uuid()) @db.Uuid
+  tenantId              String    @map("tenant_id") @db.Uuid
+  campusId              String    @map("campus_id") @db.Uuid
+  month                 Int       @db.SmallInt
+  year                  Int       @db.SmallInt
+  runNo                 String    @map("run_no") @db.VarChar(30)
+  status                String    @default("DRAFT") @db.VarChar(20)
+  totalGross            Decimal   @default(0) @map("total_gross") @db.Decimal(14, 2)
+  totalDeductions       Decimal   @default(0) @map("total_deductions") @db.Decimal(14, 2)
+  totalNet              Decimal   @default(0) @map("total_net") @db.Decimal(14, 2)
+  totalEmployer         Decimal   @default(0) @map("total_employer") @db.Decimal(14, 2)
+  preparedBy            String    @map("prepared_by") @db.Uuid
+  calculatedAt          DateTime? @map("calculated_at") @db.Timestamptz(6)
+  approvalRequestId     String?   @map("approval_request_id") @db.Uuid
+  approvedBy            String?   @map("approved_by") @db.Uuid
+  approvedAt            DateTime? @map("approved_at") @db.Timestamptz(6)
+  journalEntryId        String?   @map("journal_entry_id") @db.Uuid
+  paidOn                DateTime? @map("paid_on") @db.Date
+  paidFromBankAccountId String?   @map("paid_from_bank_account_id") @db.Uuid
+  paymentJournalEntryId String?   @map("payment_journal_entry_id") @db.Uuid
+  paidBy                String?   @map("paid_by") @db.Uuid
+  cancelledBy           String?   @map("cancelled_by") @db.Uuid
+  remarks               String?   @db.VarChar(300)
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  payslips Payslip[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, runNo])
+  @@index([tenantId, year, month])
+  @@map("payroll_runs")
+}
+
+model Payslip {
+  id                    String   @id @default(uuid()) @db.Uuid
+  tenantId              String   @map("tenant_id") @db.Uuid
+  runId                 String   @map("run_id") @db.Uuid
+  employeeId            String   @map("employee_id") @db.Uuid
+  assignmentId          String   @map("assignment_id") @db.Uuid
+  monthDays             Int      @map("month_days") @db.SmallInt
+  employedDays          Decimal  @map("employed_days") @db.Decimal(5, 1)
+  lopDays               Decimal  @map("lop_days") @db.Decimal(5, 1)
+  paidDays              Decimal  @map("paid_days") @db.Decimal(5, 1)
+  grossEarnings         Decimal  @map("gross_earnings") @db.Decimal(14, 2)
+  totalDeductions       Decimal  @map("total_deductions") @db.Decimal(14, 2)
+  employerContributions Decimal  @map("employer_contributions") @db.Decimal(14, 2)
+  netPay                Decimal  @map("net_pay") @db.Decimal(14, 2)
+  pfWages               Decimal  @default(0) @map("pf_wages") @db.Decimal(14, 2)
+  esiWages              Decimal  @default(0) @map("esi_wages") @db.Decimal(14, 2)
+  taxableYearProjected  Decimal  @default(0) @map("taxable_year_projected") @db.Decimal(14, 2)
+  taxYear               Decimal  @default(0) @map("tax_year") @db.Decimal(14, 2)
+  designation           String?  @db.VarChar(80)
+  bankName              String?  @map("bank_name") @db.VarChar(100)
+  bankAccountLast4      String?  @map("bank_account_last4") @db.VarChar(4)
+  ifsc                  String?  @db.VarChar(11)
+  isReleased            Boolean  @default(false) @map("is_released")
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  run   PayrollRun    @relation(fields: [tenantId, runId], references: [tenantId, id])
+  items PayslipItem[]
+
+  @@unique([tenantId, id])
+  @@unique([runId, employeeId])
+  @@index([tenantId, employeeId])
+  @@map("payslips")
+}
+
+model PayslipItem {
+  id           String  @id @default(uuid()) @db.Uuid
+  tenantId     String  @map("tenant_id") @db.Uuid
+  payslipId    String  @map("payslip_id") @db.Uuid
+  componentId  String? @map("component_id") @db.Uuid
+  adjustmentId String? @map("adjustment_id") @db.Uuid
+  loanId       String? @map("loan_id") @db.Uuid
+  itemType     String  @map("item_type") @db.VarChar(10)
+  code         String  @db.VarChar(20)
+  name         String  @db.VarChar(100)
+  amount       Decimal @db.Decimal(14, 2)
+  sortOrder    Int     @default(0) @map("sort_order") @db.SmallInt
+
+  payslip Payslip @relation(fields: [tenantId, payslipId], references: [tenantId, id])
+
+  @@unique([tenantId, id])
+  @@index([tenantId, payslipId])
+  @@map("payslip_items")
+}
+
+model PayrollAdjustment {
+  id         String   @id @default(uuid()) @db.Uuid
+  tenantId   String   @map("tenant_id") @db.Uuid
+  runId      String   @map("run_id") @db.Uuid
+  employeeId String   @map("employee_id") @db.Uuid
+  itemType   String   @map("item_type") @db.VarChar(10)
+  label      String   @db.VarChar(100)
+  amount     Decimal  @db.Decimal(14, 2)
+  isTaxable  Boolean  @default(true) @map("is_taxable")
+  createdBy  String   @map("created_by") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, runId])
+  @@map("payroll_adjustments")
+}
+
+model EmployeeLoan {
+  id                String   @id @default(uuid()) @db.Uuid
+  tenantId          String   @map("tenant_id") @db.Uuid
+  campusId          String   @map("campus_id") @db.Uuid
+  loanNo            String   @map("loan_no") @db.VarChar(30)
+  employeeId        String   @map("employee_id") @db.Uuid
+  loanType          String   @map("loan_type") @db.VarChar(10)
+  amount            Decimal  @db.Decimal(14, 2)
+  emiAmount         Decimal  @map("emi_amount") @db.Decimal(14, 2)
+  startMonth        Int      @map("start_month") @db.SmallInt
+  startYear         Int      @map("start_year") @db.SmallInt
+  recovered         Decimal  @default(0) @db.Decimal(14, 2)
+  reason            String   @db.VarChar(300)
+  disbursedOn       DateTime @map("disbursed_on") @db.Date
+  mode              String   @db.VarChar(10)
+  bankAccountId     String?  @map("bank_account_id") @db.Uuid
+  status            String   @db.VarChar(20)
+  approvalRequestId String?  @map("approval_request_id") @db.Uuid
+  journalEntryId    String?  @map("journal_entry_id") @db.Uuid
+  createdBy         String   @map("created_by") @db.Uuid
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, loanNo])
+  @@index([tenantId, employeeId, status])
+  @@map("employee_loans")
+}
+
+model PayrollTaxOpening {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.Uuid
+  employeeId  String   @map("employee_id") @db.Uuid
+  fyLabel     String   @map("fy_label") @db.VarChar(7)
+  taxablePaid Decimal  @map("taxable_paid") @db.Decimal(14, 2)
+  tdsDeducted Decimal  @map("tds_deducted") @db.Decimal(14, 2)
+  remarks     String?  @db.VarChar(300)
+  updatedBy   String   @map("updated_by") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, employeeId, fyLabel])
+  @@map("payroll_tax_openings")
+}

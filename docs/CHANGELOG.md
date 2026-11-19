@@ -1,5 +1,15 @@
 # Changelog
 
+## [Unreleased] — 2026-11-19 (Phase 15 Payroll)
+### Added
+- Salary components and structures, staff salaries with revisions and a live monthly breakdown.
+- Statutory rules, pre-filled and marked "please check": PF, ESI, Karnataka professional tax and new-regime income tax (TDS spread over the year), with a fixed-TDS option and tax openings for salary paid earlier in the year.
+- Monthly payroll runs per campus: loss of pay from attendance and leave, one-off lines, approval by another person, one journal per run, bank transfer file, payment and payslip release.
+- Payslips (print / PDF) and "My payslips" for every staff member.
+- Salary advances and loans recovered from salary.
+- Statements: payroll register, PF with the EPFO ECR file, ESI, professional tax, TDS on salary.
+- Final settlement worksheet on staff exits.
+
 ## [Unreleased] — 2026-11-19 (Phase 14 HR)
 ### Added
 - Full staff profiles: personal, statutory (PAN encrypted, Aadhaar last 4 only, UAN, PF, ESI) and salary bank details, qualifications and experience; "My profile" for every staff member.
