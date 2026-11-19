@@ -7,7 +7,7 @@ export interface AuditEntry {
   tenantId: string;
   userId: string | null;
   campusId?: string | null;
-  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'STATUS_CHANGE' | 'INVITE' | 'REMOVE' | 'LOGIN' | 'EXPORT' | 'UPLOAD' | 'SUBMIT' | 'APPROVE' | 'REJECT';
+  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'STATUS_CHANGE' | 'INVITE' | 'REMOVE' | 'LOGIN' | 'EXPORT' | 'UPLOAD' | 'SUBMIT' | 'APPROVE' | 'REJECT' | 'CANCEL' | 'IMPORT' | 'MATCH' | 'UNMATCH' | 'IGNORE' | 'REVEAL' | 'LOCK' | 'UNLOCK' | 'CLOSE';
   entityType: string;
   entityId?: string | null;
   oldValues?: unknown;

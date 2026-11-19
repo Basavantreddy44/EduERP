@@ -275,7 +275,7 @@ Design: docs/tables/B3_engagement.md §4 (committees, meetings, participants, ag
 - **AC68 Front office (M12.3):** a student leaves early only with a guardian allowed to collect, or after approval for anyone else; a visitor or pass is out once and back once; ID numbers are never stored in full; isolation.
 - **AC69 Department requests (M12.4):** a request needing approval is not worked on before approval; only the handling department's staff are assigned; only the requester closes it; isolation.
 
-## 2o. Phase 13 — Accounts: full accounting that replaces Tally (B4 part 1; after Phase 12, 2026-11-18)
+## 2o. Phase 13 — Accounts: full accounting that replaces Tally (B4 part 1; after Phase 12, 2026-11-18; complete 2026-11-19)
 
 Design: docs/tables/B4_finance_hr.md §1 (cost centres, tax codes, TDS sections, vendors, vendor bills and items, vendor payments and allocations, expense vouchers, bank accounts, bank statement lines, reconciliations, period locks). Builds on the B1 chart of accounts, financial years and the posting service (`fees/ledger.ts`: every voucher posts one balanced journal; posted entries never change, mistakes are reversed). Module `ACCOUNTS`. Owner decisions 2026-11-18: bank account numbers and PAN encrypted with an app-level key (CD-84); GST / TDS rates pre-filled and marked "please check" (CD-85); built-in roles including Accountant (CD-86). B4 continues with Phase 14 HR and Phase 15 Payroll.
 
@@ -293,6 +293,23 @@ Design: docs/tables/B4_finance_hr.md §1 (cost centres, tax codes, TDS sections,
 - **AC72 Payments & vouchers (M13.3):** a payment never exceeds what is due unless it is an advance; allocations keep bill balances and statuses right under two payments at once; every voucher's journal balances; the approver is not the preparer; isolation.
 - **AC73 Bank reconciliation (M13.4):** importing the same statement twice adds nothing; a statement line is matched only once and only to entries on that bank's ledger; the reconciliation statement explains the whole difference; isolation.
 - **AC74 Reports (M13.5):** the trial balance balances; income & expenditure and the balance sheet tie out to the trial balance (assets = liabilities + funds + surplus); fee receipts, refunds and earlier postings appear correctly; isolation.
+
+## 2p. Phase 14 — HR: staff records, shifts, leave balances, exits (B4 part 2; after Phase 13, 2026-11-19)
+
+Design: docs/tables/B4_finance_hr.md §2 (designations, employee details, qualifications, experiences, shifts, leave balances, employee exits). Builds on the B1 staff list (`employees`), leave types / requests and staff attendance. Module `HR_PAYROLL` (the basic staff list stays in the core, CD-52). PAN and bank account numbers use the Phase 13 field encryption (CD-84); Aadhaar is never stored in full (last 4 only, as for students). Phase 15 Payroll reads these records.
+
+| Milestone | Scope | Not in scope |
+|---|---|---|
+| **M14.1 Designations & staff profile** | Designations (teaching / non-teaching / admin / support) replacing the free-text designation (existing values carried over); full profile: personal (father / spouse, marital status, blood group, addresses, emergency contact), statutory (PAN encrypted, Aadhaar last 4, UAN, PF and ESI numbers), bank (encrypted, last 4 shown), reporting manager, confirmation and probation dates; qualifications and experience; documents through the existing files service; staff can see (not change) their own profile | Recruitment and onboarding checklists, appraisal |
+| **M14.2 Shifts & staff attendance** | Shifts per campus (start, end, late after, half-day after), staff assigned to a shift; staff attendance marks late / half-day from the shift times when an in-time is entered; monthly staff attendance summary (present, absent, leave, late, half-day) that payroll will use | Biometric / RFID devices (Coming soon) |
+| **M14.3 Leave balances** | Yearly allotment per leave type (days per year, carry-forward limit), opening balances, balance used when leave is approved and given back when cancelled, encashment recorded; the leave form shows the balance and refuses paid leave beyond it (unpaid leave allowed as loss of pay); year-end carry-forward | Leave encashment payment (payroll phase) |
+| **M14.4 Exits** | Resignation / retirement / termination / contract end with last working day; handover to a colleague; no-dues clearance by section (library, store, accounts, hostel, IT) each cleared by its owner; on closing: login switched off, open approvals moved to the reporting manager, the staff member shown as left; final settlement amount recorded for payroll | Full and final settlement calculation (payroll phase), relieving / experience letters from templates (later, with certificates) |
+
+### Acceptance criteria
+- **AC75 Profile (M14.1):** PAN and bank numbers are encrypted and shown as the last 4 (full only with the reveal right, audited); Aadhaar is never stored in full; a staff member sees only their own profile; existing designations are carried over; isolation.
+- **AC76 Shifts & attendance (M14.2):** late / half-day follow the shift times; the monthly summary adds up to the days in the month; isolation.
+- **AC77 Leave balances (M14.3):** approved leave uses the balance once (also when approved twice at once), a cancelled leave gives it back, paid leave beyond the balance is refused, carry-forward respects the limit; isolation.
+- **AC78 Exits (M14.4):** an exit closes only after every no-dues section is cleared; on closing the login is switched off and the person's pending approvals move to the reporting manager; isolation.
 
 ## 3. Parallelisation guidance
 After P0, P1/P2 (academic track) and the P3 setup work (COA, posting engine) can proceed in parallel with separate owners. P5/P6/P7 are largely independent once P3's posting service is stable.

@@ -24,6 +24,15 @@ export async function seedPermissions(prisma: PrismaClient): Promise<void> {
 export async function syncSystemRoles(prisma: PrismaClient): Promise<number> {
   const perms = new Map((await prisma.permission.findMany({ select: { id: true, code: true } })).map((p) => [p.code, p.id]));
   let added = 0;
+  // Built-in roles added since an institution was created (CD-86) are created for it — unless the
+  // institution already has a role with that code or name, which is left exactly as it is.
+  const tenants = await prisma.tenant.findMany({ select: { id: true } });
+  for (const def of SYSTEM_ROLES) {
+    for (const t of tenants) {
+      const clash = await prisma.role.findFirst({ where: { tenantId: t.id, OR: [{ code: def.code }, { name: { equals: def.name, mode: 'insensitive' } }] }, select: { id: true } });
+      if (!clash) await prisma.role.create({ data: { tenantId: t.id, code: def.code, name: def.name, isSystem: true } });
+    }
+  }
   for (const def of SYSTEM_ROLES) {
     const roles = await prisma.role.findMany({ where: { code: def.code, isSystem: true }, select: { id: true, tenantId: true } });
     for (const role of roles) {

@@ -111,6 +111,18 @@ const NAV: { section: MessageKey; items: NavItem[] }[] = [
     ],
   },
   {
+    section: 'nav.accounts',
+    items: [
+      { href: '/accounts/bills', label: 'nav.accBills', icon: 'receipt', permission: PERMISSIONS.ACC_READ, module: 'ACCOUNTS' },
+      { href: '/accounts/payments', label: 'nav.accPayments', icon: 'rupee', permission: PERMISSIONS.ACC_READ, module: 'ACCOUNTS' },
+      { href: '/accounts/vouchers', label: 'nav.accVouchers', icon: 'book', permission: PERMISSIONS.ACC_READ, module: 'ACCOUNTS' },
+      { href: '/accounts/vendors', label: 'nav.accVendors', icon: 'users', permission: PERMISSIONS.ACC_READ, module: 'ACCOUNTS' },
+      { href: '/accounts/bank', label: 'nav.accBank', icon: 'building', permission: PERMISSIONS.ACC_BANK, module: 'ACCOUNTS' },
+      { href: '/accounts/reports', label: 'nav.accReports', icon: 'layers', permission: PERMISSIONS.ACC_READ, module: 'ACCOUNTS' },
+      { href: '/accounts/setup', label: 'nav.accSetup', icon: 'settings', permission: PERMISSIONS.ACC_READ, module: 'ACCOUNTS' },
+    ],
+  },
+  {
     section: 'nav.transport',
     items: [
       { href: '/transport', label: 'nav.buses', icon: 'bus', permission: PERMISSIONS.TRANSPORT_READ, module: 'TRANSPORT' },

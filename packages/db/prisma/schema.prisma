@@ -1401,6 +1401,7 @@ model JournalLine {
   credit         Decimal @default(0) @db.Decimal(14, 2)
   partyType      String? @map("party_type") @db.VarChar(20)
   partyId        String? @map("party_id") @db.Uuid
+  costCentreId   String? @map("cost_centre_id") @db.Uuid
 
   entry   JournalEntry @relation(fields: [tenantId, journalEntryId], references: [tenantId, id])
   account Account      @relation(fields: [tenantId, accountId], references: [tenantId, id])
@@ -3645,4 +3646,345 @@ model DepartmentRequestUpdate {
 
   @@index([tenantId, requestId, createdAt])
   @@map("department_request_updates")
+}
+
+// ───────────── Phase 13: Accounts (B4 §1) ─────────────
+
+model CostCentre {
+  id           String   @id @default(uuid()) @db.Uuid
+  tenantId     String   @map("tenant_id") @db.Uuid
+  code         String   @db.VarChar(20)
+  name         String   @db.VarChar(100)
+  campusId     String?  @map("campus_id") @db.Uuid
+  departmentId String?  @map("department_id") @db.Uuid
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, code])
+  @@map("cost_centres")
+}
+
+/// GST codes, effective-dated; input GST is claimable or added to the cost.
+model TaxCode {
+  id            String    @id @default(uuid()) @db.Uuid
+  tenantId      String    @map("tenant_id") @db.Uuid
+  code          String    @db.VarChar(20)
+  name          String    @db.VarChar(100)
+  ratePercent   Decimal   @map("rate_percent") @db.Decimal(5, 2)
+  itcClaimable  Boolean   @default(false) @map("itc_claimable")
+  effectiveFrom DateTime  @map("effective_from") @db.Date
+  effectiveTo   DateTime? @map("effective_to") @db.Date
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, code, effectiveFrom])
+  @@map("tax_codes")
+}
+
+model TdsSection {
+  id              String    @id @default(uuid()) @db.Uuid
+  tenantId        String    @map("tenant_id") @db.Uuid
+  sectionCode     String    @map("section_code") @db.VarChar(10)
+  description     String    @db.VarChar(200)
+  rateIndividual  Decimal   @map("rate_individual") @db.Decimal(5, 2)
+  rateOthers      Decimal   @map("rate_others") @db.Decimal(5, 2)
+  rateNoPan       Decimal   @map("rate_no_pan") @db.Decimal(5, 2)
+  thresholdSingle Decimal?  @map("threshold_single") @db.Decimal(14, 2)
+  thresholdAnnual Decimal?  @map("threshold_annual") @db.Decimal(14, 2)
+  effectiveFrom   DateTime  @map("effective_from") @db.Date
+  effectiveTo     DateTime? @map("effective_to") @db.Date
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, sectionCode, effectiveFrom])
+  @@map("tds_sections")
+}
+
+model BankAccount {
+  id              String   @id @default(uuid()) @db.Uuid
+  tenantId        String   @map("tenant_id") @db.Uuid
+  campusId        String?  @map("campus_id") @db.Uuid
+  accountId       String   @map("account_id") @db.Uuid
+  bankName        String   @map("bank_name") @db.VarChar(100)
+  branch          String?  @db.VarChar(100)
+  accountNoEnc    String   @map("account_no_enc") @db.VarChar(200)
+  accountNoLast4  String   @map("account_no_last4") @db.VarChar(4)
+  ifsc            String   @db.VarChar(11)
+  accountType     String   @map("account_type") @db.VarChar(10)
+  isFeeCollection Boolean  @default(false) @map("is_fee_collection")
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  statementLines BankStatementLine[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, accountId])
+  @@map("bank_accounts")
+}
+
+/// Month lock: nothing posts into a LOCKED month; unlocking goes through approval.
+model PeriodLock {
+  id                String    @id @default(uuid()) @db.Uuid
+  tenantId          String    @map("tenant_id") @db.Uuid
+  monthStart        DateTime  @map("month_start") @db.Date
+  status            String    @db.VarChar(10)
+  lockedBy          String    @map("locked_by") @db.Uuid
+  lockedAt          DateTime  @default(now()) @map("locked_at") @db.Timestamptz(6)
+  unlockReason      String?   @map("unlock_reason") @db.VarChar(300)
+  unlockRequestedBy String?   @map("unlock_requested_by") @db.Uuid
+  approvalRequestId String?   @map("approval_request_id") @db.Uuid
+  unlockedAt        DateTime? @map("unlocked_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, monthStart])
+  @@map("period_locks")
+}
+
+model Vendor {
+  id              String   @id @default(uuid()) @db.Uuid
+  tenantId        String   @map("tenant_id") @db.Uuid
+  vendorCode      String   @map("vendor_code") @db.VarChar(20)
+  name            String   @db.VarChar(200)
+  vendorType      String   @map("vendor_type") @db.VarChar(20)
+  gstin           String?  @db.VarChar(15)
+  panEnc          String?  @map("pan_enc") @db.VarChar(200)
+  panLast4        String?  @map("pan_last4") @db.VarChar(4)
+  panHolder       String   @default("NONE") @map("pan_holder") @db.VarChar(10)
+  stateCode       String   @map("state_code") @db.VarChar(2)
+  phone           String?  @db.VarChar(15)
+  email           String?  @db.VarChar(150)
+  address         String?  @db.VarChar(500)
+  bankName        String?  @map("bank_name") @db.VarChar(100)
+  bankAccountEnc  String?  @map("bank_account_enc") @db.VarChar(200)
+  bankAccountLast4 String? @map("bank_account_last4") @db.VarChar(4)
+  ifsc            String?  @db.VarChar(11)
+  tdsSectionId    String?  @map("tds_section_id") @db.Uuid
+  status          String   @default("ACTIVE") @db.VarChar(10)
+  createdBy       String?  @map("created_by") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  bills    VendorBill[]
+  payments VendorPayment[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, vendorCode])
+  @@map("vendors")
+}
+
+model VendorBill {
+  id                String    @id @default(uuid()) @db.Uuid
+  tenantId          String    @map("tenant_id") @db.Uuid
+  campusId          String    @map("campus_id") @db.Uuid
+  internalNo        String    @map("internal_no") @db.VarChar(30)
+  vendorId          String    @map("vendor_id") @db.Uuid
+  billNo            String    @map("bill_no") @db.VarChar(50)
+  billDate          DateTime  @map("bill_date") @db.Date
+  dueDate           DateTime? @map("due_date") @db.Date
+  purchaseOrderId   String?   @map("purchase_order_id") @db.Uuid
+  goodsReceiptId    String?   @map("goods_receipt_id") @db.Uuid
+  subTotal          Decimal   @map("sub_total") @db.Decimal(14, 2)
+  taxAmount         Decimal   @map("tax_amount") @db.Decimal(14, 2)
+  tdsSectionId      String?   @map("tds_section_id") @db.Uuid
+  tdsRate           Decimal?  @map("tds_rate") @db.Decimal(5, 2)
+  tdsAmount         Decimal   @default(0) @map("tds_amount") @db.Decimal(14, 2)
+  totalAmount       Decimal   @map("total_amount") @db.Decimal(14, 2)
+  payableAmount     Decimal   @map("payable_amount") @db.Decimal(14, 2)
+  paidAmount        Decimal   @default(0) @map("paid_amount") @db.Decimal(14, 2)
+  notes             String?   @db.VarChar(500)
+  approvalRequestId String?   @map("approval_request_id") @db.Uuid
+  status            String    @db.VarChar(20)
+  journalEntryId    String?   @map("journal_entry_id") @db.Uuid
+  cancelReason      String?   @map("cancel_reason") @db.VarChar(300)
+  createdBy         String    @map("created_by") @db.Uuid
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  vendor      Vendor                    @relation(fields: [tenantId, vendorId], references: [tenantId, id])
+  items       VendorBillItem[]
+  allocations VendorPaymentAllocation[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, internalNo])
+  @@index([tenantId, vendorId, status])
+  @@map("vendor_bills")
+}
+
+model VendorBillItem {
+  id           String  @id @default(uuid()) @db.Uuid
+  tenantId     String  @map("tenant_id") @db.Uuid
+  billId       String  @map("bill_id") @db.Uuid
+  lineNo       Int     @map("line_no") @db.SmallInt
+  accountId    String  @map("account_id") @db.Uuid
+  costCentreId String? @map("cost_centre_id") @db.Uuid
+  description  String  @db.VarChar(300)
+  quantity     Decimal @db.Decimal(14, 2)
+  rate         Decimal @db.Decimal(14, 2)
+  amount       Decimal @db.Decimal(14, 2)
+  taxCodeId    String? @map("tax_code_id") @db.Uuid
+  taxRate      Decimal @default(0) @map("tax_rate") @db.Decimal(5, 2)
+  cgst         Decimal @default(0) @db.Decimal(14, 2)
+  sgst         Decimal @default(0) @db.Decimal(14, 2)
+  igst         Decimal @default(0) @db.Decimal(14, 2)
+  itcClaimable Boolean @default(false) @map("itc_claimable")
+
+  bill VendorBill @relation(fields: [tenantId, billId], references: [tenantId, id])
+
+  @@unique([tenantId, id])
+  @@unique([billId, lineNo])
+  @@map("vendor_bill_items")
+}
+
+model VendorPayment {
+  id                String   @id @default(uuid()) @db.Uuid
+  tenantId          String   @map("tenant_id") @db.Uuid
+  campusId          String   @map("campus_id") @db.Uuid
+  paymentNo         String   @map("payment_no") @db.VarChar(30)
+  vendorId          String   @map("vendor_id") @db.Uuid
+  paymentDate       DateTime @map("payment_date") @db.Date
+  amount            Decimal  @db.Decimal(14, 2)
+  advanceAmount     Decimal  @default(0) @map("advance_amount") @db.Decimal(14, 2)
+  advanceUsed       Decimal  @default(0) @map("advance_used") @db.Decimal(14, 2)
+  mode              String   @db.VarChar(10)
+  bankAccountId     String?  @map("bank_account_id") @db.Uuid
+  referenceNo       String?  @map("reference_no") @db.VarChar(50)
+  narration         String?  @db.VarChar(300)
+  approvalRequestId String?  @map("approval_request_id") @db.Uuid
+  status            String   @db.VarChar(20)
+  journalEntryId    String?  @map("journal_entry_id") @db.Uuid
+  cancelReason      String?  @map("cancel_reason") @db.VarChar(300)
+  createdBy         String   @map("created_by") @db.Uuid
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  vendor      Vendor                    @relation(fields: [tenantId, vendorId], references: [tenantId, id])
+  allocations VendorPaymentAllocation[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, paymentNo])
+  @@index([tenantId, vendorId])
+  @@map("vendor_payments")
+}
+
+/// Payment (or an earlier advance being adjusted) applied to a bill.
+model VendorPaymentAllocation {
+  id             String   @id @default(uuid()) @db.Uuid
+  tenantId       String   @map("tenant_id") @db.Uuid
+  paymentId      String   @map("payment_id") @db.Uuid
+  billId         String   @map("bill_id") @db.Uuid
+  amount         Decimal  @db.Decimal(14, 2)
+  isAdjustment   Boolean  @default(false) @map("is_adjustment")
+  journalEntryId String?  @map("journal_entry_id") @db.Uuid
+  createdBy      String?  @map("created_by") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  payment VendorPayment @relation(fields: [tenantId, paymentId], references: [tenantId, id])
+  bill    VendorBill    @relation(fields: [tenantId, billId], references: [tenantId, id])
+
+  @@unique([tenantId, id])
+  @@index([tenantId, billId])
+  @@map("vendor_payment_allocations")
+}
+
+/// Expense / petty-cash, contra and journal vouchers (no vendor bill).
+model AccountVoucher {
+  id                String   @id @default(uuid()) @db.Uuid
+  tenantId          String   @map("tenant_id") @db.Uuid
+  campusId          String?  @map("campus_id") @db.Uuid
+  voucherNo         String   @map("voucher_no") @db.VarChar(30)
+  voucherType       String   @map("voucher_type") @db.VarChar(10)
+  voucherDate       DateTime @map("voucher_date") @db.Date
+  amount            Decimal  @db.Decimal(14, 2)
+  paidTo            String?  @map("paid_to") @db.VarChar(150)
+  referenceNo       String?  @map("reference_no") @db.VarChar(50)
+  narration         String   @db.VarChar(500)
+  approvalRequestId String?  @map("approval_request_id") @db.Uuid
+  status            String   @db.VarChar(20)
+  journalEntryId    String?  @map("journal_entry_id") @db.Uuid
+  cancelReason      String?  @map("cancel_reason") @db.VarChar(300)
+  createdBy         String   @map("created_by") @db.Uuid
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  lines AccountVoucherLine[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, voucherNo])
+  @@map("account_vouchers")
+}
+
+model AccountVoucherLine {
+  id           String  @id @default(uuid()) @db.Uuid
+  tenantId     String  @map("tenant_id") @db.Uuid
+  voucherId    String  @map("voucher_id") @db.Uuid
+  lineNo       Int     @map("line_no") @db.SmallInt
+  accountId    String  @map("account_id") @db.Uuid
+  costCentreId String? @map("cost_centre_id") @db.Uuid
+  debit        Decimal @default(0) @db.Decimal(14, 2)
+  credit       Decimal @default(0) @db.Decimal(14, 2)
+
+  voucher AccountVoucher @relation(fields: [tenantId, voucherId], references: [tenantId, id])
+
+  @@unique([tenantId, id])
+  @@unique([voucherId, lineNo])
+  @@map("account_voucher_lines")
+}
+
+model BankStatementImport {
+  id            String   @id @default(uuid()) @db.Uuid
+  tenantId      String   @map("tenant_id") @db.Uuid
+  bankAccountId String   @map("bank_account_id") @db.Uuid
+  fileName      String   @map("file_name") @db.VarChar(200)
+  lineCount     Int      @map("line_count")
+  addedCount    Int      @map("added_count")
+  importedBy    String   @map("imported_by") @db.Uuid
+  importedAt    DateTime @default(now()) @map("imported_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@map("bank_statement_imports")
+}
+
+model BankStatementLine {
+  id            String   @id @default(uuid()) @db.Uuid
+  tenantId      String   @map("tenant_id") @db.Uuid
+  bankAccountId String   @map("bank_account_id") @db.Uuid
+  importId      String   @map("import_id") @db.Uuid
+  txnDate       DateTime @map("txn_date") @db.Date
+  description   String   @db.VarChar(300)
+  referenceNo   String?  @map("reference_no") @db.VarChar(100)
+  debit         Decimal  @default(0) @db.Decimal(14, 2)
+  credit        Decimal  @default(0) @db.Decimal(14, 2)
+  balance       Decimal? @db.Decimal(14, 2)
+  fingerprint   String   @db.VarChar(64)
+  matchStatus   String   @default("UNMATCHED") @map("match_status") @db.VarChar(10)
+  ignoreReason  String?  @map("ignore_reason") @db.VarChar(200)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  bankAccount     BankAccount          @relation(fields: [tenantId, bankAccountId], references: [tenantId, id])
+  reconciliations BankReconciliation[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, bankAccountId, fingerprint])
+  @@index([tenantId, bankAccountId, matchStatus, txnDate])
+  @@map("bank_statement_lines")
+}
+
+model BankReconciliation {
+  id              String   @id @default(uuid()) @db.Uuid
+  tenantId        String   @map("tenant_id") @db.Uuid
+  statementLineId String   @map("statement_line_id") @db.Uuid
+  journalLineId   String   @map("journal_line_id") @db.Uuid
+  matchType       String   @map("match_type") @db.VarChar(10)
+  matchedBy       String   @map("matched_by") @db.Uuid
+  matchedAt       DateTime @default(now()) @map("matched_at") @db.Timestamptz(6)
+
+  statementLine BankStatementLine @relation(fields: [tenantId, statementLineId], references: [tenantId, id])
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, journalLineId])
+  @@index([tenantId, statementLineId])
+  @@map("bank_reconciliations")
 }

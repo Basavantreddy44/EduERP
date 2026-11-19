@@ -44,6 +44,11 @@ const envSchema = z.object({
   RAZORPAY_KEY_ID: z.string().optional(),
   RAZORPAY_KEY_SECRET: z.string().optional(),
   RAZORPAY_WEBHOOK_SECRET: z.string().optional(),
+  /**
+   * Field-level encryption key for bank account numbers and PAN (CD-84): 32 random bytes in base64
+   * (`openssl rand -base64 32`). Required in production; never commit it.
+   */
+  FIELD_ENCRYPTION_KEY: z.string().optional(),
   /** Online-payment re-check of pending orders by the worker (seconds). */
   PAYMENT_RECONCILE_SECONDS: z.coerce.number().int().min(30).max(3600).default(300),
 });

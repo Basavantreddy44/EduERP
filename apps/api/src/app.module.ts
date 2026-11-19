@@ -106,6 +106,12 @@ import { ComplaintsService } from './modules/engagement/complaints.service';
 import { FrontOfficeService } from './modules/engagement/front-office.service';
 import { DeptRequestsService } from './modules/engagement/requests.service';
 import { ComplaintsController, DeptRequestsController, FrontOfficeController, MeetingsController, PortalComplaintsController } from './modules/engagement/engagement2.controller';
+import { AccountsController } from './modules/accounts/accounts.controller';
+import { AccountsSetupService } from './modules/accounts/setup.service';
+import { VendorsService } from './modules/accounts/vendors.service';
+import { AccountPaymentsService } from './modules/accounts/payments.service';
+import { BankReconService } from './modules/accounts/bank.service';
+import { AccountsReportsService } from './modules/accounts/reports.service';
 import { CertificatesController, CertificateVerifyController } from './modules/students/certificates.controller';
 
 const isTest = process.env.NODE_ENV === 'test';
@@ -179,6 +185,7 @@ const isTest = process.env.NODE_ENV === 'test';
     FrontOfficeController,
     DeptRequestsController,
     PortalComplaintsController,
+    AccountsController,
   ],
   providers: [
     Db,
@@ -250,6 +257,11 @@ const isTest = process.env.NODE_ENV === 'test';
     ComplaintsService,
     FrontOfficeService,
     DeptRequestsService,
+    AccountsSetupService,
+    VendorsService,
+    AccountPaymentsService,
+    BankReconService,
+    AccountsReportsService,
     MessService,
     StudentsImporter,
     { provide: APP_INTERCEPTOR, useClass: IdempotencyInterceptor },

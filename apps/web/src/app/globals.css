@@ -1925,3 +1925,45 @@ a.ecal-chip:hover { filter: brightness(.96); }
   .p12-reply-row { flex-direction: column; align-items: flex-start; }
   .p12-filters { width: 100%; }
 }
+
+/* ───────────── Phase 13: accounts ───────────── */
+.acc-lines { margin: 4px 0 12px; overflow-x: auto; }
+.acc-lines .table { min-width: 620px; }
+.acc-lines td { vertical-align: middle; padding-top: 6px; padding-bottom: 6px; }
+.acc-lines input, .acc-lines select { width: 100%; min-width: 0; }
+.acc-lines td.num input { text-align: right; max-width: 130px; margin-left: auto; display: block; }
+.acc-lines tfoot td { font-weight: 700; }
+.acc-preview { margin-top: 4px; }
+.acc-preview dd strong { color: var(--navy); font-size: 1.08em; }
+.acc-report .acc-note { margin: 0; padding: 8px 14px; border-top: 1px solid var(--border); }
+.acc-report td.num, .acc-report th.num { white-space: nowrap; }
+.acc-report tfoot td, .acc-subtotal td, .acc-subtotal th { font-weight: 800; background: var(--surface-2); }
+.acc-heading td { font-weight: 800; color: var(--navy); background: #f6f3ea; }
+.acc-chart td { padding-top: 7px; padding-bottom: 7px; }
+.acc-report-bar { display: flex; flex-wrap: wrap; gap: 12px 18px; align-items: center; padding: 12px 16px; margin-bottom: 10px; }
+.acc-check { align-items: center; flex-wrap: wrap; }
+.acc-check span { flex: 1; min-width: 220px; }
+.acc-bills { display: block; }
+.acc-bill-row { display: grid; grid-template-columns: minmax(0, 1fr) auto 130px; gap: 6px 12px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.acc-bill-row:last-of-type { border-bottom: 0; }
+.acc-bill-row input { text-align: right; }
+.acc-recon { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.acc-recon > li { padding: 12px 16px; display: grid; gap: 8px; }
+.acc-recon-line { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.acc-amt { font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.acc-amt.in { color: var(--ok); }
+.acc-amt.out { color: var(--text); }
+.acc-suggest { list-style: none; margin: 0; padding: 8px 10px; display: grid; gap: 6px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.acc-suggest li { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 13.5px; flex-wrap: wrap; }
+.acc-map { margin: 8px 0; }
+.acc-sample { margin: 6px 0 14px; max-height: 220px; overflow: auto; }
+.acc-sample td, .acc-sample th { font-size: 12.5px; white-space: nowrap; }
+.acc-stmt .table th[scope=row] { text-align: left; font-weight: 600; text-transform: none; letter-spacing: 0; font-size: 14px; color: var(--text); background: none; }
+.acc-stmt details { margin-top: 10px; }
+.acc-stmt summary { cursor: pointer; font-weight: 700; color: var(--navy); }
+.acc-pick { max-height: 340px; }
+@media (max-width: 560px) {
+  .acc-bill-row { grid-template-columns: 1fr; }
+  .acc-recon-line { flex-direction: column; }
+  .acc-report-bar { flex-direction: column; align-items: stretch; }
+}

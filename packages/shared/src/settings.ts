@@ -13,7 +13,7 @@ export interface SettingDefinition<T = unknown> {
   key: string;
   label: string;
   description: string;
-  group: 'General' | 'Attendance' | 'Fees' | 'Notifications' | 'Files' | 'Engagement';
+  group: 'General' | 'Attendance' | 'Fees' | 'Notifications' | 'Files' | 'Engagement' | 'Accounts';
   schema: z.ZodType<T>;
   defaultValue: T;
   /** Where it may be set. TENANT = institution-wide value; CAMPUS = per-campus override allowed. */
@@ -133,6 +133,16 @@ export const SETTINGS = [
     defaultValue: 'ON' as 'ON' | 'OFF',
     scopes: ['TENANT', 'CAMPUS'],
     options: [{ value: 'ON', label: 'Yes' }, { value: 'OFF', label: 'No' }],
+  }),
+  define({
+    key: 'accounts.statutory_rates_confirmed',
+    label: 'GST and TDS rates checked by the accountant',
+    description: 'EduERP fills in commonly used rates; until the accountant confirms them, Accounts shows a reminder to check them.',
+    group: 'Accounts',
+    schema: z.enum(['NO', 'YES']),
+    defaultValue: 'NO' as 'NO' | 'YES',
+    scopes: ['TENANT'],
+    options: [{ value: 'NO', label: 'Not yet' }, { value: 'YES', label: 'Yes' }],
   }),
 ] as const;
 

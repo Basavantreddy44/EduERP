@@ -1,5 +1,18 @@
 # Changelog
 
+## [Unreleased] — 2026-11-19 (Phase 13 Accounts)
+### Added
+- Full accounting: chart of accounts editor, cost centres, bank accounts, opening balances, month lock and year close.
+- GST and TDS rates (pre-filled, to be checked by the accountant).
+- Vendors and bills with GST (CGST + SGST or IGST) and TDS worked out; approval and posting.
+- Vendor payments (part, full, advance), advance adjustment, expense / contra / journal vouchers.
+- Bank statement import and reconciliation with automatic matching and a reconciliation statement.
+- Reports: day book, cash and bank books, ledger, trial balance, income & expenditure, balance sheet, receipts & payments, GST and TDS registers, with Excel download.
+- Field-level encryption for bank account numbers and PAN (key in the server environment).
+- Built-in roles for every institution: Teacher, Head of Department, Exam cell, Front desk, Accountant.
+### Changed
+- Fee receipts and other postings dated in a locked month or closed year are refused with a clear message.
+
 ## [Unreleased] — 2026-11-18 (Phase 12 Engagement II)
 ### Added
 - Staff meetings and committees: schedule, invite, answer, attendance, minutes (draft, shared, approved and then locked) and action items with owners and due dates.

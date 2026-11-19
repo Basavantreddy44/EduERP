@@ -45,7 +45,7 @@ export async function ensureFinancialYear(tx: Tx, tenantId: string, isoDate: str
   return tx.financialYear.findFirstOrThrow({ where: { name: fy.name } });
 }
 
-export interface PostingLine { accountId: string; debitPaise?: number; creditPaise?: number; partyType?: 'STUDENT'; partyId?: string }
+export interface PostingLine { accountId: string; debitPaise?: number; creditPaise?: number; partyType?: 'STUDENT' | 'VENDOR'; partyId?: string; costCentreId?: string | null }
 
 /**
  * Posts a balanced journal entry (W-04). Lines on the same account and side are merged; zero lines are
@@ -54,12 +54,12 @@ export interface PostingLine { accountId: string; debitPaise?: number; creditPai
 export async function post(
   tx: Tx,
   numbering: NumberingService,
-  e: { tenantId: string; campusId: string | null; date: string; voucherType: 'RECEIPT' | 'PAYMENT' | 'JOURNAL' | 'SALES'; sourceType: string; sourceId: string; narration: string; userId: string | null; lines: PostingLine[]; reversalOfId?: string },
+  e: { tenantId: string; campusId: string | null; date: string; voucherType: 'RECEIPT' | 'PAYMENT' | 'JOURNAL' | 'SALES' | 'CONTRA' | 'PURCHASE'; sourceType: string; sourceId: string; narration: string; userId: string | null; lines: PostingLine[]; reversalOfId?: string },
 ) {
   const merged = new Map<string, PostingLine & { debitPaise: number; creditPaise: number }>();
   for (const l of e.lines) {
     const side = (l.debitPaise ?? 0) > 0 ? 'D' : 'C';
-    const k = `${l.accountId}|${side}|${l.partyId ?? ''}`;
+    const k = `${l.accountId}|${side}|${l.partyId ?? ''}|${l.costCentreId ?? ''}`;
     const m = merged.get(k) ?? { ...l, debitPaise: 0, creditPaise: 0 };
     m.debitPaise += l.debitPaise ?? 0;
     m.creditPaise += l.creditPaise ?? 0;
@@ -79,7 +79,7 @@ export async function post(
   });
   await tx.journalLine.createMany({
     data: lines.map((l) => ({
-      tenantId: e.tenantId, journalEntryId: entry.id, accountId: l.accountId, debit: fromPaise(l.debitPaise), credit: fromPaise(l.creditPaise), partyType: l.partyType ?? null, partyId: l.partyId ?? null,
+      tenantId: e.tenantId, journalEntryId: entry.id, accountId: l.accountId, debit: fromPaise(l.debitPaise), credit: fromPaise(l.creditPaise), partyType: l.partyType ?? null, partyId: l.partyId ?? null, costCentreId: l.costCentreId ?? null,
     })),
   });
   return entry;
@@ -91,7 +91,7 @@ export async function reverse(tx: Tx, numbering: NumberingService, entryId: stri
   if (orig.status !== 'POSTED') throw new Error(`Entry ${orig.entryNo} is already reversed`);
   const rev = await post(tx, numbering, {
     tenantId: orig.tenantId, campusId: orig.campusId, date, voucherType: orig.voucherType as 'JOURNAL', sourceType: orig.sourceType, sourceId: orig.sourceId!, narration, userId, reversalOfId: orig.id,
-    lines: orig.lines.map((l) => ({ accountId: l.accountId, debitPaise: toPaise(l.credit.toString()), creditPaise: toPaise(l.debit.toString()), partyType: (l.partyType as 'STUDENT') ?? undefined, partyId: l.partyId ?? undefined })),
+    lines: orig.lines.map((l) => ({ accountId: l.accountId, debitPaise: toPaise(l.credit.toString()), creditPaise: toPaise(l.debit.toString()), partyType: (l.partyType as 'STUDENT' | 'VENDOR') ?? undefined, partyId: l.partyId ?? undefined, costCentreId: l.costCentreId })),
   });
   await tx.journalEntry.update({ where: { id: orig.id }, data: { status: 'REVERSED' } });
   return rev;

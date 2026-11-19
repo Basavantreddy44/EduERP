@@ -23,3 +23,4 @@ export * from './exams';
 export * from './academics2';
 export * from './engagement';
 export * from './engagement2';
+export * from './accounts2';

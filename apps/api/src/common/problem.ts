@@ -43,6 +43,11 @@ export class ProblemFilter implements ExceptionFilter {
       status = HttpStatus.CONFLICT;
       code = 'duplicate';
       detail = 'A record with the same unique value already exists';
+    } else if (err instanceof Error && /The month of .+ is locked|The financial year is closed/.test(err.message)) {
+      // Database backstop (journal_period_open trigger): nothing posts into a locked month or a closed year.
+      status = HttpStatus.CONFLICT;
+      code = /locked/.test(err.message) ? 'period-locked' : 'year-closed';
+      detail = (err.message.match(/The month of .+? is locked|The financial year is closed/) ?? [''])[0] + ' — ask the accountant before entering anything dated then';
     } else {
       this.log.error({ err, requestId: req.id }, 'Unhandled error');
     }

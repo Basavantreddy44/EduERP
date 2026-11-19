@@ -80,6 +80,12 @@ export const PERMISSIONS = {
   DEPT_REQ_RAISE: 'requests.raise',
   DEPT_REQ_HANDLE: 'requests.handle',
   DEPT_REQ_SETUP: 'requests.setup',
+  ACC_READ: 'accounts.read',
+  ACC_ENTRY: 'accounts.entry',
+  ACC_SETUP: 'accounts.setup',
+  ACC_BANK: 'accounts.bank',
+  ACC_CLOSE: 'accounts.close',
+  ACC_REVEAL: 'accounts.reveal',
 } as const;
 
 export type PermissionCode = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -162,12 +168,36 @@ export const PERMISSION_CATALOGUE: { code: PermissionCode; module: string; descr
   { code: PERMISSIONS.DEPT_REQ_RAISE, module: 'DEPT_REQUESTS', description: 'Raise requests to other departments' },
   { code: PERMISSIONS.DEPT_REQ_HANDLE, module: 'DEPT_REQUESTS', description: 'Work on requests to your department' },
   { code: PERMISSIONS.DEPT_REQ_SETUP, module: 'DEPT_REQUESTS', description: 'Request types and routing' },
+  { code: PERMISSIONS.ACC_READ, module: 'ACCOUNTS', description: 'Accounts: books, vendors, bills and reports' },
+  { code: PERMISSIONS.ACC_ENTRY, module: 'ACCOUNTS', description: 'Accounts: enter bills, payments and vouchers' },
+  { code: PERMISSIONS.ACC_SETUP, module: 'ACCOUNTS', description: 'Accounts set-up: chart of accounts, cost centres, bank accounts, GST and TDS rates, opening balances' },
+  { code: PERMISSIONS.ACC_BANK, module: 'ACCOUNTS', description: 'Bank statements and reconciliation' },
+  { code: PERMISSIONS.ACC_CLOSE, module: 'ACCOUNTS', description: 'Lock months and close the financial year' },
+  { code: PERMISSIONS.ACC_REVEAL, module: 'ACCOUNTS', description: 'See full bank account numbers and PAN (recorded in the audit log)' },
+];
+
+/** A teacher: own classes (CD-73), attendance, homework, marks, parents, staff meetings, complaints and requests. */
+const TEACHER_PERMS: PermissionCode[] = [
+  PERMISSIONS.ACAD_TEACH, PERMISSIONS.ATT_READ, PERMISSIONS.ATT_MARK, PERMISSIONS.ATT_CORRECT, PERMISSIONS.LEAVE_SELF, PERMISSIONS.LEAVE_STUDENT, PERMISSIONS.EXAM_READ, PERMISSIONS.EXAM_MARKS,
+  PERMISSIONS.FEED_READ, PERMISSIONS.FEED_POST, PERMISSIONS.EVENT_READ, PERMISSIONS.PTM_TEACH, PERMISSIONS.MEETING_ATTEND, PERMISSIONS.GRIEVANCE_RAISE, PERMISSIONS.GRIEVANCE_HANDLE, PERMISSIONS.DEPT_REQ_RAISE,
 ];
 
 /** System roles created for every new tenant. */
 export const SYSTEM_ROLES: { code: string; name: string; permissions: PermissionCode[] }[] = [
   { code: 'INSTITUTION_ADMIN', name: 'Institution Admin', permissions: PERMISSION_CATALOGUE.map((p) => p.code) },
   { code: 'CAMPUS_VIEWER', name: 'Campus Viewer', permissions: [PERMISSIONS.ORG_CAMPUS_READ, PERMISSIONS.ORG_ACADEMIC_READ] },
+  // CD-86: everyday roles every institution starts with; the school edits them.
+  { code: 'TEACHING_STAFF', name: 'Teacher', permissions: TEACHER_PERMS },
+  {
+    code: 'DEPT_HEAD', name: 'Head of Department', permissions: [...TEACHER_PERMS, PERMISSIONS.ACAD_READ, PERMISSIONS.STU_STUDENT_READ, PERMISSIONS.HR_STAFF_READ, PERMISSIONS.LEAVE_READ, PERMISSIONS.EXAM_VERIFY,
+      PERMISSIONS.FEED_MODERATE, PERMISSIONS.MEETING_MANAGE, PERMISSIONS.GRIEVANCE_MANAGE, PERMISSIONS.FRONT_APPROVE, PERMISSIONS.DEPT_REQ_HANDLE],
+  },
+  { code: 'EXAM_CELL', name: 'Exam cell', permissions: [PERMISSIONS.EXAM_READ, PERMISSIONS.EXAM_SETUP, PERMISSIONS.EXAM_VERIFY, PERMISSIONS.EXAM_PUBLISH, PERMISSIONS.ACAD_READ, PERMISSIONS.STU_STUDENT_READ, PERMISSIONS.MEETING_ATTEND, PERMISSIONS.LEAVE_SELF, PERMISSIONS.DEPT_REQ_RAISE] },
+  { code: 'FRONT_DESK', name: 'Front desk', permissions: [PERMISSIONS.FRONT_DESK, PERMISSIONS.ADM_ENQUIRY_MANAGE, PERMISSIONS.MEETING_ATTEND, PERMISSIONS.GRIEVANCE_RAISE, PERMISSIONS.DEPT_REQ_RAISE, PERMISSIONS.DEPT_REQ_HANDLE, PERMISSIONS.LEAVE_SELF, PERMISSIONS.FEED_READ, PERMISSIONS.EVENT_READ] },
+  {
+    code: 'ACCOUNTANT', name: 'Accountant', permissions: [PERMISSIONS.ORG_CAMPUS_READ, PERMISSIONS.ACC_READ, PERMISSIONS.ACC_ENTRY, PERMISSIONS.ACC_SETUP, PERMISSIONS.ACC_BANK, PERMISSIONS.ACC_CLOSE, PERMISSIONS.FEE_READ, PERMISSIONS.FEE_BILL, PERMISSIONS.FEE_COLLECT,
+      PERMISSIONS.MEETING_ATTEND, PERMISSIONS.LEAVE_SELF, PERMISSIONS.DEPT_REQ_RAISE, PERMISSIONS.DEPT_REQ_HANDLE, PERMISSIONS.FEED_READ, PERMISSIONS.EVENT_READ],
+  },
 ];
 
 /** Platform (SaaS operator) roles live on users.platform_role, not in tenant roles. */
