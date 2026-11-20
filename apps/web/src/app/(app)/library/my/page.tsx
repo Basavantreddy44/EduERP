@@ -7,7 +7,7 @@ import { useI18n } from '@/lib/i18n';
 import { EmptyState, PageHeader, SkeletonRows, useToast } from '@/components/ui';
 import { ClPill } from '@/components/campuslife';
 
-interface Mine { member: { name: string; code: string }; limit: number; out: number; loans: { id: string; title: string; authors: string | null; accessionNo: string; dueDate: string; daysLate: number; canRenew: boolean; renewCount: number }[]; history: { id: string; title: string; returnDate: string | null; status: string }[]; reservations: { id: string; title: string; status: string; expiresOn: string | null }[] }
+interface Mine { member: { name: string; code: string } | null; limit: number; out: number; loans: { id: string; title: string; authors: string | null; accessionNo: string; dueDate: string; daysLate: number; canRenew: boolean; renewCount: number }[]; history: { id: string; title: string; returnDate: string | null; status: string }[]; reservations: { id: string; title: string; status: string; expiresOn: string | null }[] }
 
 /** My library: the signed-in staff member's books, renewals and reservations. */
 export default function MyLibraryPage() {
@@ -24,8 +24,8 @@ export default function MyLibraryPage() {
   const d = (s: string | null) => (s ? new Date(`${s}T00:00:00Z`).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }) : '');
   return (
     <>
-      <PageHeader eyebrow={t('nav.library')} title={t('lib.my.title')} description={v ? t('lib.memberLine', { out: v.out, limit: v.limit }) : t('lib.my.desc')} />
-      {v === undefined ? <SkeletonRows rows={3} /> : !v ? <EmptyState icon="users" title={t('lib.my.noStaff')} /> : (
+      <PageHeader eyebrow={t('nav.library')} title={t('lib.my.title')} description={v?.member ? t('lib.memberLine', { out: v.out, limit: v.limit }) : t('lib.my.desc')} />
+      {v === undefined ? <SkeletonRows rows={3} /> : !v?.member || !Array.isArray(v.loans) ? <EmptyState icon="users" title={t('lib.my.noStaff')} text={t('lib.my.noStaffHint')} /> : (
         <>
           {!v.loans.length ? <EmptyState icon="book" title={t('lib.my.none')} text={t('lib.my.noneHint')} /> : (
             <ul className="pay-mine">{v.loans.map((l) => (

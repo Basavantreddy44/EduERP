@@ -241,7 +241,8 @@ export class LibraryService {
   my(auth: AuthContext) {
     return this.db.run(this.ctx(auth), async (tx) => {
       const e = await tx.employee.findFirst({ where: { userId: auth.userId }, select: { id: true } });
-      if (!e) return null;
+      // Not on the staff list (e.g. an office login): an explicit empty answer, never an empty body.
+      if (!e) return { member: null, limit: 0, out: 0, overdue: 0, loans: [], history: [], reservations: [] };
       return this.loansOf(tx, auth.tenantId!, await this.member(tx, 'EMPLOYEE', e.id));
     });
   }

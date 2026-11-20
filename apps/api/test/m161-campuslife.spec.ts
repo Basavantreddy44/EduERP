@@ -198,6 +198,8 @@ describe('AC84 circulation', () => {
     const staff = await post('/library/issue', { code: '3', memberType: 'EMPLOYEE', memberId: ids.ravi }, lib);
     expect(staff.status).toBe(201);
     expect((await get('/library/my', ravi)).body.loans.map((l: { accessionNo: string }) => l.accessionNo)).toEqual(['3']);
+    // A login that is not on the staff list gets a clear empty answer (the page once crashed on an empty body).
+    expect((await get('/library/my', lib)).body).toMatchObject({ member: null, loans: [] });
   });
 
   it('stock verification lists what was not found and can mark it lost', async () => {
