@@ -110,6 +110,11 @@ import { AccountsController } from './modules/accounts/accounts.controller';
 import { HrController } from './modules/hr/hr.controller';
 import { HrService } from './modules/hr/hr.service';
 import { PayrollController } from './modules/payroll/payroll.controller';
+import { DisciplineController, InfirmaryController, LibraryController } from './modules/campuslife/campuslife.controller';
+import { LibraryService } from './modules/campuslife/library.service';
+import { HealthService } from './modules/campuslife/health.service';
+import { DisciplineService } from './modules/campuslife/discipline.service';
+import { LibraryBooksImporter } from './modules/campuslife/library.importer';
 import { PayrollSetupService } from './modules/payroll/payroll-setup.service';
 import { PayrollRunsService } from './modules/payroll/payroll-runs.service';
 import { PayrollExtraService } from './modules/payroll/payroll-extra.service';
@@ -196,6 +201,9 @@ const isTest = process.env.NODE_ENV === 'test';
     AccountsController,
     HrController,
     PayrollController,
+    LibraryController,
+    InfirmaryController,
+    DisciplineController,
   ],
   providers: [
     Db,
@@ -220,7 +228,7 @@ const isTest = process.env.NODE_ENV === 'test';
     {
       provide: IMPORTERS,
       useFactory: (...i: AnyImporter[]) => i,
-      inject: [DepartmentsImporter, HolidaysImporter, UsersImporter, StudentsImporter, StaffImporter],
+      inject: [DepartmentsImporter, HolidaysImporter, UsersImporter, StudentsImporter, StaffImporter, LibraryBooksImporter],
     },
     ImportsService,
     ExportsService,
@@ -276,6 +284,10 @@ const isTest = process.env.NODE_ENV === 'test';
     PayrollSetupService,
     PayrollRunsService,
     PayrollExtraService,
+    LibraryService,
+    HealthService,
+    DisciplineService,
+    LibraryBooksImporter,
     LeaveBalancesService,
     ExitsService,
     MessService,

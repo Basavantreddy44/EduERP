@@ -35,7 +35,7 @@ export interface Importer<T> {
 
 // ───────────── helpers ─────────────
 
-const zodErrors = (e: z.ZodError, labels: Record<string, string>) =>
+export const zodErrors = (e: z.ZodError, labels: Record<string, string>) =>
   e.issues.map((i) => `${labels[String(i.path[0])] ?? String(i.path[0])}: ${i.message}`);
 
 /** Accepts a label ("Public holiday"), a code ("PUBLIC") or a loose spelling ("public"). */
@@ -62,7 +62,7 @@ export function parseDate(raw: string): string | null {
 }
 
 /** Campus code column → id (or null for institution-wide), enforcing the importer's campus scope. */
-function campusFrom(code: string, ctx: ImportContext, errors: string[]): string | null | undefined {
+export function campusFrom(code: string, ctx: ImportContext, errors: string[]): string | null | undefined {
   const c = code.trim().toUpperCase();
   if (!c) {
     if (!ctx.scope.all) errors.push('Campus code: you can only add rows for your own campuses');
@@ -77,14 +77,14 @@ function campusFrom(code: string, ctx: ImportContext, errors: string[]): string 
   return id;
 }
 
-async function baseContext(tx: Tx, auth: AuthContext, permission: PermissionCode): Promise<ImportContext> {
+export async function baseContext(tx: Tx, auth: AuthContext, permission: PermissionCode): Promise<ImportContext> {
   const campuses = await tx.campus.findMany({ select: { id: true, code: true } });
   return { campusByCode: new Map(campuses.map((c) => [c.code.toUpperCase(), c.id])), scope: scopeFor(auth, permission)! };
 }
 
-const campusHelp = async (tx: Tx) => ({ title: 'Campus codes you can use', values: (await tx.campus.findMany({ orderBy: { code: 'asc' }, select: { code: true, name: true } })).map((c) => `${c.code} — ${c.name}`) });
+export const campusHelp = async (tx: Tx) => ({ title: 'Campus codes you can use', values: (await tx.campus.findMany({ orderBy: { code: 'asc' }, select: { code: true, name: true } })).map((c) => `${c.code} — ${c.name}`) });
 
-const labelsOf = (t: ImportTypeCode) => Object.fromEntries(IMPORT_TYPES[t].columns.map((c) => [c.key, c.header]));
+export const labelsOf = (t: ImportTypeCode) => Object.fromEntries(IMPORT_TYPES[t].columns.map((c) => [c.key, c.header]));
 
 // ───────────── Departments ─────────────
 

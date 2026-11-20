@@ -110,6 +110,23 @@ const NAV: { section: MessageKey; items: NavItem[] }[] = [
     ],
   },
   {
+    section: 'nav.library',
+    items: [
+      { href: '/library', label: 'nav.libDesk', icon: 'book', module: 'LIBRARY', permission: PERMISSIONS.LIB_CIRCULATE },
+      { href: '/library/catalogue', label: 'nav.libCatalogue', icon: 'layers', module: 'LIBRARY' },
+      { href: '/library/my', label: 'nav.libMine', icon: 'clipboard', module: 'LIBRARY' },
+      { href: '/library/manage', label: 'nav.libManage', icon: 'settings', module: 'LIBRARY', permission: PERMISSIONS.LIB_MANAGE },
+    ],
+  },
+  {
+    section: 'nav.campusCare',
+    items: [
+      { href: '/health', label: 'nav.health', icon: 'shield', module: 'HEALTH', anyOf: [PERMISSIONS.HEALTH_READ, PERMISSIONS.HEALTH_MANAGE, PERMISSIONS.HEALTH_HOSTEL] },
+      { href: '/discipline', label: 'nav.discipline', icon: 'alert', module: 'DISCIPLINE', anyOf: [PERMISSIONS.DISC_REPORT, PERMISSIONS.DISC_MANAGE, PERMISSIONS.DISC_CLASS] },
+      { href: '/discipline/counselling', label: 'nav.counselling', icon: 'users', module: 'DISCIPLINE', permission: PERMISSIONS.COUNSEL },
+    ],
+  },
+  {
     section: 'nav.payroll',
     items: [
       { href: '/payroll/my-payslips', label: 'nav.payMine', icon: 'receipt', module: 'HR_PAYROLL' },

@@ -26,8 +26,8 @@ const put = (path: string, body: unknown, s: Session = A.session) => http().put(
 const get = (path: string, s: Session = A.session) => http().get(`${API}${path}`).set(auth(s));
 const today = new Date(Date.now() + 330 * 60_000).toISOString().slice(0, 10);
 const shift = (d: string, n: number) => new Date(Date.parse(`${d}T00:00:00Z`) + n * 86_400_000).toISOString().slice(0, 10);
-/** The next Monday–Friday at least n days ahead. */
-const workday = (n: number) => { let d = shift(today, n); while ([0, 6].includes(new Date(`${d}T00:00:00Z`).getUTCDay())) d = shift(d, 1); return d; };
+/** The first Monday at least n days ahead (whole working weeks, whatever day the suite runs). */
+const monday = (n: number) => { let d = shift(today, n); while (new Date(`${d}T00:00:00Z`).getUTCDay() !== 1) d = shift(d, 1); return d; };
 /** The most recent past Monday–Friday. */
 const pastWorkday = () => { let d = shift(today, -1); while ([0, 6].includes(new Date(`${d}T00:00:00Z`).getUTCDay())) d = shift(d, -1); return d; };
 
@@ -133,20 +133,20 @@ describe('AC77 leave balances', () => {
     const bal = (await get(`/hr/leave-balances?yearId=${ids.year}&employeeId=${ids.priya}`, hr)).body.rows[0].balances.find((b: { code: string }) => b.code === 'CL');
     expect(bal).toMatchObject({ allowance: 2, adjustments: 1.5, left: 3.5 });
     expect((await get('/leave/balance?applicantType=EMPLOYEE', priya)).body.types.find((t: { code: string }) => t.code === 'CL')).toMatchObject({ allowed: 3.5, left: 3.5 });
-    const d1 = workday(14);
-    const four = await post('/leave/requests', { applicantType: 'EMPLOYEE', leaveTypeId: ids.cl, reason: 'Family function', fromDate: d1, toDate: workday(17) }, priya);
+    const d1 = monday(14);
+    const four = await post('/leave/requests', { applicantType: 'EMPLOYEE', leaveTypeId: ids.cl, reason: 'Family function', fromDate: d1, toDate: shift(d1, 3) }, priya);
     expect(four.body.type).toBe('leave-balance');
     const ok = await post('/leave/requests', { applicantType: 'EMPLOYEE', leaveTypeId: ids.cl, reason: 'Family function', fromDate: d1, toDate: d1 }, priya);
     expect(ok.body.status).toBe('APPROVED');
     ids.leave1 = ok.body.id;
-    expect((await post('/leave/requests', { applicantType: 'EMPLOYEE', leaveTypeId: ids.lop, reason: 'Personal', fromDate: workday(21), toDate: workday(21) }, priya)).body.status).toBe('APPROVED');
+    expect((await post('/leave/requests', { applicantType: 'EMPLOYEE', leaveTypeId: ids.lop, reason: 'Personal', fromDate: monday(21), toDate: monday(21) }, priya)).body.status).toBe('APPROVED');
     expect((await get(`/hr/leave-balances?yearId=${ids.year}&employeeId=${ids.priya}`, priya)).body.rows[0].balances.find((b: { code: string }) => b.code === 'CL')).toMatchObject({ approved: 1, left: 2.5 });
   });
 
   it('two applications at once use the balance once; a cancelled leave gives it back', async () => {
     // Ravi has 2 days; two 2-day applications at the same moment — only one fits.
-    const a = workday(28); const b = workday(35);
-    const both = await Promise.all([[a, workday(29)], [b, workday(36)]].map(([f, t]) => post('/leave/requests', { applicantType: 'EMPLOYEE', leaveTypeId: ids.cl, reason: 'Trip', fromDate: f, toDate: t }, ravi.session)));
+    const a = monday(28); const b = monday(35);
+    const both = await Promise.all([[a, shift(a, 1)], [b, shift(b, 1)]].map(([f, t]) => post('/leave/requests', { applicantType: 'EMPLOYEE', leaveTypeId: ids.cl, reason: 'Trip', fromDate: f, toDate: t }, ravi.session)));
     const okOne = both.filter((r) => r.status === 201);
     expect(okOne).toHaveLength(1);
     expect(both.find((r) => r.status !== 201)!.body.type).toBe('leave-balance');

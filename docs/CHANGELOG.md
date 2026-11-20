@@ -1,5 +1,13 @@
 # Changelog
 
+## [Unreleased] — 2026-11-20 (Phase 16 Campus life II)
+### Added
+- Library: catalogue with accession numbers and barcodes, Excel import of the register, issue and return by scan, renewals, reservations held for the first in line, late fines and lost books billed to fees, overdue reminders, stock verification, My library and the parent app's Library tab.
+- Health & infirmary: student health records with allergy warnings, infirmary visits (parents told when a child is sent home or referred), check-ups and vaccinations with a due list.
+- Discipline: incident types, incidents reported by teachers, review, actions (warning, parent meeting, suspension, fine billed to fees, counselling) and closing; class teachers see their class.
+- Counselling sessions with encrypted notes only their author can read.
+- Built-in roles: Librarian, School nurse, Counsellor.
+
 ## [Unreleased] — 2026-11-19 (Phase 15 Payroll)
 ### Added
 - Salary components and structures, staff salaries with revisions and a live monthly breakdown.

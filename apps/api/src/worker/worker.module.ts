@@ -15,6 +15,7 @@ import { PAYMENT_GATEWAY, createGateway } from '../modules/fees/gateway';
 import { LateFeeService } from '../modules/fees/late-fee.service';
 import { TransportFleetService } from '../modules/transport/fleet.service';
 import { ComplaintsService } from '../modules/engagement/complaints.service';
+import { LibraryService } from '../modules/campuslife/library.service';
 
 /** Everything the background worker needs; no HTTP. */
 @Module({
@@ -44,7 +45,9 @@ import { ComplaintsService } from '../modules/engagement/complaints.service';
     // Transport: bus documents and driving licences expiring (30 / 15 / 7 days).
     TransportFleetService,
     ComplaintsService,
+    // Library: overdue reminders and expired holds (daily, safe to repeat).
+    LibraryService,
   ],
-  exports: [JobsRunner, Db, FeeOnlineService, LateFeeService, TransportFleetService, ComplaintsService],
+  exports: [JobsRunner, Db, FeeOnlineService, LateFeeService, TransportFleetService, ComplaintsService, LibraryService],
 })
 export class WorkerModule {}

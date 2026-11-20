@@ -38,6 +38,10 @@ export const NOTIFICATION_EVENTS = {
   PTM_BOOKED: { code: 'PTM_BOOKED', label: 'Parent-teacher meeting booked', channels: ['IN_APP'], mandatory: false, variables: ['student', 'teacher', 'date', 'time'] },
   RESULT_PUBLISHED: { code: 'RESULT_PUBLISHED', label: 'Results published', channels: ['IN_APP', 'EMAIL'], mandatory: false, variables: ['student', 'term', 'section'] },
   HOSTEL_OUTPASS: { code: 'HOSTEL_OUTPASS', label: 'Outpass waiting for your approval', channels: ['IN_APP', 'EMAIL'], mandatory: false, variables: ['student', 'destination', 'outTime', 'expectedReturn'] },
+  LIBRARY_OVERDUE: { code: 'LIBRARY_OVERDUE', label: 'Library book overdue', channels: ['IN_APP', 'EMAIL'], mandatory: false, variables: ['who', 'title', 'dueDate', 'days'] },
+  LIBRARY_READY: { code: 'LIBRARY_READY', label: 'Reserved library book ready', channels: ['IN_APP', 'EMAIL'], mandatory: false, variables: ['who', 'title', 'until'] },
+  INFIRMARY_VISIT: { code: 'INFIRMARY_VISIT', label: 'Child seen in the school infirmary', channels: ['IN_APP', 'EMAIL'], mandatory: false, variables: ['student', 'complaint', 'outcome', 'time'] },
+  DISCIPLINE_INCIDENT: { code: 'DISCIPLINE_INCIDENT', label: 'Behaviour incident', channels: ['IN_APP', 'EMAIL'], mandatory: false, variables: ['student', 'type', 'date'] },
 } as const satisfies Record<string, NotificationEvent>;
 
 export type NotificationEventCode = keyof typeof NOTIFICATION_EVENTS;
@@ -133,6 +137,23 @@ export const DEFAULT_TEMPLATES: TemplateText[] = [
   { eventCode: 'ACCOUNT_SECURITY', channel: 'IN_APP', language: 'kn', subject: 'ಖಾತೆ ಭದ್ರತಾ ಸೂಚನೆ', body: '{{message}}' },
   { eventCode: 'ACCOUNT_SECURITY', channel: 'EMAIL', language: 'en', subject: 'Account security notice', body: 'Hello,\n\n{{message}}\n\nIf this was not you, contact your institution administrator.' },
   { eventCode: 'ACCOUNT_SECURITY', channel: 'EMAIL', language: 'kn', subject: 'ಖಾತೆ ಭದ್ರತಾ ಸೂಚನೆ', body: 'ನಮಸ್ಕಾರ,\n\n{{message}}\n\nಇದು ನೀವಲ್ಲದಿದ್ದರೆ, ನಿಮ್ಮ ಸಂಸ್ಥೆಯ ನಿರ್ವಾಹಕರನ್ನು ಸಂಪರ್ಕಿಸಿ.' },
+  // LIBRARY_OVERDUE, LIBRARY_READY, INFIRMARY_VISIT, DISCIPLINE_INCIDENT (Phase 16)
+  { eventCode: 'LIBRARY_OVERDUE', channel: 'IN_APP', language: 'en', subject: 'Library book overdue: {{title}}', body: '{{who}} had "{{title}}" due back on {{dueDate}} ({{days}} days late). Please return it to the library.' },
+  { eventCode: 'LIBRARY_OVERDUE', channel: 'IN_APP', language: 'kn', subject: 'ಗ್ರಂಥಾಲಯ ಪುಸ್ತಕ ತಡ: {{title}}', body: '{{who}} ಅವರ "{{title}}" {{dueDate}} ರಂದು ಹಿಂದಿರುಗಿಸಬೇಕಿತ್ತು ({{days}} ದಿನ ತಡ). ದಯವಿಟ್ಟು ಗ್ರಂಥಾಲಯಕ್ಕೆ ಹಿಂದಿರುಗಿಸಿ.' },
+  { eventCode: 'LIBRARY_OVERDUE', channel: 'EMAIL', language: 'en', subject: 'Library book overdue: {{title}}', body: 'Hello,\n\n{{who}} had "{{title}}" due back on {{dueDate}} — it is now {{days}} days late.\n\nPlease return it to the library.' },
+  { eventCode: 'LIBRARY_OVERDUE', channel: 'EMAIL', language: 'kn', subject: 'ಗ್ರಂಥಾಲಯ ಪುಸ್ತಕ ತಡ: {{title}}', body: 'ನಮಸ್ಕಾರ,\n\n{{who}} ಅವರ "{{title}}" {{dueDate}} ರಂದು ಹಿಂದಿರುಗಿಸಬೇಕಿತ್ತು — ಈಗ {{days}} ದಿನ ತಡವಾಗಿದೆ.\n\nದಯವಿಟ್ಟು ಗ್ರಂಥಾಲಯಕ್ಕೆ ಹಿಂದಿರುಗಿಸಿ.' },
+  { eventCode: 'LIBRARY_READY', channel: 'IN_APP', language: 'en', subject: 'Your reserved book is ready', body: '"{{title}}" is kept for {{who}} at the library until {{until}}.' },
+  { eventCode: 'LIBRARY_READY', channel: 'IN_APP', language: 'kn', subject: 'ಕಾಯ್ದಿರಿಸಿದ ಪುಸ್ತಕ ಸಿದ್ಧ', body: '"{{title}}" ಅನ್ನು {{who}} ಅವರಿಗಾಗಿ {{until}} ವರೆಗೆ ಗ್ರಂಥಾಲಯದಲ್ಲಿ ಇಡಲಾಗಿದೆ.' },
+  { eventCode: 'LIBRARY_READY', channel: 'EMAIL', language: 'en', subject: 'Reserved book ready: {{title}}', body: 'Hello,\n\n"{{title}}" is now kept for {{who}} at the library until {{until}}. Please collect it before then.' },
+  { eventCode: 'LIBRARY_READY', channel: 'EMAIL', language: 'kn', subject: 'ಕಾಯ್ದಿರಿಸಿದ ಪುಸ್ತಕ ಸಿದ್ಧ: {{title}}', body: 'ನಮಸ್ಕಾರ,\n\n"{{title}}" ಅನ್ನು {{who}} ಅವರಿಗಾಗಿ {{until}} ವರೆಗೆ ಗ್ರಂಥಾಲಯದಲ್ಲಿ ಇಡಲಾಗಿದೆ. ಅದರೊಳಗೆ ಪಡೆದುಕೊಳ್ಳಿ.' },
+  { eventCode: 'INFIRMARY_VISIT', channel: 'IN_APP', language: 'en', subject: '{{student}} was seen by the school nurse', body: '{{time}}: {{complaint}}. {{outcome}}' },
+  { eventCode: 'INFIRMARY_VISIT', channel: 'IN_APP', language: 'kn', subject: '{{student}} ಅವರನ್ನು ಶಾಲಾ ನರ್ಸ್ ನೋಡಿದ್ದಾರೆ', body: '{{time}}: {{complaint}}. {{outcome}}' },
+  { eventCode: 'INFIRMARY_VISIT', channel: 'EMAIL', language: 'en', subject: '{{student}} was seen by the school nurse', body: 'Dear parent,\n\n{{student}} was seen in the school infirmary at {{time}} for: {{complaint}}.\n\n{{outcome}}\n\nPlease contact the school if you have any questions.' },
+  { eventCode: 'INFIRMARY_VISIT', channel: 'EMAIL', language: 'kn', subject: '{{student}} ಅವರನ್ನು ಶಾಲಾ ನರ್ಸ್ ನೋಡಿದ್ದಾರೆ', body: 'ಆತ್ಮೀಯ ಪೋಷಕರೇ,\n\n{{time}} ಕ್ಕೆ {{student}} ಅವರನ್ನು ಶಾಲಾ ಆರೋಗ್ಯ ಕೊಠಡಿಯಲ್ಲಿ ನೋಡಲಾಯಿತು: {{complaint}}.\n\n{{outcome}}\n\nಪ್ರಶ್ನೆಗಳಿದ್ದರೆ ಶಾಲೆಯನ್ನು ಸಂಪರ್ಕಿಸಿ.' },
+  { eventCode: 'DISCIPLINE_INCIDENT', channel: 'IN_APP', language: 'en', subject: 'Behaviour note about {{student}}', body: 'An incident ({{type}}) was recorded on {{date}}. The class teacher will be in touch; you can also contact the school.' },
+  { eventCode: 'DISCIPLINE_INCIDENT', channel: 'IN_APP', language: 'kn', subject: '{{student}} ಅವರ ನಡವಳಿಕೆ ಕುರಿತು', body: '{{date}} ರಂದು ಒಂದು ಘಟನೆ ({{type}}) ದಾಖಲಾಗಿದೆ. ತರಗತಿ ಶಿಕ್ಷಕರು ಸಂಪರ್ಕಿಸುತ್ತಾರೆ; ನೀವೂ ಶಾಲೆಯನ್ನು ಸಂಪರ್ಕಿಸಬಹುದು.' },
+  { eventCode: 'DISCIPLINE_INCIDENT', channel: 'EMAIL', language: 'en', subject: 'Behaviour note about {{student}}', body: 'Dear parent,\n\nAn incident ({{type}}) involving {{student}} was recorded on {{date}}.\n\nThe class teacher will be in touch. You are welcome to contact the school.' },
+  { eventCode: 'DISCIPLINE_INCIDENT', channel: 'EMAIL', language: 'kn', subject: '{{student}} ಅವರ ನಡವಳಿಕೆ ಕುರಿತು', body: 'ಆತ್ಮೀಯ ಪೋಷಕರೇ,\n\n{{date}} ರಂದು {{student}} ಅವರನ್ನು ಒಳಗೊಂಡ ಒಂದು ಘಟನೆ ({{type}}) ದಾಖಲಾಗಿದೆ.\n\nತರಗತಿ ಶಿಕ್ಷಕರು ಸಂಪರ್ಕಿಸುತ್ತಾರೆ. ನೀವು ಶಾಲೆಯನ್ನು ಸಂಪರ್ಕಿಸಬಹುದು.' },
 ];
 
 /** Replaces {{name}} placeholders; unknown placeholders become empty. Values are plain text (no HTML). */

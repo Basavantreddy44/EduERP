@@ -19,8 +19,8 @@ import { Card, ReportCard } from '@/components/exams';
 import { ChildEvents, ChildPtm } from '@/components/portal-engagement';
 import { ChildComplaints } from '@/components/portal-complaints';
 
-type Tab = 'attendance' | 'timetable' | 'homework' | 'material' | 'results' | 'events' | 'ptm' | 'complaints' | 'fees' | 'leave' | 'bus' | 'hostel';
-const TABS: Tab[] = ['attendance', 'timetable', 'homework', 'material', 'results', 'events', 'ptm', 'fees', 'leave', 'bus', 'hostel', 'complaints'];
+type Tab = 'attendance' | 'timetable' | 'homework' | 'material' | 'results' | 'events' | 'ptm' | 'complaints' | 'fees' | 'leave' | 'bus' | 'hostel' | 'library';
+const TABS: Tab[] = ['attendance', 'timetable', 'homework', 'material', 'results', 'events', 'ptm', 'fees', 'leave', 'bus', 'hostel', 'library', 'complaints'];
 const inr = (v: string | number) => formatINR(toPaise(String(v)));
 const shiftMonth = (m: string, n: number) => { const d = new Date(Date.UTC(Number(m.slice(0, 4)), Number(m.slice(5, 7)) - 1 + n, 1)); return d.toISOString().slice(0, 7); };
 
@@ -40,7 +40,7 @@ export default function ChildPage() {
   const child = portal?.children.find((c) => c.id === id);
   if (!portal) return null;
   if (!child) return <EmptyState icon="users" title={t('pt.notYours')} action={<Link href="/portal" className="btn">{t('pt.back')}</Link>} />;
-  const tabs = TABS.filter((x) => (x === 'fees' ? hasModule('FEES') : x === 'bus' ? hasModule('TRANSPORT') : x === 'hostel' ? hasModule('HOSTEL') : x === 'results' ? hasModule('EXAMS') : x === 'events' ? hasModule('EVENTS') : x === 'ptm' ? hasModule('MEETINGS') : x === 'complaints' ? hasModule('GRIEVANCE') : x === 'timetable' || x === 'homework' || x === 'material' ? hasModule('ACADEMICS') : hasModule('ATTENDANCE')));
+  const tabs = TABS.filter((x) => (x === 'fees' ? hasModule('FEES') : x === 'bus' ? hasModule('TRANSPORT') : x === 'hostel' ? hasModule('HOSTEL') : x === 'library' ? hasModule('LIBRARY') : x === 'results' ? hasModule('EXAMS') : x === 'events' ? hasModule('EVENTS') : x === 'ptm' ? hasModule('MEETINGS') : x === 'complaints' ? hasModule('GRIEVANCE') : x === 'timetable' || x === 'homework' || x === 'material' ? hasModule('ACADEMICS') : hasModule('ATTENDANCE')));
   const pick = (x: Tab) => { setTab(x); history.replaceState(null, '', `#${x}`); window.dispatchEvent(new HashChangeEvent('hashchange')); };
 
   return (
@@ -67,6 +67,7 @@ export default function ChildPage() {
         {tab === 'leave' && <Leave id={id} />}
         {tab === 'bus' && <Bus id={id} />}
         {tab === 'hostel' && <Hostel id={id} />}
+        {tab === 'library' && <ChildLibrary id={id} />}
       </section>
     </>
   );
@@ -342,6 +343,37 @@ interface HostelView {
   outpasses: { id: string; destination: string; reason: string; outTime: string; expectedReturn: string; status: string; parentApproval: string; wardenApproval: string }[];
   homeGoings: { id: string; fromDate: string; toDate: string; reason: string; status: string }[];
   mess: { plan: string; today: { meal: string; items: string }[] } | null;
+}
+
+interface LibView { loans: { id: string; title: string; authors: string | null; dueDate: string; daysLate: number; fineSoFar: string }[]; history: { id: string; title: string; returnDate: string | null; fineAmount: string; fineStatus: string }[]; reservations: { id: string; title: string; status: string; expiresOn: string | null }[] }
+
+/** The child's library books, due dates and reservations (Phase 16). */
+function ChildLibrary({ id }: { id: string }) {
+  const { t, locale } = useI18n();
+  const [v, setV] = useState<LibView | null>(null);
+  useEffect(() => { api<LibView>(`/library/children/${id}`).then(setV).catch(() => setV({ loans: [], history: [], reservations: [] })); }, [id]);
+  const d = (s: string | null) => (s ? new Date(`${s}T00:00:00Z`).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }) : '');
+  if (!v) return <SkeletonRows rows={3} />;
+  if (!v.loans.length && !v.reservations.length && !v.history.length) return <EmptyState icon="book" title={t('pt.lib.none')} />;
+  return (
+    <>
+      {v.loans.length > 0 ? (
+        <ul className="pay-mine">{v.loans.map((l) => (
+          <li key={l.id} className="card">
+            <span><strong>{l.title}</strong>{l.authors && <span className="sub-line muted small">{l.authors}</span>}</span>
+            <span className="pay-mine-amt"><span className="muted small">{t('lib.dueOn')}</span><strong className={l.daysLate ? 'text-bad' : undefined}>{d(l.dueDate)}</strong>{l.daysLate > 0 && <span className="small text-bad">{t('pt.lib.late', { n: l.daysLate, amt: l.fineSoFar })}</span>}</span>
+          </li>
+        ))}</ul>
+      ) : <p className="muted">{t('pt.lib.noneOut')}</p>}
+      {v.reservations.map((r) => <p key={r.id} className="notice"><Icon name="star" size={16} /> {r.status === 'READY' ? t('pt.lib.ready', { title: r.title, d: d(r.expiresOn) }) : t('pt.lib.waiting', { title: r.title })}</p>)}
+      {v.history.length > 0 && (
+        <section className="card p12-block" aria-labelledby="pt-lib-h">
+          <h3 id="pt-lib-h" className="card-title">{t('pt.lib.recent')}</h3>
+          <ul className="p12-action-list">{v.history.map((h) => <li key={h.id}><span>{h.title}</span><span className="muted small">{d(h.returnDate)}{h.fineStatus === 'CHARGED' ? ` · ${t('pt.lib.fine', { amt: h.fineAmount })}` : ''}</span></li>)}</ul>
+        </section>
+      )}
+    </>
+  );
 }
 
 function Hostel({ id }: { id: string }) {

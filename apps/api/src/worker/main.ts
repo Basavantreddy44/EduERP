@@ -6,6 +6,7 @@ import { FeeOnlineService } from '../modules/fees/online.service';
 import { LateFeeService } from '../modules/fees/late-fee.service';
 import { TransportFleetService } from '../modules/transport/fleet.service';
 import { ComplaintsService } from '../modules/engagement/complaints.service';
+import { LibraryService } from '../modules/campuslife/library.service';
 import { config } from '../config';
 
 /** Background worker process: `pnpm --filter @eduerp/api worker`. Run one or more next to the API. */
@@ -44,7 +45,14 @@ async function main(): Promise<void> {
   const escalate = () => complaints.escalateAll().then((n) => n && console.log(`Complaints escalated: ${n}`)).catch((e) => console.error('Complaint escalation failed:', e instanceof Error ? e.message : e));
   const escalateFirst = setTimeout(escalate, 180_000);
   const escalateTimer = setInterval(escalate, 3_600_000);
+  // Library: overdue reminders (once a day per loan) and expired holds; hourly, first pass four minutes after start.
+  const library = app.get(LibraryService);
+  const remind = () => library.remindAll().then((n) => n && console.log(`Library overdue reminders: ${n}`)).catch((e) => console.error('Library reminders failed:', e instanceof Error ? e.message : e));
+  const libraryFirst = setTimeout(remind, 240_000);
+  const libraryTimer = setInterval(remind, 3_600_000);
   const shutdown = async () => {
+    clearTimeout(libraryFirst);
+    clearInterval(libraryTimer);
     clearInterval(recheck);
     clearTimeout(lateFirst);
     clearInterval(lateTimer);

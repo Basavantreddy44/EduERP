@@ -4424,3 +4424,313 @@ model PayrollTaxOpening {
   @@unique([tenantId, employeeId, fyLabel])
   @@map("payroll_tax_openings")
 }
+
+// ───────────── Phase 16: Library, health & infirmary, discipline & counselling (B5 §4–§6) ─────────────
+
+model LibrarySettings {
+  id              String   @id @default(uuid()) @db.Uuid
+  tenantId        String   @map("tenant_id") @db.Uuid
+  studentLoanDays Int      @default(14) @map("student_loan_days") @db.SmallInt
+  staffLoanDays   Int      @default(30) @map("staff_loan_days") @db.SmallInt
+  studentMaxBooks Int      @default(2) @map("student_max_books") @db.SmallInt
+  staffMaxBooks   Int      @default(5) @map("staff_max_books") @db.SmallInt
+  maxRenewals     Int      @default(1) @map("max_renewals") @db.SmallInt
+  finePerDay      Decimal  @default(1) @map("fine_per_day") @db.Decimal(8, 2)
+  graceDays       Int      @default(0) @map("grace_days") @db.SmallInt
+  holdDays        Int      @default(3) @map("hold_days") @db.SmallInt
+  nextAccession   Int      @default(1) @map("next_accession")
+  updatedBy       String?  @map("updated_by") @db.Uuid
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId])
+  @@map("library_settings")
+}
+
+model LibraryBook {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.Uuid
+  isbn        String?  @db.VarChar(20)
+  title       String   @db.VarChar(300)
+  authors     String?  @db.VarChar(300)
+  publisher   String?  @db.VarChar(150)
+  edition     String?  @db.VarChar(30)
+  publishYear Int?     @map("publish_year") @db.SmallInt
+  language    String?  @db.VarChar(30)
+  subject     String?  @db.VarChar(100)
+  callNo      String?  @map("call_no") @db.VarChar(50)
+  createdBy   String?  @map("created_by") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  copies LibraryCopy[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, isbn])
+  @@map("library_books")
+}
+
+model LibraryCopy {
+  id           String    @id @default(uuid()) @db.Uuid
+  tenantId     String    @map("tenant_id") @db.Uuid
+  bookId       String    @map("book_id") @db.Uuid
+  campusId     String    @map("campus_id") @db.Uuid
+  accessionNo  String    @map("accession_no") @db.VarChar(30)
+  barcode      String?   @db.VarChar(50)
+  purchaseDate DateTime? @map("purchase_date") @db.Date
+  price        Decimal?  @db.Decimal(10, 2)
+  rackLocation String?   @map("rack_location") @db.VarChar(50)
+  status       String    @default("AVAILABLE") @db.VarChar(15)
+  remarks      String?   @db.VarChar(200)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  book LibraryBook @relation(fields: [tenantId, bookId], references: [tenantId, id])
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, accessionNo])
+  @@index([tenantId, bookId])
+  @@map("library_copies")
+}
+
+model LibraryIssue {
+  id            String    @id @default(uuid()) @db.Uuid
+  tenantId      String    @map("tenant_id") @db.Uuid
+  campusId      String    @map("campus_id") @db.Uuid
+  copyId        String    @map("copy_id") @db.Uuid
+  memberType    String    @map("member_type") @db.VarChar(10)
+  studentId     String?   @map("student_id") @db.Uuid
+  employeeId    String?   @map("employee_id") @db.Uuid
+  issueDate     DateTime  @map("issue_date") @db.Date
+  dueDate       DateTime  @map("due_date") @db.Date
+  renewCount    Int       @default(0) @map("renew_count") @db.SmallInt
+  returnDate    DateTime? @map("return_date") @db.Date
+  fineAmount    Decimal   @default(0) @map("fine_amount") @db.Decimal(10, 2)
+  fineStatus    String    @default("NONE") @map("fine_status") @db.VarChar(10)
+  fineInvoiceId String?   @map("fine_invoice_id") @db.Uuid
+  lostInvoiceId String?   @map("lost_invoice_id") @db.Uuid
+  status        String    @default("ISSUED") @db.VarChar(10)
+  issuedBy      String    @map("issued_by") @db.Uuid
+  returnedTo    String?   @map("returned_to") @db.Uuid
+  lastReminder  DateTime? @map("last_reminder") @db.Date
+  remarks       String?   @db.VarChar(200)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, status, dueDate])
+  @@index([tenantId, studentId])
+  @@index([tenantId, employeeId])
+  @@map("library_issues")
+}
+
+model LibraryReservation {
+  id         String    @id @default(uuid()) @db.Uuid
+  tenantId   String    @map("tenant_id") @db.Uuid
+  bookId     String    @map("book_id") @db.Uuid
+  campusId   String    @map("campus_id") @db.Uuid
+  memberType String    @map("member_type") @db.VarChar(10)
+  studentId  String?   @map("student_id") @db.Uuid
+  employeeId String?   @map("employee_id") @db.Uuid
+  status     String    @default("WAITING") @db.VarChar(10)
+  copyId     String?   @map("copy_id") @db.Uuid
+  readyAt    DateTime? @map("ready_at") @db.Timestamptz(6)
+  expiresOn  DateTime? @map("expires_on") @db.Date
+  createdBy  String    @map("created_by") @db.Uuid
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, bookId, status])
+  @@map("library_reservations")
+}
+
+model LibraryStockCheck {
+  id        String    @id @default(uuid()) @db.Uuid
+  tenantId  String    @map("tenant_id") @db.Uuid
+  campusId  String    @map("campus_id") @db.Uuid
+  startedOn DateTime  @map("started_on") @db.Date
+  status    String    @default("OPEN") @db.VarChar(10)
+  closedAt  DateTime? @map("closed_at") @db.Timestamptz(6)
+  createdBy String    @map("created_by") @db.Uuid
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@map("library_stock_checks")
+}
+
+model LibraryStockScan {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  checkId   String   @map("check_id") @db.Uuid
+  copyId    String   @map("copy_id") @db.Uuid
+  scannedBy String   @map("scanned_by") @db.Uuid
+  scannedAt DateTime @default(now()) @map("scanned_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@unique([checkId, copyId])
+  @@map("library_stock_scans")
+}
+
+model StudentHealthProfile {
+  id                String   @id @default(uuid()) @db.Uuid
+  tenantId          String   @map("tenant_id") @db.Uuid
+  studentId         String   @map("student_id") @db.Uuid
+  heightCm          Decimal? @map("height_cm") @db.Decimal(5, 1)
+  weightKg          Decimal? @map("weight_kg") @db.Decimal(5, 1)
+  allergies         String?  @db.VarChar(500)
+  conditions        String?  @db.VarChar(500)
+  medications       String?  @db.VarChar(500)
+  disability        String?  @db.VarChar(200)
+  doctorName        String?  @map("doctor_name") @db.VarChar(150)
+  doctorPhone       String?  @map("doctor_phone") @db.VarChar(15)
+  updatedBy         String   @map("updated_by") @db.Uuid
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, studentId])
+  @@map("student_health_profiles")
+}
+
+model InfirmaryVisit {
+  id             String   @id @default(uuid()) @db.Uuid
+  tenantId       String   @map("tenant_id") @db.Uuid
+  campusId       String   @map("campus_id") @db.Uuid
+  patientType    String   @map("patient_type") @db.VarChar(10)
+  studentId      String?  @map("student_id") @db.Uuid
+  employeeId     String?  @map("employee_id") @db.Uuid
+  visitAt        DateTime @map("visit_at") @db.Timestamptz(6)
+  complaint      String   @db.VarChar(300)
+  temperature    Decimal? @db.Decimal(4, 1)
+  treatment      String?  @db.VarChar(500)
+  medicine       String?  @db.VarChar(300)
+  outcome        String   @db.VarChar(20)
+  parentInformed Boolean  @default(false) @map("parent_informed")
+  attendedBy     String   @map("attended_by") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, campusId, visitAt])
+  @@index([tenantId, studentId])
+  @@map("infirmary_visits")
+}
+
+model HealthCheckup {
+  id             String   @id @default(uuid()) @db.Uuid
+  tenantId       String   @map("tenant_id") @db.Uuid
+  studentId      String   @map("student_id") @db.Uuid
+  checkupDate    DateTime @map("checkup_date") @db.Date
+  checkupType    String   @map("checkup_type") @db.VarChar(10)
+  heightCm       Decimal? @map("height_cm") @db.Decimal(5, 1)
+  weightKg       Decimal? @map("weight_kg") @db.Decimal(5, 1)
+  findings       String   @db.VarChar(1000)
+  recommendation String?  @db.VarChar(500)
+  doctorName     String?  @map("doctor_name") @db.VarChar(150)
+  createdBy      String   @map("created_by") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, studentId])
+  @@map("health_checkups")
+}
+
+model Vaccination {
+  id              String    @id @default(uuid()) @db.Uuid
+  tenantId        String    @map("tenant_id") @db.Uuid
+  studentId       String    @map("student_id") @db.Uuid
+  vaccineName     String    @map("vaccine_name") @db.VarChar(100)
+  doseNo          Int       @default(1) @map("dose_no") @db.SmallInt
+  vaccinationDate DateTime  @map("vaccination_date") @db.Date
+  nextDueDate     DateTime? @map("next_due_date") @db.Date
+  remarks         String?   @db.VarChar(200)
+  createdBy       String    @map("created_by") @db.Uuid
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, studentId])
+  @@map("vaccinations")
+}
+
+model DisciplineIncidentType {
+  id           String   @id @default(uuid()) @db.Uuid
+  tenantId     String   @map("tenant_id") @db.Uuid
+  name         String   @db.VarChar(100)
+  severity     String   @db.VarChar(10)
+  notifyParent Boolean  @default(false) @map("notify_parent")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, name])
+  @@map("discipline_incident_types")
+}
+
+model DisciplineIncident {
+  id             String    @id @default(uuid()) @db.Uuid
+  tenantId       String    @map("tenant_id") @db.Uuid
+  campusId       String    @map("campus_id") @db.Uuid
+  studentId      String    @map("student_id") @db.Uuid
+  typeId         String    @map("type_id") @db.Uuid
+  incidentAt     DateTime  @map("incident_at") @db.Timestamptz(6)
+  location       String?   @db.VarChar(100)
+  description    String    @db.VarChar(2000)
+  witnesses      String?   @db.VarChar(300)
+  status         String    @default("REPORTED") @db.VarChar(15)
+  parentNotified Boolean   @default(false) @map("parent_notified")
+  reportedBy     String    @map("reported_by") @db.Uuid
+  closedBy       String?   @map("closed_by") @db.Uuid
+  closedAt       DateTime? @map("closed_at") @db.Timestamptz(6)
+  closingNote    String?   @map("closing_note") @db.VarChar(500)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  actions DisciplineAction[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, studentId])
+  @@index([tenantId, campusId, status])
+  @@map("discipline_incidents")
+}
+
+model DisciplineAction {
+  id                String    @id @default(uuid()) @db.Uuid
+  tenantId          String    @map("tenant_id") @db.Uuid
+  incidentId        String    @map("incident_id") @db.Uuid
+  actionType        String    @map("action_type") @db.VarChar(15)
+  description       String    @db.VarChar(500)
+  fromDate          DateTime? @map("from_date") @db.Date
+  toDate            DateTime? @map("to_date") @db.Date
+  fineAmount        Decimal?  @map("fine_amount") @db.Decimal(10, 2)
+  fineStatus        String    @default("NONE") @map("fine_status") @db.VarChar(20)
+  invoiceId         String?   @map("invoice_id") @db.Uuid
+  approvalRequestId String?   @map("approval_request_id") @db.Uuid
+  createdBy         String    @map("created_by") @db.Uuid
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  incident DisciplineIncident @relation(fields: [tenantId, incidentId], references: [tenantId, id])
+
+  @@unique([tenantId, id])
+  @@map("discipline_actions")
+}
+
+model CounsellingSession {
+  id             String    @id @default(uuid()) @db.Uuid
+  tenantId       String    @map("tenant_id") @db.Uuid
+  campusId       String    @map("campus_id") @db.Uuid
+  studentId      String    @map("student_id") @db.Uuid
+  counsellorId   String    @map("counsellor_id") @db.Uuid
+  sessionAt      DateTime  @map("session_at") @db.Timestamptz(6)
+  referralSource String    @map("referral_source") @db.VarChar(15)
+  incidentId     String?   @map("incident_id") @db.Uuid
+  notesEnc       String?   @map("notes_enc")
+  followUpDate   DateTime? @map("follow_up_date") @db.Date
+  isConfidential Boolean   @default(true) @map("is_confidential")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, studentId])
+  @@index([tenantId, counsellorId])
+  @@map("counselling_sessions")
+}

@@ -99,6 +99,16 @@ export const PERMISSIONS = {
   PAYROLL_PAY: 'payroll.pay',
   PAYROLL_LOAN: 'payroll.loan.manage',
   PAYROLL_REPORTS: 'payroll.reports',
+  LIB_MANAGE: 'library.manage',
+  LIB_CIRCULATE: 'library.circulate',
+  LIB_WAIVE: 'library.fine.waive',
+  HEALTH_READ: 'health.read',
+  HEALTH_MANAGE: 'health.manage',
+  HEALTH_HOSTEL: 'health.read.hostel',
+  DISC_REPORT: 'discipline.report',
+  DISC_MANAGE: 'discipline.manage',
+  DISC_CLASS: 'discipline.read.class',
+  COUNSEL: 'counselling.manage',
 } as const;
 
 export type PermissionCode = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -200,12 +210,23 @@ export const PERMISSION_CATALOGUE: { code: PermissionCode; module: string; descr
   { code: PERMISSIONS.PAYROLL_PAY, module: 'HR_PAYROLL', description: 'Download the salary bank file and record salaries as paid' },
   { code: PERMISSIONS.PAYROLL_LOAN, module: 'HR_PAYROLL', description: 'Staff loans and salary advances' },
   { code: PERMISSIONS.PAYROLL_REPORTS, module: 'HR_PAYROLL', description: 'Payroll register and PF / ESI / PT / TDS statements' },
+  { code: PERMISSIONS.LIB_MANAGE, module: 'LIBRARY', description: 'Library catalogue, copies, settings, import and stock verification' },
+  { code: PERMISSIONS.LIB_CIRCULATE, module: 'LIBRARY', description: 'Issue, return, renew and reserve books; overdue list' },
+  { code: PERMISSIONS.LIB_WAIVE, module: 'LIBRARY', description: 'Waive a library fine' },
+  { code: PERMISSIONS.HEALTH_READ, module: 'HEALTH', description: 'Read health records and infirmary visits' },
+  { code: PERMISSIONS.HEALTH_MANAGE, module: 'HEALTH', description: 'Record infirmary visits, health profiles, check-ups and vaccinations' },
+  { code: PERMISSIONS.HEALTH_HOSTEL, module: 'HEALTH', description: 'Read health records of the students in your hostel (wardens)' },
+  { code: PERMISSIONS.DISC_REPORT, module: 'DISCIPLINE', description: 'Report a discipline incident' },
+  { code: PERMISSIONS.DISC_MANAGE, module: 'DISCIPLINE', description: 'Review incidents, take action and close them; incident types' },
+  { code: PERMISSIONS.DISC_CLASS, module: 'DISCIPLINE', description: 'Read the incidents of your own class (class teachers)' },
+  { code: PERMISSIONS.COUNSEL, module: 'DISCIPLINE', description: 'Counselling sessions (notes readable only by their author)' },
 ];
 
 /** A teacher: own classes (CD-73), attendance, homework, marks, parents, staff meetings, complaints and requests. */
 const TEACHER_PERMS: PermissionCode[] = [
   PERMISSIONS.ACAD_TEACH, PERMISSIONS.ATT_READ, PERMISSIONS.ATT_MARK, PERMISSIONS.ATT_CORRECT, PERMISSIONS.LEAVE_SELF, PERMISSIONS.LEAVE_STUDENT, PERMISSIONS.EXAM_READ, PERMISSIONS.EXAM_MARKS,
   PERMISSIONS.FEED_READ, PERMISSIONS.FEED_POST, PERMISSIONS.EVENT_READ, PERMISSIONS.PTM_TEACH, PERMISSIONS.MEETING_ATTEND, PERMISSIONS.GRIEVANCE_RAISE, PERMISSIONS.GRIEVANCE_HANDLE, PERMISSIONS.DEPT_REQ_RAISE,
+  PERMISSIONS.DISC_REPORT, PERMISSIONS.DISC_CLASS,
 ];
 
 /** System roles created for every new tenant. */
@@ -229,6 +250,9 @@ export const SYSTEM_ROLES: { code: string; name: string; permissions: Permission
     code: 'ACCOUNTANT', name: 'Accountant', permissions: [PERMISSIONS.ORG_CAMPUS_READ, PERMISSIONS.ACC_READ, PERMISSIONS.ACC_ENTRY, PERMISSIONS.ACC_SETUP, PERMISSIONS.ACC_BANK, PERMISSIONS.ACC_CLOSE, PERMISSIONS.FEE_READ, PERMISSIONS.FEE_BILL, PERMISSIONS.FEE_COLLECT, PERMISSIONS.PAYROLL_PAY, PERMISSIONS.PAYROLL_REPORTS,
       PERMISSIONS.MEETING_ATTEND, PERMISSIONS.LEAVE_SELF, PERMISSIONS.DEPT_REQ_RAISE, PERMISSIONS.DEPT_REQ_HANDLE, PERMISSIONS.FEED_READ, PERMISSIONS.EVENT_READ],
   },
+  { code: 'LIBRARIAN', name: 'Librarian', permissions: [PERMISSIONS.ORG_CAMPUS_READ, PERMISSIONS.LIB_MANAGE, PERMISSIONS.LIB_CIRCULATE, PERMISSIONS.LIB_WAIVE, PERMISSIONS.MEETING_ATTEND, PERMISSIONS.LEAVE_SELF, PERMISSIONS.DEPT_REQ_RAISE, PERMISSIONS.FEED_READ, PERMISSIONS.EVENT_READ] },
+  { code: 'NURSE', name: 'School nurse', permissions: [PERMISSIONS.ORG_CAMPUS_READ, PERMISSIONS.HEALTH_READ, PERMISSIONS.HEALTH_MANAGE, PERMISSIONS.MEETING_ATTEND, PERMISSIONS.LEAVE_SELF, PERMISSIONS.DEPT_REQ_RAISE, PERMISSIONS.FEED_READ, PERMISSIONS.EVENT_READ] },
+  { code: 'COUNSELLOR', name: 'Counsellor', permissions: [PERMISSIONS.ORG_CAMPUS_READ, PERMISSIONS.COUNSEL, PERMISSIONS.DISC_MANAGE, PERMISSIONS.DISC_REPORT, PERMISSIONS.MEETING_ATTEND, PERMISSIONS.LEAVE_SELF, PERMISSIONS.DEPT_REQ_RAISE, PERMISSIONS.FEED_READ, PERMISSIONS.EVENT_READ] },
 ];
 
 /** Platform (SaaS operator) roles live on users.platform_role, not in tenant roles. */

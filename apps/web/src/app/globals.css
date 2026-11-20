@@ -2034,3 +2034,19 @@ a.ecal-chip:hover { filter: brightness(.96); }
 }
 @media print { .payslip-page { page: payslip; } .payslip-page .receipt { padding: 0; } }
 @page payslip { size: A4; margin: 14mm; }
+
+/* ───────────── Phase 16: Library, health, discipline ───────────── */
+.lib-desk { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-bottom: 18px; }
+.lib-scan { display: flex; gap: 8px; margin: 10px 0; }
+.lib-scan .input { flex: 1; min-width: 0; font-size: 16px; }
+.lib-mini { list-style: none; margin: 6px 0; padding: 0; display: grid; gap: 4px; }
+.lib-mini li { display: flex; justify-content: space-between; gap: 10px; padding: 6px 10px; border-radius: 8px; background: var(--surface-2); font-size: 14px; }
+.lib-search { min-width: min(100%, 420px); }
+.lib-out-head { margin-top: 6px; }
+.lib-out-head .filter-bar { margin: 0; }
+.pre-wrap { white-space: pre-wrap; }
+.co-notes { padding: 12px 14px; border-radius: 10px; background: var(--surface-2); line-height: 1.55; }
+@media (max-width: 760px) { .lib-desk { grid-template-columns: 1fr; } }
+.lib-desk .card + .card, .hr-grid .card + .card { margin-top: 0; }
+.lib-desk > .card { margin-bottom: 0; }
+.lib-out-head .filter-bar input[type=search] { min-width: 260px; }

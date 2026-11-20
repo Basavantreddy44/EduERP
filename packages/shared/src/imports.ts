@@ -101,6 +101,28 @@ export const IMPORT_TYPES = {
       { key: 'joiningDate', header: 'Joining date', required: true, example: '2019-06-01', help: 'YYYY-MM-DD or DD-MM-YYYY.' },
     ],
   },
+  LIBRARY_BOOKS: {
+    type: 'LIBRARY_BOOKS',
+    label: 'Library books',
+    description: 'The existing accession register: one row per copy. Copies with the same title and ISBN become one book.',
+    columns: [
+      { key: 'accessionNo', header: 'Accession no', required: false, example: '1045', help: 'Leave empty to number automatically. Must be unique.' },
+      { key: 'title', header: 'Title', required: true, example: 'Wings of Fire', help: 'Up to 300 characters.' },
+      { key: 'authors', header: 'Author(s)', required: false, example: 'A. P. J. Abdul Kalam', help: '' },
+      { key: 'isbn', header: 'ISBN', required: false, example: '9788173711466', help: '10 or 13 digits.' },
+      { key: 'publisher', header: 'Publisher', required: false, example: 'Universities Press', help: '' },
+      { key: 'edition', header: 'Edition', required: false, example: '1st', help: '' },
+      { key: 'publishYear', header: 'Year', required: false, example: '1999', help: '' },
+      { key: 'language', header: 'Language', required: false, example: 'English', help: '' },
+      { key: 'subject', header: 'Subject', required: false, example: 'Biography', help: '' },
+      { key: 'callNo', header: 'Call no', required: false, example: '920 KAL', help: 'Shelf classification.' },
+      { key: 'campusCode', header: 'Campus code', required: true, example: 'MAIN', help: 'Where the copy is kept.' },
+      { key: 'barcode', header: 'Barcode', required: false, example: '', help: 'If different from the accession number.' },
+      { key: 'price', header: 'Price', required: false, example: '295', help: 'In rupees.' },
+      { key: 'purchaseDate', header: 'Purchase date', required: false, example: '2021-07-12', help: 'YYYY-MM-DD or DD-MM-YYYY.' },
+      { key: 'rackLocation', header: 'Rack', required: false, example: 'R3-S2', help: '' },
+    ],
+  },
 } as const satisfies Record<string, ImportType>;
 
 export type ImportTypeCode = keyof typeof IMPORT_TYPES;
