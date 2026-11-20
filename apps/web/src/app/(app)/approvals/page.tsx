@@ -30,7 +30,7 @@ export default function ApprovalsPage() {
   const dialog = useRef<HTMLDialogElement>(null);
   const toast = useToast();
   const { t, locale } = useI18n();
-  const label = (e: string) => t(`entity.${e}` as MessageKey);
+  const label = (e: string) => (e in APPROVAL_ENTITY_LABELS ? t(`entity.${e as ApprovalEntityType}` satisfies MessageKey) : e);
 
   const load = useCallback(() => {
     api<Pending[]>('/approvals/inbox').then(setItems).catch((e) => setError(e instanceof ApiError ? e.message : t('appr.loadFailed')));

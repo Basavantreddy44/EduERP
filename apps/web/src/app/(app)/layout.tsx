@@ -119,6 +119,22 @@ const NAV: { section: MessageKey; items: NavItem[] }[] = [
     ],
   },
   {
+    section: 'nav.labs',
+    items: [
+      { href: '/labs', label: 'nav.labsList', icon: 'building', module: 'LABS', anyOf: [PERMISSIONS.LAB_READ, PERMISSIONS.LAB_MANAGE, PERMISSIONS.LAB_SESSION] },
+      { href: '/labs/sessions', label: 'nav.labSessions', icon: 'calendar', module: 'LABS', anyOf: [PERMISSIONS.LAB_READ, PERMISSIONS.LAB_MANAGE, PERMISSIONS.LAB_SESSION] },
+      { href: '/labs/breakages', label: 'nav.labBreakages', icon: 'alert', module: 'LABS', anyOf: [PERMISSIONS.LAB_READ, PERMISSIONS.LAB_MANAGE, PERMISSIONS.LAB_SESSION] },
+    ],
+  },
+  {
+    section: 'nav.sports',
+    items: [
+      { href: '/activities', label: 'nav.actList', icon: 'star', module: 'SPORTS', anyOf: [PERMISSIONS.ACT_READ, PERMISSIONS.ACT_MANAGE] },
+      { href: '/activities/achievements', label: 'nav.actAchievements', icon: 'check', module: 'SPORTS', anyOf: [PERMISSIONS.ACT_READ, PERMISSIONS.ACT_MANAGE, PERMISSIONS.ACH_ADD] },
+      { href: '/activities/report', label: 'nav.actReport', icon: 'grid', module: 'SPORTS', anyOf: [PERMISSIONS.ACT_READ, PERMISSIONS.ACT_MANAGE] },
+    ],
+  },
+  {
     section: 'nav.campusCare',
     items: [
       { href: '/health', label: 'nav.health', icon: 'shield', module: 'HEALTH', anyOf: [PERMISSIONS.HEALTH_READ, PERMISSIONS.HEALTH_MANAGE, PERMISSIONS.HEALTH_HOSTEL] },
@@ -156,6 +172,18 @@ const NAV: { section: MessageKey; items: NavItem[] }[] = [
       { href: '/accounts/bank', label: 'nav.accBank', icon: 'building', permission: PERMISSIONS.ACC_BANK, module: 'ACCOUNTS' },
       { href: '/accounts/reports', label: 'nav.accReports', icon: 'layers', permission: PERMISSIONS.ACC_READ, module: 'ACCOUNTS' },
       { href: '/accounts/setup', label: 'nav.accSetup', icon: 'settings', permission: PERMISSIONS.ACC_READ, module: 'ACCOUNTS' },
+    ],
+  },
+  {
+    section: 'nav.inventory',
+    items: [
+      { href: '/inventory', label: 'nav.invStock', icon: 'layers', permission: PERMISSIONS.INV_READ, module: 'INVENTORY' },
+      { href: '/inventory/requests', label: 'nav.invRequests', icon: 'clipboard', anyOf: [PERMISSIONS.INV_REQUEST, PERMISSIONS.INV_READ], module: 'INVENTORY' },
+      { href: '/inventory/orders', label: 'nav.invOrders', icon: 'file', permission: PERMISSIONS.INV_READ, module: 'INVENTORY' },
+      { href: '/inventory/issues', label: 'nav.invIssues', icon: 'swap', permission: PERMISSIONS.INV_READ, module: 'INVENTORY' },
+      { href: '/inventory/counts', label: 'nav.invCounts', icon: 'check', permission: PERMISSIONS.INV_READ, module: 'INVENTORY' },
+      { href: '/inventory/reports', label: 'nav.invReports', icon: 'grid', permission: PERMISSIONS.INV_READ, module: 'INVENTORY' },
+      { href: '/inventory/setup', label: 'nav.invSetup', icon: 'settings', permission: PERMISSIONS.INV_READ, module: 'INVENTORY' },
     ],
   },
   {

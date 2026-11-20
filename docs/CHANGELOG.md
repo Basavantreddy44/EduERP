@@ -1,5 +1,31 @@
 # Changelog
 
+## [Unreleased] — 2026-11-20 (Phase 18 Labs, and Sports & activities)
+### Added
+- Labs with their in-charge, assistant, seats and own store; an equipment register with asset tags (unique per institution), condition and calibration dates, and a calibration due list.
+- Practical sessions booked per lab, class, batch and teacher; a lab is never booked twice at the same time; sessions marked done (with students present) or cancelled.
+- Lab breakages charged to the student's fees under Fines — after approval where a rule exists — or waived with a reason; broken equipment taken off the count.
+- Sports, clubs and houses with a coordinator; members per year with team and role (captain, vice-captain, secretary).
+- Competitions (school level to international) with entries by category and results; optional calendar event.
+- Achievements for students and staff: from a result or recorded by a teacher, verified by a coordinator, then shown on the student profile and in the parent app, parents told, and optionally posted to the news feed.
+- Activities report: participation and medals by activity and level, with CSV download.
+- "Activities" tab on the student profile and in the parent app.
+- Built-in roles: Lab assistant, Sports & activities coordinator; teachers can book practicals, report breakages and record achievements.
+
+## [Unreleased] — 2026-11-20 (Phase 17 Inventory & purchase)
+### Added
+- Items, categories and stores (with a store keeper), opening stock, and stock by store at the weighted-average rate; every movement in an item ledger.
+- Purchase requests from departments (approval where a rule exists), vendor quotations side by side with the lowest marked, and the chosen quotation with its reason.
+- Purchase orders (from a quotation or direct, approved by amount where a rule exists), printable for the vendor.
+- Goods receipts with accepted and rejected quantities (up to 5% over the order); only accepted goods enter stock.
+- Vendor bill made from a goods receipt (3-way match: never more than accepted and not yet billed, at the order rate), posted in Accounts as before.
+- Issues to departments or staff, transfers between stores, stock counts adjusted after approval, a daily low-stock notice to store keepers.
+- Store reports: consumption by department and the purchase register, with CSV download.
+- Built-in role: Store keeper.
+- pgAdmin for developers (`docker compose --profile tools up -d pgadmin`, http://localhost:5050).
+### Fixed
+- The approvals page showed codes instead of names for eleven approval types added since Phase 12; every type must now have a name or the build fails.
+
 ## [Unreleased] — 2026-11-20 (Phase 16 Campus life II)
 ### Added
 - Library: catalogue with accession numbers and barcodes, Excel import of the register, issue and return by scan, renewals, reservations held for the first in line, late fines and lost books billed to fees, overdue reminders, stock verification, My library and the parent app's Library tab.

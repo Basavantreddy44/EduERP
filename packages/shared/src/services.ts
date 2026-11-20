@@ -3,7 +3,7 @@ import { z } from 'zod';
 // ───────────── Numbering (G-05) ─────────────
 
 /** Document types that use number series. Modules add theirs here. */
-export const DOC_TYPES = ['ENQUIRY', 'ADMISSION', 'APPLICATION', 'RECEIPT', 'INVOICE', 'EMPLOYEE', 'TC', 'CERT', 'COMPLAINT', 'DEPT_REQUEST', 'GATE_PASS', 'VISITOR_PASS', 'VENDOR', 'VENDOR_BILL', 'VENDOR_PAYMENT', 'VOUCHER', 'JOURNAL', 'PAYROLL_RUN', 'STAFF_LOAN', 'TEST'] as const;
+export const DOC_TYPES = ['ENQUIRY', 'ADMISSION', 'APPLICATION', 'RECEIPT', 'INVOICE', 'EMPLOYEE', 'TC', 'CERT', 'COMPLAINT', 'DEPT_REQUEST', 'GATE_PASS', 'VISITOR_PASS', 'VENDOR', 'VENDOR_BILL', 'VENDOR_PAYMENT', 'VOUCHER', 'JOURNAL', 'PAYROLL_RUN', 'STAFF_LOAN', 'PURCHASE_REQUEST', 'PURCHASE_ORDER', 'GRN', 'STOCK_ISSUE', 'TEST'] as const;
 export type DocType = (typeof DOC_TYPES)[number];
 
 export const createSequenceSchema = z.object({
@@ -44,7 +44,7 @@ export const listFilesQuerySchema = z.object({
 // ───────────── Approvals (G-04) ─────────────
 
 /** Business records that can need approval. Modules add theirs here. */
-export const APPROVAL_ENTITY_TYPES = ['CONCESSION', 'REFUND', 'ATTENDANCE_CORRECTION', 'LEAVE', 'OUTPASS', 'HOSTEL_DAMAGE', 'CERTIFICATE', 'DEPT_REQUEST', 'VENDOR_BILL', 'VENDOR_PAYMENT', 'ACCOUNT_VOUCHER', 'PERIOD_UNLOCK', 'PURCHASE_ORDER', 'PAYROLL_RUN', 'STAFF_LOAN', 'DISCIPLINE_FINE', 'TEST'] as const;
+export const APPROVAL_ENTITY_TYPES = ['CONCESSION', 'REFUND', 'ATTENDANCE_CORRECTION', 'LEAVE', 'OUTPASS', 'HOSTEL_DAMAGE', 'CERTIFICATE', 'DEPT_REQUEST', 'VENDOR_BILL', 'VENDOR_PAYMENT', 'ACCOUNT_VOUCHER', 'PERIOD_UNLOCK', 'PURCHASE_ORDER', 'PAYROLL_RUN', 'STAFF_LOAN', 'DISCIPLINE_FINE', 'PURCHASE_REQUEST', 'STOCK_ADJUSTMENT', 'LAB_BREAKAGE', 'TEST'] as const;
 export type ApprovalEntityType = (typeof APPROVAL_ENTITY_TYPES)[number];
 export const APPROVAL_ENTITY_LABELS: Record<ApprovalEntityType, string> = {
   CONCESSION: 'Fee concession',
@@ -63,6 +63,9 @@ export const APPROVAL_ENTITY_LABELS: Record<ApprovalEntityType, string> = {
   PAYROLL_RUN: 'Payroll run',
   STAFF_LOAN: 'Staff loan / advance',
   DISCIPLINE_FINE: 'Discipline fine',
+  PURCHASE_REQUEST: 'Purchase request',
+  STOCK_ADJUSTMENT: 'Stock count adjustment',
+  LAB_BREAKAGE: 'Lab breakage charge',
   TEST: 'Test request',
 };
 

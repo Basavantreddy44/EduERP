@@ -68,6 +68,8 @@ pnpm worker                   # background worker (outbox, notifications, email)
 
 Sign in at http://localhost:3100 as the seeded platform admin, add an institution under **Institutions**, then sign in as that institution's admin and add campuses.
 
+Database browser (optional): `docker compose --profile tools up -d pgadmin`, then open http://localhost:5050. The **EduERP (local)** server is already listed; its password is `POSTGRES_OWNER_PASSWORD` from your `.env`. The app's data is in the `eduerp` database (`eduerp_test` is wiped by every test run). It signs in as the owner role, so it sees every institution — look, don't edit. Stop it with `docker compose stop pgadmin`.
+
 Tests (need the Postgres container running):
 - `pnpm --filter @eduerp/api test`: API integration tests. They rebuild the `eduerp_test` database from migrations on every run.
 - `pnpm --filter @eduerp/e2e e2e`: browser end-to-end tests (first time: `pnpm --filter @eduerp/e2e e2e:install`). Reuses the API/web if already running, otherwise starts them. Creates uniquely named test institutions in the dev database.

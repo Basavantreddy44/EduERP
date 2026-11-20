@@ -27,3 +27,5 @@ export * from './accounts2';
 export * from './hr';
 export * from './payroll';
 export * from './campuslife';
+export * from './inventory';
+export * from './activities';

@@ -115,6 +115,12 @@ import { LibraryService } from './modules/campuslife/library.service';
 import { HealthService } from './modules/campuslife/health.service';
 import { DisciplineService } from './modules/campuslife/discipline.service';
 import { LibraryBooksImporter } from './modules/campuslife/library.importer';
+import { InventoryController } from './modules/inventory/inventory.controller';
+import { InventoryService } from './modules/inventory/inventory.service';
+import { ActivitiesController, LabsController } from './modules/activities/activities.controller';
+import { LabsService } from './modules/activities/labs.service';
+import { SportsService } from './modules/activities/sports.service';
+import { PurchaseService } from './modules/inventory/purchase.service';
 import { PayrollSetupService } from './modules/payroll/payroll-setup.service';
 import { PayrollRunsService } from './modules/payroll/payroll-runs.service';
 import { PayrollExtraService } from './modules/payroll/payroll-extra.service';
@@ -204,6 +210,9 @@ const isTest = process.env.NODE_ENV === 'test';
     LibraryController,
     InfirmaryController,
     DisciplineController,
+    InventoryController,
+    LabsController,
+    ActivitiesController,
   ],
   providers: [
     Db,
@@ -288,6 +297,10 @@ const isTest = process.env.NODE_ENV === 'test';
     HealthService,
     DisciplineService,
     LibraryBooksImporter,
+    InventoryService,
+    LabsService,
+    SportsService,
+    PurchaseService,
     LeaveBalancesService,
     ExitsService,
     MessService,

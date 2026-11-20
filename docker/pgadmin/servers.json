@@ -1,0 +1,14 @@
+{
+  "Servers": {
+    "1": {
+      "Name": "EduERP (local)",
+      "Group": "EduERP",
+      "Host": "postgres",
+      "Port": 5432,
+      "MaintenanceDB": "eduerp",
+      "Username": "eduerp_owner",
+      "SSLMode": "prefer",
+      "Comment": "Local development database. Owner login: sees every institution's rows."
+    }
+  }
+}

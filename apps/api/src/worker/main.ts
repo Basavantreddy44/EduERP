@@ -7,6 +7,7 @@ import { LateFeeService } from '../modules/fees/late-fee.service';
 import { TransportFleetService } from '../modules/transport/fleet.service';
 import { ComplaintsService } from '../modules/engagement/complaints.service';
 import { LibraryService } from '../modules/campuslife/library.service';
+import { InventoryService } from '../modules/inventory/inventory.service';
 import { config } from '../config';
 
 /** Background worker process: `pnpm --filter @eduerp/api worker`. Run one or more next to the API. */
@@ -50,7 +51,14 @@ async function main(): Promise<void> {
   const remind = () => library.remindAll().then((n) => n && console.log(`Library overdue reminders: ${n}`)).catch((e) => console.error('Library reminders failed:', e instanceof Error ? e.message : e));
   const libraryFirst = setTimeout(remind, 240_000);
   const libraryTimer = setInterval(remind, 3_600_000);
+  // Inventory: low-stock notices; hourly, first pass five minutes after start.
+  const inventory = app.get(InventoryService);
+  const lowStock = () => inventory.alertAll().then((n) => n && console.log(`Low-stock notices: ${n}`)).catch((e) => console.error('Low-stock notices failed:', e instanceof Error ? e.message : e));
+  const stockFirst = setTimeout(lowStock, 300_000);
+  const stockTimer = setInterval(lowStock, 3_600_000);
   const shutdown = async () => {
+    clearTimeout(stockFirst);
+    clearInterval(stockTimer);
     clearTimeout(libraryFirst);
     clearInterval(libraryTimer);
     clearInterval(recheck);

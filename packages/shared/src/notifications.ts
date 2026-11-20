@@ -42,6 +42,8 @@ export const NOTIFICATION_EVENTS = {
   LIBRARY_READY: { code: 'LIBRARY_READY', label: 'Reserved library book ready', channels: ['IN_APP', 'EMAIL'], mandatory: false, variables: ['who', 'title', 'until'] },
   INFIRMARY_VISIT: { code: 'INFIRMARY_VISIT', label: 'Child seen in the school infirmary', channels: ['IN_APP', 'EMAIL'], mandatory: false, variables: ['student', 'complaint', 'outcome', 'time'] },
   DISCIPLINE_INCIDENT: { code: 'DISCIPLINE_INCIDENT', label: 'Behaviour incident', channels: ['IN_APP', 'EMAIL'], mandatory: false, variables: ['student', 'type', 'date'] },
+  ACHIEVEMENT: { code: 'ACHIEVEMENT', label: 'A child’s achievement', channels: ['IN_APP', 'EMAIL'], mandatory: false, variables: ['student', 'title', 'level'] },
+  INVENTORY_LOW: { code: 'INVENTORY_LOW', label: 'Store items running low', channels: ['IN_APP', 'EMAIL'], mandatory: false, variables: ['store', 'count', 'items'] },
 } as const satisfies Record<string, NotificationEvent>;
 
 export type NotificationEventCode = keyof typeof NOTIFICATION_EVENTS;
@@ -154,6 +156,16 @@ export const DEFAULT_TEMPLATES: TemplateText[] = [
   { eventCode: 'DISCIPLINE_INCIDENT', channel: 'IN_APP', language: 'kn', subject: '{{student}} ಅವರ ನಡವಳಿಕೆ ಕುರಿತು', body: '{{date}} ರಂದು ಒಂದು ಘಟನೆ ({{type}}) ದಾಖಲಾಗಿದೆ. ತರಗತಿ ಶಿಕ್ಷಕರು ಸಂಪರ್ಕಿಸುತ್ತಾರೆ; ನೀವೂ ಶಾಲೆಯನ್ನು ಸಂಪರ್ಕಿಸಬಹುದು.' },
   { eventCode: 'DISCIPLINE_INCIDENT', channel: 'EMAIL', language: 'en', subject: 'Behaviour note about {{student}}', body: 'Dear parent,\n\nAn incident ({{type}}) involving {{student}} was recorded on {{date}}.\n\nThe class teacher will be in touch. You are welcome to contact the school.' },
   { eventCode: 'DISCIPLINE_INCIDENT', channel: 'EMAIL', language: 'kn', subject: '{{student}} ಅವರ ನಡವಳಿಕೆ ಕುರಿತು', body: 'ಆತ್ಮೀಯ ಪೋಷಕರೇ,\n\n{{date}} ರಂದು {{student}} ಅವರನ್ನು ಒಳಗೊಂಡ ಒಂದು ಘಟನೆ ({{type}}) ದಾಖಲಾಗಿದೆ.\n\nತರಗತಿ ಶಿಕ್ಷಕರು ಸಂಪರ್ಕಿಸುತ್ತಾರೆ. ನೀವು ಶಾಲೆಯನ್ನು ಸಂಪರ್ಕಿಸಬಹುದು.' },
+  // ACHIEVEMENT (Phase 18)
+  { eventCode: 'ACHIEVEMENT', channel: 'IN_APP', language: 'en', subject: 'Well done, {{student}}!', body: '{{student}}: {{title}} ({{level}}).' },
+  { eventCode: 'ACHIEVEMENT', channel: 'IN_APP', language: 'kn', subject: 'ಅಭಿನಂದನೆಗಳು, {{student}}!', body: '{{student}}: {{title}} ({{level}}).' },
+  { eventCode: 'ACHIEVEMENT', channel: 'EMAIL', language: 'en', subject: 'Well done, {{student}}!', body: 'Dear parent,\n\nWe are happy to share that {{student}} has achieved: {{title}} ({{level}}).\n\nIt is now on {{student}}’s record in the parent app.' },
+  { eventCode: 'ACHIEVEMENT', channel: 'EMAIL', language: 'kn', subject: 'ಅಭಿನಂದನೆಗಳು, {{student}}!', body: 'ಆತ್ಮೀಯ ಪೋಷಕರೇ,\n\n{{student}} ಅವರ ಸಾಧನೆ: {{title}} ({{level}}) ಎಂದು ತಿಳಿಸಲು ಸಂತೋಷವಾಗುತ್ತದೆ.\n\nಇದು ಈಗ ಪೋಷಕರ ಆ್ಯಪ್‌ನಲ್ಲಿ {{student}} ಅವರ ದಾಖಲೆಯಲ್ಲಿದೆ.' },
+  // INVENTORY_LOW (Phase 17)
+  { eventCode: 'INVENTORY_LOW', channel: 'IN_APP', language: 'en', subject: '{{count}} item(s) running low in {{store}}', body: 'At or below the reorder level: {{items}}. Raise a purchase request.' },
+  { eventCode: 'INVENTORY_LOW', channel: 'IN_APP', language: 'kn', subject: '{{store}} ನಲ್ಲಿ {{count}} ವಸ್ತು(ಗಳು) ಕಡಿಮೆಯಾಗುತ್ತಿವೆ', body: 'ಮರು ಆದೇಶ ಮಟ್ಟ ಅಥವಾ ಅದಕ್ಕಿಂತ ಕಡಿಮೆ: {{items}}. ಖರೀದಿ ವಿನಂತಿ ಸಲ್ಲಿಸಿ.' },
+  { eventCode: 'INVENTORY_LOW', channel: 'EMAIL', language: 'en', subject: '{{count}} item(s) running low in {{store}}', body: 'Hello,\n\nThese items in {{store}} are at or below their reorder level: {{items}}.\n\nPlease raise a purchase request in EduERP → Inventory.' },
+  { eventCode: 'INVENTORY_LOW', channel: 'EMAIL', language: 'kn', subject: '{{store}} ನಲ್ಲಿ {{count}} ವಸ್ತು(ಗಳು) ಕಡಿಮೆಯಾಗುತ್ತಿವೆ', body: 'ನಮಸ್ಕಾರ,\n\n{{store}} ನಲ್ಲಿನ ಈ ವಸ್ತುಗಳು ಮರು ಆದೇಶ ಮಟ್ಟದಲ್ಲಿ ಅಥವಾ ಅದಕ್ಕಿಂತ ಕಡಿಮೆ ಇವೆ: {{items}}.\n\nದಯವಿಟ್ಟು EduERP → ದಾಸ್ತಾನು ವಿಭಾಗದಲ್ಲಿ ಖರೀದಿ ವಿನಂತಿ ಸಲ್ಲಿಸಿ.' },
 ];
 
 /** Replaces {{name}} placeholders; unknown placeholders become empty. Values are plain text (no HTML). */

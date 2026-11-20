@@ -2050,3 +2050,86 @@ a.ecal-chip:hover { filter: brightness(.96); }
 .lib-desk .card + .card, .hr-grid .card + .card { margin-top: 0; }
 .lib-desk > .card { margin-bottom: 0; }
 .lib-out-head .filter-bar input[type=search] { min-width: 260px; }
+
+/* ───────────── Phase 17: inventory & purchase ───────────── */
+.inv-f { display: flex; flex-direction: column; gap: 5px; font-size: 13px; font-weight: 700; color: var(--text); }
+.inv-f input, .inv-f select { height: 40px; padding: 0 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: #fff; font: 500 14px var(--font-sans), sans-serif; min-width: 180px; }
+.inv-f input[type=search] { min-width: 240px; }
+.filter-bar .check { align-self: center; margin-top: 18px; }
+tr.row-warn td { background: #fdf8ee; }
+.inv-lines td:first-child { min-width: 240px; }
+.inv-lines td .sub-line { display: block; margin-top: 2px; text-align: inherit; }
+.inv-facts { display: flex; flex-wrap: wrap; gap: 8px 32px; margin: 0 0 12px; }
+.inv-facts dt { font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.inv-facts dd { margin: 2px 0 0; font-weight: 700; }
+.inv-compare { min-width: 560px; }
+.inv-compare th[scope=row] { font-weight: 600; text-align: left; }
+.inv-compare td.inv-best { background: var(--ok-bg); color: #1d6b45; font-weight: 700; }
+.inv-compare td.inv-best .muted { color: #1d6b45; opacity: 1; }
+.inv-compare th.inv-chosen { box-shadow: inset 0 -3px 0 var(--gold); }
+.inv-compare tfoot th, .inv-compare tfoot td { background: var(--surface-2); }
+.inv-compare tr.inv-total td, .inv-compare tr.inv-total th { font-size: 1.05em; }
+.inv-grn + .inv-grn { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+.inv-grn-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 14px; }
+.inv-counts { display: grid; gap: 0; }
+tr.inv-differs td { background: #fdf8ee; }
+.po-page .row-actions { gap: 8px; align-items: center; flex-wrap: wrap; }
+.po-page .receipt + .card { margin-top: 18px; }
+.receipt.void { opacity: .9; }
+.po-terms { margin-top: 16px; }
+.po-terms h2 { margin: 0 0 4px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.po-sign { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; margin-top: 46px; }
+.po-sign-line { min-width: 200px; padding-top: 6px; border-top: 1px solid var(--text); text-align: center; font-size: 13px; font-weight: 600; }
+@media (max-width: 640px) {
+  .inv-f, .inv-f input, .inv-f select, .inv-f input[type=search] { width: 100%; min-width: 0; }
+  .po-page .receipt-tools { flex-direction: column; align-items: flex-start; }
+  .po-sign { flex-direction: column; align-items: flex-start; }
+}
+@media print { .po-page { page: po; } .po-page .receipt { padding: 0; border: 0; box-shadow: none; } .inv-best { background: none !important; } }
+@page po { size: A4; margin: 14mm; }
+
+/* ───────────── Phase 18: labs, sports & activities ───────────── */
+.act-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-bottom: 18px; }
+.act-card { padding: 16px 18px; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.act-card .card-title { margin: 0; }
+.act-card p { margin: 0; }
+.act-card-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.act-card-foot { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: auto; padding-top: 10px; }
+.act-link { color: inherit; text-decoration: none; transition: border-color .15s, box-shadow .15s; }
+.act-link:hover { border-color: var(--gold); box-shadow: var(--shadow-sm); }
+.act-link:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.act-desc { color: var(--text); }
+.act-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 12px; margin: 6px 0 0; }
+.act-facts dt { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.act-facts dd { margin: 2px 0 0; font-size: 14px; font-weight: 600; }
+.act-group { margin-bottom: 8px; }
+.act-chips { list-style: none; margin: 8px 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.act-chips li { display: inline-flex; align-items: center; gap: 6px; padding: 6px 6px 6px 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--surface-2); font-size: 14px; }
+.act-chips-static li { padding-right: 12px; }
+.act-role { margin-left: 6px; }
+.act-team + .act-team { margin-top: 10px; }
+.act-team-name { margin: 4px 0 0; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.act-year { flex-direction: row; align-items: center; gap: 8px; }
+.act-year select { min-width: 140px; }
+.act-remove { margin-top: 4px; color: var(--bad); }
+.act-sessions, .act-ach-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.act-sessions li { display: grid; grid-template-columns: 110px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--border); }
+.act-sessions li:first-child { border-top: 0; }
+.act-time { font-weight: 700; color: var(--navy); }
+.act-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: flex-end; }
+.act-ach-list { gap: 10px; margin-bottom: 18px; }
+.act-ach-list li { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 12px 16px; margin: 0; }
+.act-medal { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: #f6ecd6; color: #8a6a21; }
+.act-student section + section { margin-top: 16px; }
+.act-awards { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 10px; }
+.act-awards li { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 10px; align-items: start; }
+.act-picker { display: grid; gap: 6px; }
+.act-self { align-self: end; margin-bottom: 18px; }
+.act-note { margin: 0; padding: 8px 14px; border-top: 1px solid var(--border); }
+@media (max-width: 760px) {
+  .act-facts { grid-template-columns: 1fr 1fr; }
+  .act-sessions li { grid-template-columns: 1fr; gap: 4px; }
+  .act-actions { justify-content: flex-start; }
+  .act-ach-list li { grid-template-columns: 36px minmax(0, 1fr); }
+  .act-ach-list .act-actions { grid-column: 1 / -1; }
+}

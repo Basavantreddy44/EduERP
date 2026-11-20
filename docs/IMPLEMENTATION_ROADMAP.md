@@ -346,5 +346,51 @@ Design: docs/tables/B5_campus_life.md §4 Library, §5 Health & infirmary, §6 D
 - **AC85 Health (M16.3):** health records need the health right (wardens: their hostel's students only); a visit that sends a child home tells the parents; vaccinations due are listed; isolation.
 - **AC86 Discipline & counselling (M16.4):** an incident's actions and status follow review → action → closed; a fine is billed to fees (after approval where set up); class teachers read their class's incidents only; counselling notes are stored encrypted and only their author can read them; isolation.
 
+## 2s. Phase 17 — Inventory & purchase (B6 part 1; after Phase 16, 2026-11-20; complete 2026-11-20)
+
+Design: docs/tables/B6_operations.md §1 (item categories, items, stores, stock balances, stock ledger, purchase requests, quotations, purchase orders, goods receipts, stock issues and transfers, stock counts). Builds on Phase 13 vendors, GST codes and vendor bills (the bill's purchase-order and goods-receipt links are filled from here), Phase 12 department requests and the approvals engine. Module `INVENTORY`. Owner decision 2026-11-20: purchases are booked as an expense on the vendor bill, as today; EduERP keeps stock quantities and their weighted-average value per store for issues, counts and reports, but stock is not an asset in the balance sheet (no inventory postings).
+
+| Milestone | Scope | Not in scope |
+|---|---|---|
+| **M17.1 Items & stores** | Item categories (starter: stationery, cleaning, lab consumables, IT, furniture, kitchen, sports); items with code, unit, type (consumable / asset / lab equipment), HSN, GST code, reorder level and the expense account the bill uses; stores per campus with a store keeper; opening stock per store at a rate; stock balance per store (quantity, weighted-average rate, value) changed only through the stock ledger in the same transaction with the row locked; item ledger | Fixed-asset register and depreciation, batch / expiry tracking, barcodes for items |
+| **M17.2 Purchase requests & quotations** | Purchase request from a department (optionally from a Phase 12 department request) with items, quantities, estimated rates and the date needed; approval (type "Purchase request", where a rule exists); quotations from vendors with item rates, GST, delivery days and terms; comparative statement (lowest per item and in total) and selection with a reason | Online tender / reverse auction, vendor portal |
+| **M17.3 Purchase orders, goods receipts & bills** | Purchase order from the selected quotation or directly, delivered to a store, approved by amount (type "Purchase order"), printable; goods receipt against the order with received, accepted and rejected quantities (accepted up to the ordered quantity + 5%), posted into stock at the order rate; order partly / fully received, closed or cancelled; the vendor bill made from a goods receipt (3-way match: billed quantity never more than accepted less already billed, at the order rate) and posted as in Phase 13 | Returns to vendor with debit notes, landed-cost apportionment |
+| **M17.4 Issues, transfers, counts & alerts** | Issue to a department or a staff member (optionally against a department request, closing it), out at the weighted-average rate, never more than in stock; transfer between stores (out and in together); physical stock count per store with the differences adjusted after approval (type "Stock adjustment", where a rule exists); low-stock list and a daily notice to the store keepers; reports: stock by store with value, item ledger, consumption by department and item, purchase register | Automatic reorder purchase requests, mess / kitchen consumption from menus |
+
+### Acceptance criteria
+- **AC87 Items & stock (M17.1):** stock never goes below zero (also with two issues at once); the weighted-average rate and value follow every receipt; the ledger balance always equals the stock balance; isolation.
+- **AC88 Requests & quotations (M17.2):** a request needs approval where a rule exists; the comparative statement picks the lowest total and per-item rates; only one quotation is selected per request; isolation.
+- **AC89 Orders, receipts & bills (M17.3):** an order is approved by someone else where a rule exists; accepted quantities never exceed the order + 5%; only accepted quantities enter stock; a bill from a receipt never bills more than was accepted less already billed; the order shows partly / fully received; isolation.
+- **AC90 Issues, counts & alerts (M17.4):** issues and transfers move stock at the average rate and never below zero; a count's differences adjust stock only after approval; items below their reorder level are listed and the store keeper is told once a day; isolation.
+
+## 2u. Phase 18 — Labs, and Sports & activities (B6 part 2; after Phase 17, 2026-11-20; complete 2026-11-20)
+
+Design: docs/tables/B6_operations.md §2 (labs, lab equipment, lab sessions, lab breakages) and §3 (activities, activity members, competitions, competition participants, achievements). Builds on Phase 17 stores and issues (each lab may have its own store for consumables), Phase 2 fee billing (breakages charged under the Fines fee head, like library fines), the approvals engine, Phase 8 sections and subjects, Phase 11 events and the news feed. Modules `LABS` and `SPORTS`.
+
+| Milestone | Scope | Not in scope |
+|---|---|---|
+| **M18.1 Labs & equipment** | Labs per campus with department, in-charge, lab assistant, capacity and the lab's store; equipment register with asset tag (unique per institution), quantity, condition (working / needs repair / damaged / disposed), optional inventory item, last and next calibration; calibration due / overdue list (30 days) | Equipment loans to students, maintenance contracts (AMC) |
+| **M18.2 Practical sessions & breakages** | Practical sessions per lab: class section, subject, batch, teacher, date and time, experiment; never two sessions in one lab at the same time; mark completed (with attendance count and remarks) or cancelled; a teacher's own sessions; breakage register (item or equipment, student, quantity, amount) charged to the student's fees under the Fines head — after approval where a LAB_BREAKAGE rule exists, otherwise at once — or waived with a reason; damaged equipment marked | Per-student practical attendance and marks (exams module), lab timetable inside the class timetable |
+| **M18.3 Activities & teams** | Activities per campus — sports, clubs (NCC, NSS, music, robotics…) and houses — with a coordinator; members per academic year with team and role (member, captain, vice-captain, secretary); a student's activities on their profile and in the parent app | Fees for activities, practice schedules and attendance |
+| **M18.4 Competitions & achievements** | Competitions per activity (intra-school to international) with venue, dates and an optional calendar event; participants by category with results (participated, winner, runner-up, third, special mention); achievements for students and staff (sports, academic, cultural, NCC / NSS, other) created from a result or entered directly, verified by a coordinator, then shown on the student profile and in the parent app, parents told, and optionally posted to the school news feed; reports: participation and medals by activity and level | Certificates printed for each participant, inter-school league tables |
+
+### Acceptance criteria
+- **AC91 Labs & equipment (M18.1):** asset tags are unique per institution; condition and calibration dates are kept; the due list shows equipment due within 30 days or overdue; isolation.
+- **AC92 Sessions & breakages (M18.2):** two sessions can never overlap in one lab (also when booked at the same moment); a breakage is billed to the student's fees once — after approval where a rule exists — or waived with a reason; isolation.
+- **AC93 Activities (M18.3):** a student is a member of an activity once per year; members show on the student profile and in the parent app for their own child only; isolation.
+- **AC94 Competitions & achievements (M18.4):** a student is entered once per competition and category; an achievement from a result keeps the link; only verified achievements reach the profile, the parent app, parents and the news feed; isolation.
+
+## 2t. Order after Phase 17 (owner, 2026-11-20)
+
+1. **Phase 18:** Labs, and Sports & activities.
+2. **Phase 19:** Placements, and Reports & exports (saved reports, background exports).
+3. **Phase 20 — SaaS billing for institutions** (added by the owner on 2026-11-20, before release). Plans, subscriptions, trials and module switches already exist (P0); what is missing is charging the institutions and acting on expiry. Planned scope, to be detailed and confirmed before building:
+   - **Invoices to institutions:** an invoice for each subscription (plan × students, GST), numbered and printable, with a running statement per institution in the platform console.
+   - **Recording payments:** bank transfer / UPI / cheque entered by the platform owner; online payment is "Coming soon" until a gateway is chosen.
+   - **Renewal & expiry:** reminders to the institution admin before the end date; after the end date a grace period, then the institution becomes read-only (SUSPENDED) automatically; reactivated when paid.
+   - **Student-count true-up:** compare active students against the subscribed count and show the difference.
+   - Not in scope: self sign-up, a custom web address per institution.
+4. Then university CBCS (credits, SGPA / CGPA, backlogs).
+
 ## 3. Parallelisation guidance
 After P0, P1/P2 (academic track) and the P3 setup work (COA, posting engine) can proceed in parallel with separate owners. P5/P6/P7 are largely independent once P3's posting service is stable.

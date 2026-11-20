@@ -3833,6 +3833,7 @@ model VendorBillItem {
   sgst         Decimal @default(0) @db.Decimal(14, 2)
   igst         Decimal @default(0) @db.Decimal(14, 2)
   itcClaimable Boolean @default(false) @map("itc_claimable")
+  goodsReceiptItemId String? @map("goods_receipt_item_id") @db.Uuid
 
   bill VendorBill @relation(fields: [tenantId, billId], references: [tenantId, id])
 
@@ -4733,4 +4734,545 @@ model CounsellingSession {
   @@index([tenantId, studentId])
   @@index([tenantId, counsellorId])
   @@map("counselling_sessions")
+}
+
+// ───────────── Phase 17: Inventory & purchase (B6 §1) ─────────────
+
+model ItemCategory {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  name      String   @db.VarChar(100)
+  parentId  String?  @map("parent_id") @db.Uuid
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, name])
+  @@map("item_categories")
+}
+
+model InventoryItem {
+  id               String   @id @default(uuid()) @db.Uuid
+  tenantId         String   @map("tenant_id") @db.Uuid
+  itemCode         String   @map("item_code") @db.VarChar(30)
+  name             String   @db.VarChar(200)
+  categoryId       String   @map("category_id") @db.Uuid
+  unit             String   @db.VarChar(20)
+  itemType         String   @map("item_type") @db.VarChar(15)
+  hsnCode          String?  @map("hsn_code") @db.VarChar(10)
+  taxCodeId        String?  @map("tax_code_id") @db.Uuid
+  reorderLevel     Decimal  @default(0) @map("reorder_level") @db.Decimal(14, 2)
+  expenseAccountId String?  @map("expense_account_id") @db.Uuid
+  description      String?  @db.VarChar(300)
+  isActive         Boolean  @default(true) @map("is_active")
+  createdBy        String?  @map("created_by") @db.Uuid
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, itemCode])
+  @@map("inventory_items")
+}
+
+model Store {
+  id            String   @id @default(uuid()) @db.Uuid
+  tenantId      String   @map("tenant_id") @db.Uuid
+  campusId      String   @map("campus_id") @db.Uuid
+  name          String   @db.VarChar(100)
+  storeKeeperId String?  @map("store_keeper_id") @db.Uuid
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, campusId, name])
+  @@map("stores")
+}
+
+model StockBalance {
+  id           String    @id @default(uuid()) @db.Uuid
+  tenantId     String    @map("tenant_id") @db.Uuid
+  storeId      String    @map("store_id") @db.Uuid
+  itemId       String    @map("item_id") @db.Uuid
+  quantity     Decimal   @default(0) @db.Decimal(14, 2)
+  avgCost      Decimal   @default(0) @map("avg_cost") @db.Decimal(14, 4)
+  value        Decimal   @default(0) @db.Decimal(14, 2)
+  lastLowAlert DateTime? @map("last_low_alert") @db.Date
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@unique([storeId, itemId])
+  @@map("stock_balances")
+}
+
+model StockTransaction {
+  id            String   @id @default(uuid()) @db.Uuid
+  tenantId      String   @map("tenant_id") @db.Uuid
+  storeId       String   @map("store_id") @db.Uuid
+  itemId        String   @map("item_id") @db.Uuid
+  txnAt         DateTime @default(now()) @map("txn_at") @db.Timestamptz(6)
+  txnDate       DateTime @map("txn_date") @db.Date
+  txnType       String   @map("txn_type") @db.VarChar(15)
+  quantity      Decimal  @db.Decimal(14, 2)
+  rate          Decimal  @db.Decimal(14, 4)
+  value         Decimal  @db.Decimal(14, 2)
+  referenceType String   @map("reference_type") @db.VarChar(15)
+  referenceId   String?  @map("reference_id") @db.Uuid
+  balanceAfter  Decimal  @map("balance_after") @db.Decimal(14, 2)
+  valueAfter    Decimal  @map("value_after") @db.Decimal(14, 2)
+  remarks       String?  @db.VarChar(200)
+  createdBy     String?  @map("created_by") @db.Uuid
+
+  @@unique([tenantId, id])
+  @@index([tenantId, itemId, txnAt])
+  @@index([tenantId, storeId, txnAt])
+  @@map("stock_transactions")
+}
+
+model PurchaseRequest {
+  id                  String    @id @default(uuid()) @db.Uuid
+  tenantId            String    @map("tenant_id") @db.Uuid
+  campusId            String    @map("campus_id") @db.Uuid
+  prNo                String    @map("pr_no") @db.VarChar(30)
+  departmentId        String    @map("department_id") @db.Uuid
+  departmentRequestId String?   @map("department_request_id") @db.Uuid
+  requestedBy         String    @map("requested_by") @db.Uuid
+  requiredBy          DateTime? @map("required_by") @db.Date
+  justification       String    @db.VarChar(500)
+  estimatedTotal      Decimal   @default(0) @map("estimated_total") @db.Decimal(14, 2)
+  approvalRequestId   String?   @map("approval_request_id") @db.Uuid
+  status              String    @db.VarChar(15)
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  items PurchaseRequestItem[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, prNo])
+  @@index([tenantId, status])
+  @@map("purchase_requests")
+}
+
+model PurchaseRequestItem {
+  id            String  @id @default(uuid()) @db.Uuid
+  tenantId      String  @map("tenant_id") @db.Uuid
+  prId          String  @map("pr_id") @db.Uuid
+  itemId        String  @map("item_id") @db.Uuid
+  quantity      Decimal @db.Decimal(14, 2)
+  estimatedRate Decimal @default(0) @map("estimated_rate") @db.Decimal(14, 2)
+  remarks       String? @db.VarChar(200)
+
+  pr PurchaseRequest @relation(fields: [tenantId, prId], references: [tenantId, id])
+
+  @@unique([tenantId, id])
+  @@unique([prId, itemId])
+  @@map("purchase_request_items")
+}
+
+model Quotation {
+  id              String    @id @default(uuid()) @db.Uuid
+  tenantId        String    @map("tenant_id") @db.Uuid
+  prId            String    @map("pr_id") @db.Uuid
+  vendorId        String    @map("vendor_id") @db.Uuid
+  quotationNo     String?   @map("quotation_no") @db.VarChar(50)
+  quotationDate   DateTime  @map("quotation_date") @db.Date
+  validTill       DateTime? @map("valid_till") @db.Date
+  deliveryDays    Int?      @map("delivery_days") @db.SmallInt
+  paymentTerms    String?   @map("payment_terms") @db.VarChar(200)
+  subTotal        Decimal   @map("sub_total") @db.Decimal(14, 2)
+  taxAmount       Decimal   @map("tax_amount") @db.Decimal(14, 2)
+  totalAmount     Decimal   @map("total_amount") @db.Decimal(14, 2)
+  isSelected      Boolean   @default(false) @map("is_selected")
+  selectionReason String?   @map("selection_reason") @db.VarChar(300)
+  createdBy       String    @map("created_by") @db.Uuid
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  items QuotationItem[]
+
+  @@unique([tenantId, id])
+  @@unique([prId, vendorId])
+  @@map("quotations")
+}
+
+model QuotationItem {
+  id          String  @id @default(uuid()) @db.Uuid
+  tenantId    String  @map("tenant_id") @db.Uuid
+  quotationId String  @map("quotation_id") @db.Uuid
+  prItemId    String  @map("pr_item_id") @db.Uuid
+  rate        Decimal @db.Decimal(14, 2)
+  taxPercent  Decimal @default(0) @map("tax_percent") @db.Decimal(5, 2)
+  amount      Decimal @db.Decimal(14, 2)
+
+  quotation Quotation @relation(fields: [tenantId, quotationId], references: [tenantId, id])
+
+  @@unique([tenantId, id])
+  @@unique([quotationId, prItemId])
+  @@map("quotation_items")
+}
+
+model PurchaseOrder {
+  id                String    @id @default(uuid()) @db.Uuid
+  tenantId          String    @map("tenant_id") @db.Uuid
+  campusId          String    @map("campus_id") @db.Uuid
+  poNo              String    @map("po_no") @db.VarChar(30)
+  vendorId          String    @map("vendor_id") @db.Uuid
+  prId              String?   @map("pr_id") @db.Uuid
+  quotationId       String?   @map("quotation_id") @db.Uuid
+  poDate            DateTime  @map("po_date") @db.Date
+  deliveryDate      DateTime? @map("delivery_date") @db.Date
+  storeId           String    @map("store_id") @db.Uuid
+  subTotal          Decimal   @map("sub_total") @db.Decimal(14, 2)
+  taxAmount         Decimal   @map("tax_amount") @db.Decimal(14, 2)
+  totalAmount       Decimal   @map("total_amount") @db.Decimal(14, 2)
+  terms             String?   @db.VarChar(2000)
+  approvalRequestId String?   @map("approval_request_id") @db.Uuid
+  status            String    @db.VarChar(20)
+  cancelReason      String?   @map("cancel_reason") @db.VarChar(300)
+  createdBy         String    @map("created_by") @db.Uuid
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  items PurchaseOrderItem[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, poNo])
+  @@index([tenantId, status])
+  @@map("purchase_orders")
+}
+
+model PurchaseOrderItem {
+  id          String  @id @default(uuid()) @db.Uuid
+  tenantId    String  @map("tenant_id") @db.Uuid
+  poId        String  @map("po_id") @db.Uuid
+  lineNo      Int     @map("line_no") @db.SmallInt
+  itemId      String  @map("item_id") @db.Uuid
+  quantity    Decimal @db.Decimal(14, 2)
+  rate        Decimal @db.Decimal(14, 2)
+  taxCodeId   String? @map("tax_code_id") @db.Uuid
+  taxPercent  Decimal @default(0) @map("tax_percent") @db.Decimal(5, 2)
+  amount      Decimal @db.Decimal(14, 2)
+  taxAmount   Decimal @default(0) @map("tax_amount") @db.Decimal(14, 2)
+  receivedQty Decimal @default(0) @map("received_qty") @db.Decimal(14, 2)
+
+  po PurchaseOrder @relation(fields: [tenantId, poId], references: [tenantId, id])
+
+  @@unique([tenantId, id])
+  @@unique([poId, lineNo])
+  @@map("purchase_order_items")
+}
+
+model GoodsReceipt {
+  id              String   @id @default(uuid()) @db.Uuid
+  tenantId        String   @map("tenant_id") @db.Uuid
+  campusId        String   @map("campus_id") @db.Uuid
+  grnNo           String   @map("grn_no") @db.VarChar(30)
+  poId            String   @map("po_id") @db.Uuid
+  storeId         String   @map("store_id") @db.Uuid
+  receiptDate     DateTime @map("receipt_date") @db.Date
+  vendorChallanNo String?  @map("vendor_challan_no") @db.VarChar(50)
+  receivedBy      String   @map("received_by") @db.Uuid
+  remarks         String?  @db.VarChar(300)
+  status          String   @default("POSTED") @db.VarChar(10)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  items GoodsReceiptItem[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, grnNo])
+  @@index([tenantId, poId])
+  @@map("goods_receipts")
+}
+
+model GoodsReceiptItem {
+  id              String  @id @default(uuid()) @db.Uuid
+  tenantId        String  @map("tenant_id") @db.Uuid
+  grnId           String  @map("grn_id") @db.Uuid
+  poItemId        String  @map("po_item_id") @db.Uuid
+  itemId          String  @map("item_id") @db.Uuid
+  receivedQty     Decimal @map("received_qty") @db.Decimal(14, 2)
+  acceptedQty     Decimal @map("accepted_qty") @db.Decimal(14, 2)
+  rejectedQty     Decimal @default(0) @map("rejected_qty") @db.Decimal(14, 2)
+  rejectionReason String? @map("rejection_reason") @db.VarChar(200)
+  rate            Decimal @db.Decimal(14, 2)
+
+  grn GoodsReceipt @relation(fields: [tenantId, grnId], references: [tenantId, id])
+
+  @@unique([tenantId, id])
+  @@unique([grnId, poItemId])
+  @@map("goods_receipt_items")
+}
+
+model StockIssue {
+  id                  String   @id @default(uuid()) @db.Uuid
+  tenantId            String   @map("tenant_id") @db.Uuid
+  campusId            String   @map("campus_id") @db.Uuid
+  issueNo             String   @map("issue_no") @db.VarChar(30)
+  issueType           String   @map("issue_type") @db.VarChar(10)
+  fromStoreId         String   @map("from_store_id") @db.Uuid
+  toStoreId           String?  @map("to_store_id") @db.Uuid
+  toDepartmentId      String?  @map("to_department_id") @db.Uuid
+  departmentRequestId String?  @map("department_request_id") @db.Uuid
+  issuedToEmployeeId  String?  @map("issued_to_employee_id") @db.Uuid
+  issueDate           DateTime @map("issue_date") @db.Date
+  totalValue          Decimal  @default(0) @map("total_value") @db.Decimal(14, 2)
+  remarks             String?  @db.VarChar(300)
+  status              String   @default("ISSUED") @db.VarChar(10)
+  createdBy           String   @map("created_by") @db.Uuid
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  items StockIssueItem[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, issueNo])
+  @@index([tenantId, issueDate])
+  @@map("stock_issues")
+}
+
+model StockIssueItem {
+  id         String  @id @default(uuid()) @db.Uuid
+  tenantId   String  @map("tenant_id") @db.Uuid
+  issueId    String  @map("issue_id") @db.Uuid
+  itemId     String  @map("item_id") @db.Uuid
+  quantity   Decimal @db.Decimal(14, 2)
+  rate       Decimal @db.Decimal(14, 4)
+  value      Decimal @db.Decimal(14, 2)
+  returnable Boolean @default(false)
+
+  issue StockIssue @relation(fields: [tenantId, issueId], references: [tenantId, id])
+
+  @@unique([tenantId, id])
+  @@unique([issueId, itemId])
+  @@map("stock_issue_items")
+}
+
+model StockCount {
+  id                String    @id @default(uuid()) @db.Uuid
+  tenantId          String    @map("tenant_id") @db.Uuid
+  campusId          String    @map("campus_id") @db.Uuid
+  storeId           String    @map("store_id") @db.Uuid
+  countDate         DateTime  @map("count_date") @db.Date
+  status            String    @db.VarChar(20)
+  approvalRequestId String?   @map("approval_request_id") @db.Uuid
+  remarks           String?   @db.VarChar(300)
+  createdBy         String    @map("created_by") @db.Uuid
+  adjustedAt        DateTime? @map("adjusted_at") @db.Timestamptz(6)
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  lines StockCountLine[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, storeId])
+  @@map("stock_counts")
+}
+
+model StockCountLine {
+  id         String  @id @default(uuid()) @db.Uuid
+  tenantId   String  @map("tenant_id") @db.Uuid
+  countId    String  @map("count_id") @db.Uuid
+  itemId     String  @map("item_id") @db.Uuid
+  systemQty  Decimal @map("system_qty") @db.Decimal(14, 2)
+  countedQty Decimal @map("counted_qty") @db.Decimal(14, 2)
+  difference Decimal @db.Decimal(14, 2)
+  rate       Decimal @db.Decimal(14, 4)
+  remarks    String? @db.VarChar(200)
+
+  count StockCount @relation(fields: [tenantId, countId], references: [tenantId, id])
+
+  @@unique([tenantId, id])
+  @@unique([countId, itemId])
+  @@map("stock_count_lines")
+}
+
+// ───────────── Phase 18: Labs, and Sports & activities (B6 §2, §3) ─────────────
+
+model Lab {
+  id                     String   @id @default(uuid()) @db.Uuid
+  tenantId               String   @map("tenant_id") @db.Uuid
+  campusId               String   @map("campus_id") @db.Uuid
+  name                   String   @db.VarChar(100)
+  departmentId           String?  @map("department_id") @db.Uuid
+  inchargeEmployeeId     String?  @map("incharge_employee_id") @db.Uuid
+  assistantEmployeeId    String?  @map("lab_assistant_employee_id") @db.Uuid
+  storeId                String?  @map("store_id") @db.Uuid
+  capacity               Int?     @db.SmallInt
+  isActive               Boolean  @default(true) @map("is_active")
+  createdBy              String?  @map("created_by") @db.Uuid
+  createdAt              DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, campusId, name])
+  @@map("labs")
+}
+
+model LabEquipment {
+  id                  String    @id @default(uuid()) @db.Uuid
+  tenantId            String    @map("tenant_id") @db.Uuid
+  labId               String    @map("lab_id") @db.Uuid
+  itemId              String?   @map("item_id") @db.Uuid
+  name                String    @db.VarChar(200)
+  assetTag            String    @map("asset_tag") @db.VarChar(50)
+  quantity            Int       @default(1) @db.SmallInt
+  condition           String    @default("WORKING") @db.VarChar(20)
+  lastCalibrationDate DateTime? @map("last_calibration_date") @db.Date
+  nextCalibrationDate DateTime? @map("next_calibration_date") @db.Date
+  notes               String?   @db.VarChar(300)
+  createdBy           String?   @map("created_by") @db.Uuid
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, assetTag])
+  @@index([tenantId, labId])
+  @@map("lab_equipment")
+}
+
+model LabSession {
+  id              String   @id @default(uuid()) @db.Uuid
+  tenantId        String   @map("tenant_id") @db.Uuid
+  labId           String   @map("lab_id") @db.Uuid
+  sectionId       String   @map("section_id") @db.Uuid
+  subjectId       String?  @map("subject_id") @db.Uuid
+  batchName       String?  @map("batch_name") @db.VarChar(20)
+  employeeId      String   @map("employee_id") @db.Uuid
+  sessionDate     DateTime @map("session_date") @db.Date
+  startTime       String   @map("start_time") @db.VarChar(5)
+  endTime         String   @map("end_time") @db.VarChar(5)
+  experimentTitle String   @map("experiment_title") @db.VarChar(200)
+  status          String   @default("SCHEDULED") @db.VarChar(20)
+  studentsPresent Int?     @map("students_present") @db.SmallInt
+  remarks         String?  @db.VarChar(300)
+  createdBy       String?  @map("created_by") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, labId, sessionDate])
+  @@map("lab_sessions")
+}
+
+model LabBreakage {
+  id                String    @id @default(uuid()) @db.Uuid
+  tenantId          String    @map("tenant_id") @db.Uuid
+  campusId          String    @map("campus_id") @db.Uuid
+  labId             String    @map("lab_id") @db.Uuid
+  equipmentId       String?   @map("equipment_id") @db.Uuid
+  sessionId         String?   @map("session_id") @db.Uuid
+  itemDescription   String    @map("item_description") @db.VarChar(200)
+  studentId         String?   @map("student_id") @db.Uuid
+  breakageDate      DateTime  @map("breakage_date") @db.Date
+  quantity          Int       @default(1) @db.SmallInt
+  chargeAmount      Decimal   @default(0) @map("charge_amount") @db.Decimal(14, 2)
+  feeInvoiceId      String?   @map("fee_invoice_id") @db.Uuid
+  approvalRequestId String?   @map("approval_request_id") @db.Uuid
+  status            String    @default("REPORTED") @db.VarChar(20)
+  waiveReason       String?   @map("waive_reason") @db.VarChar(300)
+  remarks           String?   @db.VarChar(300)
+  reportedBy        String    @map("reported_by") @db.Uuid
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, labId])
+  @@map("lab_breakages")
+}
+
+model Activity {
+  id                    String   @id @default(uuid()) @db.Uuid
+  tenantId              String   @map("tenant_id") @db.Uuid
+  campusId              String   @map("campus_id") @db.Uuid
+  name                  String   @db.VarChar(100)
+  activityType          String   @map("activity_type") @db.VarChar(10)
+  coordinatorEmployeeId String?  @map("coordinator_employee_id") @db.Uuid
+  description           String?  @db.VarChar(500)
+  isActive              Boolean  @default(true) @map("is_active")
+  createdBy             String?  @map("created_by") @db.Uuid
+  createdAt             DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, campusId, name])
+  @@map("activities")
+}
+
+model ActivityMember {
+  id             String   @id @default(uuid()) @db.Uuid
+  tenantId       String   @map("tenant_id") @db.Uuid
+  activityId     String   @map("activity_id") @db.Uuid
+  studentId      String   @map("student_id") @db.Uuid
+  academicYearId String   @map("academic_year_id") @db.Uuid
+  teamName       String?  @map("team_name") @db.VarChar(50)
+  memberRole     String   @default("MEMBER") @map("member_role") @db.VarChar(20)
+  createdBy      String?  @map("created_by") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, activityId, studentId, academicYearId])
+  @@index([tenantId, studentId])
+  @@map("activity_members")
+}
+
+model Competition {
+  id          String    @id @default(uuid()) @db.Uuid
+  tenantId    String    @map("tenant_id") @db.Uuid
+  activityId  String    @map("activity_id") @db.Uuid
+  eventId     String?   @map("event_id") @db.Uuid
+  name        String    @db.VarChar(200)
+  level       String    @db.VarChar(20)
+  venue       String?   @db.VarChar(200)
+  startDate   DateTime  @map("start_date") @db.Date
+  endDate     DateTime  @map("end_date") @db.Date
+  description String?   @db.VarChar(500)
+  createdBy   String?   @map("created_by") @db.Uuid
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, activityId])
+  @@map("competitions")
+}
+
+model CompetitionParticipant {
+  id            String   @id @default(uuid()) @db.Uuid
+  tenantId      String   @map("tenant_id") @db.Uuid
+  competitionId String   @map("competition_id") @db.Uuid
+  studentId     String   @map("student_id") @db.Uuid
+  category      String   @default("") @db.VarChar(100)
+  result        String   @default("PARTICIPATED") @db.VarChar(20)
+  remarks       String?  @db.VarChar(200)
+  createdBy     String?  @map("created_by") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, competitionId, studentId, category])
+  @@index([tenantId, studentId])
+  @@map("competition_participants")
+}
+
+model Achievement {
+  id                       String    @id @default(uuid()) @db.Uuid
+  tenantId                 String    @map("tenant_id") @db.Uuid
+  campusId                 String    @map("campus_id") @db.Uuid
+  studentId                String?   @map("student_id") @db.Uuid
+  employeeId               String?   @map("employee_id") @db.Uuid
+  title                    String    @db.VarChar(200)
+  category                 String    @db.VarChar(20)
+  level                    String    @db.VarChar(20)
+  achievementDate          DateTime  @map("achievement_date") @db.Date
+  competitionParticipantId String?   @map("competition_participant_id") @db.Uuid
+  description              String?   @db.VarChar(500)
+  feedPostId               String?   @map("feed_post_id") @db.Uuid
+  isVerified               Boolean   @default(false) @map("is_verified")
+  verifiedBy               String?   @map("verified_by") @db.Uuid
+  verifiedAt               DateTime? @map("verified_at") @db.Timestamptz(6)
+  createdBy                String?   @map("created_by") @db.Uuid
+  createdAt                DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt                DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, studentId])
+  @@map("achievements")
 }

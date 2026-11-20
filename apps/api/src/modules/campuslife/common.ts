@@ -41,7 +41,7 @@ export async function searchPeople(tx: Tx, q: string, campusIds: string[] | null
 export const scopeCampuses = (s: CampusScope | null) => (!s ? [] : s.all ? null : s.campusIds);
 
 /** In-app notice to the parents who have the app, else an email to the primary guardian. Returns whether anyone was told. */
-export async function tellParents(tx: Tx, notifications: NotificationsService, o: { tenantId: string; senderUserId: string; studentId: string; eventCode: 'INFIRMARY_VISIT' | 'DISCIPLINE_INCIDENT' | 'LIBRARY_OVERDUE' | 'LIBRARY_READY'; vars: Record<string, string>; emailSubject: string; emailBody: string; entityType: string; entityId: string }) {
+export async function tellParents(tx: Tx, notifications: NotificationsService, o: { tenantId: string; senderUserId: string; studentId: string; eventCode: 'INFIRMARY_VISIT' | 'DISCIPLINE_INCIDENT' | 'LIBRARY_OVERDUE' | 'LIBRARY_READY' | 'ACHIEVEMENT'; vars: Record<string, string>; emailSubject: string; emailBody: string; entityType: string; entityId: string }) {
   const users = (await tx.studentGuardian.findMany({ where: { studentId: o.studentId, guardian: { userId: { not: null } } }, select: { guardian: { select: { userId: true } } } })).map((g) => g.guardian.userId!);
   if (users.length) {
     await notifications.notify(tx, { tenantId: o.tenantId, userIds: users, eventCode: o.eventCode, vars: o.vars, entityType: o.entityType, entityId: o.entityId });

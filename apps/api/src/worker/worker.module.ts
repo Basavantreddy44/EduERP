@@ -16,6 +16,7 @@ import { LateFeeService } from '../modules/fees/late-fee.service';
 import { TransportFleetService } from '../modules/transport/fleet.service';
 import { ComplaintsService } from '../modules/engagement/complaints.service';
 import { LibraryService } from '../modules/campuslife/library.service';
+import { InventoryService } from '../modules/inventory/inventory.service';
 
 /** Everything the background worker needs; no HTTP. */
 @Module({
@@ -47,7 +48,9 @@ import { LibraryService } from '../modules/campuslife/library.service';
     ComplaintsService,
     // Library: overdue reminders and expired holds (daily, safe to repeat).
     LibraryService,
+    // Inventory: low-stock notices to store keepers (once a day per item and store).
+    InventoryService,
   ],
-  exports: [JobsRunner, Db, FeeOnlineService, LateFeeService, TransportFleetService, ComplaintsService, LibraryService],
+  exports: [JobsRunner, Db, FeeOnlineService, LateFeeService, TransportFleetService, ComplaintsService, LibraryService, InventoryService],
 })
 export class WorkerModule {}

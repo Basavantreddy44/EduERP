@@ -172,7 +172,12 @@ export class VendorsService implements OnModuleInit {
 
   createBill(input: BillInput, auth: AuthContext, client: ClientInfo) {
     this.entry(auth, input.campusId);
-    return this.db.run(this.ctx(auth), async (tx) => {
+    return this.db.run(this.ctx(auth), (tx) => this.createBillInTx(tx, input, auth, client));
+  }
+
+  /** Creates (and posts, when no approval applies) a bill inside the caller's transaction; inventory passes the order / receipt it bills (3-way match). */
+  async createBillInTx(tx: Tx, input: BillInput, auth: AuthContext, client: ClientInfo, link?: { purchaseOrderId: string; goodsReceiptId: string; grnItemIds: string[] }) {
+    {
       const c = await this.compute(tx, input);
       const dup = await tx.$queryRaw<{ internal_no: string }[]>`SELECT internal_no FROM vendor_bills WHERE vendor_id = ${input.vendorId}::uuid AND upper(bill_no) = upper(${input.billNo}) AND status NOT IN ('CANCELLED','REJECTED') LIMIT 1`;
       if (dup.length) throw Conflict('duplicate-bill', `Bill ${input.billNo} from ${c.vendor.name} is already entered (${dup[0].internal_no})`);
@@ -183,15 +188,16 @@ export class VendorsService implements OnModuleInit {
           tenantId: auth.tenantId!, campusId: input.campusId, internalNo, vendorId: c.vendor.id, billNo: input.billNo, billDate: new Date(`${input.billDate}T00:00:00Z`), dueDate: input.dueDate ? new Date(`${input.dueDate}T00:00:00Z`) : null,
           subTotal: fromPaise(c.subTotal), taxAmount: fromPaise(c.taxAmount), tdsSectionId: c.tds.amount ? c.tds.sectionId : null, tdsRate: c.tds.amount ? c.tds.rate : null, tdsAmount: fromPaise(c.tds.amount),
           totalAmount: fromPaise(c.total), payableAmount: fromPaise(c.payable), notes: input.notes ?? null, status: 'PENDING_APPROVAL', createdBy: auth.userId,
+          purchaseOrderId: link?.purchaseOrderId ?? null, goodsReceiptId: link?.goodsReceiptId ?? null,
         },
       });
-      await tx.vendorBillItem.createMany({ data: c.items.map((i) => ({ tenantId: auth.tenantId!, billId: bill.id, lineNo: i.lineNo, accountId: i.accountId, costCentreId: i.costCentreId, description: i.description, quantity: i.quantity, rate: i.rate, amount: fromPaise(i.amount), taxCodeId: i.taxCodeId, taxRate: i.taxRate, cgst: fromPaise(i.cgst), sgst: fromPaise(i.sgst), igst: fromPaise(i.igst), itcClaimable: i.itcClaimable })) });
+      await tx.vendorBillItem.createMany({ data: c.items.map((i) => ({ tenantId: auth.tenantId!, billId: bill.id, lineNo: i.lineNo, accountId: i.accountId, costCentreId: i.costCentreId, description: i.description, quantity: i.quantity, rate: i.rate, amount: fromPaise(i.amount), taxCodeId: i.taxCodeId, taxRate: i.taxRate, cgst: fromPaise(i.cgst), sgst: fromPaise(i.sgst), igst: fromPaise(i.igst), itcClaimable: i.itcClaimable, goodsReceiptItemId: link?.grnItemIds[i.lineNo - 1] ?? null })) });
       const req = await this.approvals.submit(tx, { tenantId: auth.tenantId!, requestedBy: auth.userId, entityType: 'VENDOR_BILL', entityId: bill.id, campusId: input.campusId, amount: c.total / 100, summary: `${internalNo} · ${c.vendor.name} bill ${input.billNo}: ₹${fromPaise(c.total)}` }, client);
       if (req) await tx.vendorBill.update({ where: { id: bill.id }, data: { approvalRequestId: req.id } });
       else await this.postBill(tx, bill.id, auth.userId);
       await this.audit.log(tx, { tenantId: auth.tenantId!, userId: auth.userId, campusId: input.campusId, action: 'CREATE', entityType: 'VENDOR_BILL', entityId: bill.id, newValues: { internalNo, vendor: c.vendor.name, billNo: input.billNo, total: fromPaise(c.total), tds: fromPaise(c.tds.amount), needsApproval: !!req } }, client);
       return { id: bill.id, internalNo, status: req ? 'PENDING_APPROVAL' : 'APPROVED', total: fromPaise(c.total), tdsAmount: fromPaise(c.tds.amount), payable: fromPaise(c.payable) };
-    });
+    }
   }
 
   /** Posts an approved bill: Dr expense (+ GST when not claimable) / Dr input GST · Cr vendor, Cr TDS payable. */
