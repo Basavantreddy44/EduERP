@@ -1,0 +1,6 @@
+# HTTPS for the API. Caddy gets and renews a free Let's Encrypt certificate for API_DOMAIN automatically
+# (the domain's DNS A record must point at this server, and ports 80 / 443 must be open).
+{$API_DOMAIN} {
+	encode gzip
+	reverse_proxy api:4000
+}
