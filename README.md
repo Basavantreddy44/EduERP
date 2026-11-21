@@ -2,9 +2,23 @@
 
 A comprehensive School & College ERP platform designed to digitize and streamline educational institution operations, including student admissions, academics, attendance, examinations, fees, HR, library, transport, and parent communication.
 
-> **Status:** In development — not yet released to institutions (release once all modules are complete). The working application (NestJS API + Next.js web + PostgreSQL) covers admissions & students, fees & basic accounts, staff, attendance & leave, dashboards, the parent & student app, transport, hostel & mess, academics, exams & report cards, and school engagement; accounts, HR and payroll are being built now. Current progress: [docs/DEVELOPMENT_STATUS.md](docs/DEVELOPMENT_STATUS.md) · plan: [docs/IMPLEMENTATION_ROADMAP.md](docs/IMPLEMENTATION_ROADMAP.md) · decisions: [docs/DECISION_LOG.md](docs/DECISION_LOG.md).
+> **Status (21 Nov 2026):** all **32 modules are built** (Phases 1–19), in English and Kannada, and tested: 40 API test suites / 437 tests pass, with browser walk-throughs per role, in Kannada and at phone width. Not yet released to institutions — release follows Phase 20 (SaaS billing for institutions) and the final testing / private pilot; university CBCS comes after. Progress: [docs/DEVELOPMENT_STATUS.md](docs/DEVELOPMENT_STATUS.md) · plan: [docs/IMPLEMENTATION_ROADMAP.md](docs/IMPLEMENTATION_ROADMAP.md) · decisions: [docs/DECISION_LOG.md](docs/DECISION_LOG.md) · changes: [docs/CHANGELOG.md](docs/CHANGELOG.md).
 
-EDUErp is a multi-tenant, multi-campus ERP for schools, higher-secondary institutions and colleges. It covers the full student lifecycle (enquiry → admission → academics → exams → certificates → alumni), integrated double-entry accounting, HR and payroll, and campus operations (hostel, transport, library, procurement, inventory), with parent/student/staff mobile journeys.
+EDUErp is a multi-tenant, multi-campus ERP for schools, PU colleges and degree colleges in Karnataka. It covers the full student lifecycle (enquiry → admission → academics → exams → certificates → alumni), full double-entry accounting that replaces Tally, HR and payroll, and campus operations (hostel, transport, library, store and purchase, labs), with a parent & student app that installs on a phone.
+
+## What is built
+
+| Area | Modules |
+|---|---|
+| Core | Institution & campus setup · users, roles & permissions · communication (in-app and email; SMS / WhatsApp "coming soon") · documents & certificates with QR verification · reports & exports · audit & security |
+| Academics | Admissions · students · academics (subjects, syllabus, lesson plans) · timetable & substitutions · attendance · homework & diary · exams & report cards · study material · placements (colleges) |
+| Finance | Fees (billing, concessions, counter and online collection, dues, late fees) · accounts (vendors, bills with GST / TDS, payments, vouchers, bank reconciliation, financial statements) · HR & payroll (PF, ESI, professional tax, income tax, payslips, loans) |
+| Campus life | Hostel & mess · transport · library · health & infirmary · discipline & counselling · sports & activities |
+| Operations | Store & purchase (requests, quotations, orders, goods receipts, issues, counts) · labs · department requests · front office |
+| Engagement | News feed · parent-teacher and staff meetings · events & calendar · complaints |
+| Platform | Institutions, plans and module switches per institution (platform console) |
+
+Built-in roles include Institution Admin, Campus Viewer, Head of Department, Teacher, Accountant, HR officer, Exam cell, Front desk, Librarian, School nurse, Counsellor, Store keeper, Lab assistant, Sports & activities coordinator and Placement officer; each institution can edit them or add its own.
 
 ## Source of truth
 
@@ -49,7 +63,9 @@ EDUErp is a multi-tenant, multi-campus ERP for schools, higher-secondary institu
 
 ## Stack (accepted, see DECISION_LOG CD-01…CD-13)
 
-NestJS 11 API · Next.js 15 PWA · PostgreSQL 16 with Row Level Security · Prisma 6 (+ hand-written SQL for RLS/constraints) · Redis · pnpm + Turborepo · Jest + Supertest (Playwright from M0.2) · GitHub Actions.
+NestJS 11 API · Next.js 15 / React 19 web app and installable parent & student app · PostgreSQL 16 with Row Level Security · Prisma 6 (+ hand-written SQL for RLS, CHECKs, triggers) · pg-boss background jobs (in Postgres) · Zod rules shared by API and web · pnpm + Turborepo · Jest + Supertest, Playwright + axe · Docker Compose + Caddy for the server.
+
+Hosting (owner decision): the web app on Vercel; the API, worker, database and files on one server in India — step by step in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## Local development
 
@@ -63,8 +79,10 @@ pnpm build                    # shared → db (prisma generate) → api, web
 pnpm db:migrate               # apply migrations as the owner role
 pnpm db:seed                  # permissions, default templates, platform admin; then jobs:setup (pg-boss schema + queues)
 pnpm dev                      # API http://localhost:4000/api/v1 · Web http://localhost:3100
-pnpm worker                   # background worker (outbox, notifications, email); run alongside the API (needs a build)
+pnpm worker                   # background worker (outbox, email, report exports, reminders); run alongside the API (needs a build)
 ```
+
+Run the worker whenever you use the app: emails, report exports (Reports → My exports), late fees, low-stock notices and other reminders are made there. For a production-like local run use `pnpm build`, then `pnpm --filter @eduerp/api start`, `pnpm --filter @eduerp/web start -p 3100` and `pnpm worker`.
 
 Sign in at http://localhost:3100 as the seeded platform admin, add an institution under **Institutions**, then sign in as that institution's admin and add campuses.
 
@@ -83,4 +101,6 @@ API docs: http://localhost:4000/api/docs (Swagger UI, not served in production u
 | `apps/e2e` | Playwright end-to-end tests |
 | `packages/shared` | Permission codes, system roles, Zod schemas shared by API and web |
 | `packages/db` | Prisma schema, migrations (with RLS SQL), seed |
-| `docs/` | Requirements, table design ([docs/tables](docs/tables/)), ADRs ([docs/adr](docs/adr/)), status |
+| `deploy/` | Server kit: API image, Docker Compose (Postgres, API, worker, Caddy HTTPS), production settings template, nightly backup script |
+| `docker/` | Local database start-up script and the pgAdmin server list |
+| `docs/` | Requirements, table design ([docs/tables](docs/tables/)), ADRs ([docs/adr](docs/adr/)), status, deployment guide, OpenAPI ([docs/api/openapi.json](docs/api/openapi.json)) |
