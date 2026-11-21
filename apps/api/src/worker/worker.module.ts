@@ -17,6 +17,8 @@ import { TransportFleetService } from '../modules/transport/fleet.service';
 import { ComplaintsService } from '../modules/engagement/complaints.service';
 import { LibraryService } from '../modules/campuslife/library.service';
 import { InventoryService } from '../modules/inventory/inventory.service';
+import { ReportsService } from '../modules/reports/reports.service';
+import { LocalDiskStorage, STORAGE } from '../modules/files/storage';
 
 /** Everything the background worker needs; no HTTP. */
 @Module({
@@ -50,7 +52,10 @@ import { InventoryService } from '../modules/inventory/inventory.service';
     LibraryService,
     // Inventory: low-stock notices to store keepers (once a day per item and store).
     InventoryService,
+    // Reports: background exports (every few seconds) and scheduled saved reports (hourly).
+    ReportsService,
+    { provide: STORAGE, useClass: LocalDiskStorage },
   ],
-  exports: [JobsRunner, Db, FeeOnlineService, LateFeeService, TransportFleetService, ComplaintsService, LibraryService, InventoryService],
+  exports: [JobsRunner, Db, FeeOnlineService, LateFeeService, TransportFleetService, ComplaintsService, LibraryService, InventoryService, ReportsService],
 })
 export class WorkerModule {}

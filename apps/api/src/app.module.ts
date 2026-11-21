@@ -120,6 +120,9 @@ import { InventoryService } from './modules/inventory/inventory.service';
 import { ActivitiesController, LabsController } from './modules/activities/activities.controller';
 import { LabsService } from './modules/activities/labs.service';
 import { SportsService } from './modules/activities/sports.service';
+import { PlacementsController, ReportsController } from './modules/placements/placements.controller';
+import { PlacementsService } from './modules/placements/placements.service';
+import { ReportsService } from './modules/reports/reports.service';
 import { PurchaseService } from './modules/inventory/purchase.service';
 import { PayrollSetupService } from './modules/payroll/payroll-setup.service';
 import { PayrollRunsService } from './modules/payroll/payroll-runs.service';
@@ -213,6 +216,8 @@ const isTest = process.env.NODE_ENV === 'test';
     InventoryController,
     LabsController,
     ActivitiesController,
+    PlacementsController,
+    ReportsController,
   ],
   providers: [
     Db,
@@ -300,6 +305,8 @@ const isTest = process.env.NODE_ENV === 'test';
     InventoryService,
     LabsService,
     SportsService,
+    PlacementsService,
+    ReportsService,
     PurchaseService,
     LeaveBalancesService,
     ExitsService,

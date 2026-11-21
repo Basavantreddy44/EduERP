@@ -19,9 +19,10 @@ import { Card, ReportCard } from '@/components/exams';
 import { ChildEvents, ChildPtm } from '@/components/portal-engagement';
 import { ChildComplaints } from '@/components/portal-complaints';
 import { StudentActivities } from '@/components/activities';
+import { ChildPlacements } from '@/components/portal-placements';
 
-type Tab = 'attendance' | 'timetable' | 'homework' | 'material' | 'results' | 'events' | 'ptm' | 'complaints' | 'fees' | 'leave' | 'bus' | 'hostel' | 'library' | 'activities';
-const TABS: Tab[] = ['attendance', 'timetable', 'homework', 'material', 'results', 'events', 'ptm', 'fees', 'leave', 'bus', 'hostel', 'library', 'activities', 'complaints'];
+type Tab = 'attendance' | 'timetable' | 'homework' | 'material' | 'results' | 'events' | 'ptm' | 'complaints' | 'fees' | 'leave' | 'bus' | 'hostel' | 'library' | 'activities' | 'placements';
+const TABS: Tab[] = ['attendance', 'timetable', 'homework', 'material', 'results', 'events', 'ptm', 'fees', 'leave', 'bus', 'hostel', 'library', 'activities', 'placements', 'complaints'];
 const inr = (v: string | number) => formatINR(toPaise(String(v)));
 const shiftMonth = (m: string, n: number) => { const d = new Date(Date.UTC(Number(m.slice(0, 4)), Number(m.slice(5, 7)) - 1 + n, 1)); return d.toISOString().slice(0, 7); };
 
@@ -41,7 +42,7 @@ export default function ChildPage() {
   const child = portal?.children.find((c) => c.id === id);
   if (!portal) return null;
   if (!child) return <EmptyState icon="users" title={t('pt.notYours')} action={<Link href="/portal" className="btn">{t('pt.back')}</Link>} />;
-  const tabs = TABS.filter((x) => (x === 'fees' ? hasModule('FEES') : x === 'bus' ? hasModule('TRANSPORT') : x === 'hostel' ? hasModule('HOSTEL') : x === 'library' ? hasModule('LIBRARY') : x === 'activities' ? hasModule('SPORTS') : x === 'results' ? hasModule('EXAMS') : x === 'events' ? hasModule('EVENTS') : x === 'ptm' ? hasModule('MEETINGS') : x === 'complaints' ? hasModule('GRIEVANCE') : x === 'timetable' || x === 'homework' || x === 'material' ? hasModule('ACADEMICS') : hasModule('ATTENDANCE')));
+  const tabs = TABS.filter((x) => (x === 'fees' ? hasModule('FEES') : x === 'bus' ? hasModule('TRANSPORT') : x === 'hostel' ? hasModule('HOSTEL') : x === 'library' ? hasModule('LIBRARY') : x === 'activities' ? hasModule('SPORTS') : x === 'placements' ? hasModule('PLACEMENTS') : x === 'results' ? hasModule('EXAMS') : x === 'events' ? hasModule('EVENTS') : x === 'ptm' ? hasModule('MEETINGS') : x === 'complaints' ? hasModule('GRIEVANCE') : x === 'timetable' || x === 'homework' || x === 'material' ? hasModule('ACADEMICS') : hasModule('ATTENDANCE')));
   const pick = (x: Tab) => { setTab(x); history.replaceState(null, '', `#${x}`); window.dispatchEvent(new HashChangeEvent('hashchange')); };
 
   return (
@@ -70,6 +71,7 @@ export default function ChildPage() {
         {tab === 'hostel' && <Hostel id={id} />}
         {tab === 'library' && <ChildLibrary id={id} />}
         {tab === 'activities' && <StudentActivities path={`/activities/children/${id}`} />}
+        {tab === 'placements' && <ChildPlacements id={id} />}
       </section>
     </>
   );

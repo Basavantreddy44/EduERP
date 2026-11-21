@@ -5276,3 +5276,166 @@ model Achievement {
   @@index([tenantId, studentId])
   @@map("achievements")
 }
+
+// ───────────── Phase 19: Placements, and Reports & exports (B6 §4, §5) ─────────────
+
+model Company {
+  id              String   @id @default(uuid()) @db.Uuid
+  tenantId        String   @map("tenant_id") @db.Uuid
+  name            String   @db.VarChar(200)
+  industry        String?  @db.VarChar(100)
+  website         String?  @db.VarChar(200)
+  hrName          String?  @map("hr_name") @db.VarChar(100)
+  hrEmail         String?  @map("hr_email") @db.VarChar(150)
+  hrPhone         String?  @map("hr_phone") @db.VarChar(15)
+  address         String?  @db.VarChar(500)
+  status          String   @default("ACTIVE") @db.VarChar(20)
+  blacklistReason String?  @map("blacklist_reason") @db.VarChar(300)
+  createdBy       String?  @map("created_by") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, name])
+  @@map("companies")
+}
+
+model StudentPlacementProfile {
+  id                 String    @id @default(uuid()) @db.Uuid
+  tenantId           String    @map("tenant_id") @db.Uuid
+  studentId          String    @map("student_id") @db.Uuid
+  resumeFileId       String?   @map("resume_file_id") @db.Uuid
+  skills             String?   @db.VarChar(500)
+  preferredLocations String?   @map("preferred_locations") @db.VarChar(200)
+  isOptedIn          Boolean   @default(true) @map("is_opted_in")
+  isPlaced           Boolean   @default(false) @map("is_placed")
+  passingYear        Int?      @map("passing_year") @db.SmallInt
+  scoreType          String?   @map("score_type") @db.VarChar(10)
+  score              Decimal?  @db.Decimal(5, 2)
+  backlogs           Int?      @db.SmallInt
+  scoreVerifiedBy    String?   @map("score_verified_by") @db.Uuid
+  scoreVerifiedAt    DateTime? @map("score_verified_at") @db.Timestamptz(6)
+  updatedBy          String?   @map("updated_by") @db.Uuid
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, studentId])
+  @@map("student_placement_profiles")
+}
+
+model PlacementDrive {
+  id                 String    @id @default(uuid()) @db.Uuid
+  tenantId           String    @map("tenant_id") @db.Uuid
+  campusId           String    @map("campus_id") @db.Uuid
+  companyId          String    @map("company_id") @db.Uuid
+  title              String    @db.VarChar(200)
+  jobType            String    @default("FULL_TIME") @map("job_type") @db.VarChar(20)
+  ctcMin             Decimal?  @map("ctc_min") @db.Decimal(14, 2)
+  ctcMax             Decimal?  @map("ctc_max") @db.Decimal(14, 2)
+  eligibleProgramIds String[]  @default([]) @map("eligible_program_ids") @db.Uuid
+  passingYear        Int       @map("passing_year") @db.SmallInt
+  scoreType          String    @default("CGPA") @map("score_type") @db.VarChar(10)
+  minScore           Decimal?  @map("min_score") @db.Decimal(5, 2)
+  maxBacklogs        Int?      @map("max_backlogs") @db.SmallInt
+  allowPlaced        Boolean   @default(false) @map("allow_placed")
+  lastDateToApply    DateTime  @map("last_date_to_apply") @db.Date
+  driveDate          DateTime? @map("drive_date") @db.Date
+  rounds             String[]  @default([])
+  description        String?   @db.VarChar(2000)
+  status             String    @default("DRAFT") @db.VarChar(20)
+  openedAt           DateTime? @map("opened_at") @db.Timestamptz(6)
+  createdBy          String?   @map("created_by") @db.Uuid
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, campusId, status])
+  @@map("placement_drives")
+}
+
+model PlacementApplication {
+  id                  String   @id @default(uuid()) @db.Uuid
+  tenantId            String   @map("tenant_id") @db.Uuid
+  driveId             String   @map("drive_id") @db.Uuid
+  studentId           String   @map("student_id") @db.Uuid
+  appliedAt           DateTime @default(now()) @map("applied_at") @db.Timestamptz(6)
+  appliedBy           String   @map("applied_by") @db.Uuid
+  eligibilitySnapshot Json     @map("eligibility_snapshot")
+  currentRound        String?  @map("current_round") @db.VarChar(50)
+  status              String   @default("APPLIED") @db.VarChar(20)
+  remarks             String?  @db.VarChar(300)
+  updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, driveId, studentId])
+  @@index([tenantId, studentId])
+  @@map("placement_applications")
+}
+
+model PlacementOffer {
+  id                String    @id @default(uuid()) @db.Uuid
+  tenantId          String    @map("tenant_id") @db.Uuid
+  applicationId     String    @map("application_id") @db.Uuid
+  studentId         String    @map("student_id") @db.Uuid
+  ctc               Decimal   @db.Decimal(14, 2)
+  offerDate         DateTime  @map("offer_date") @db.Date
+  joiningDate       DateTime? @map("joining_date") @db.Date
+  offerLetterFileId String?   @map("offer_letter_file_id") @db.Uuid
+  status            String    @default("OFFERED") @db.VarChar(20)
+  decidedAt         DateTime? @map("decided_at") @db.Timestamptz(6)
+  remarks           String?   @db.VarChar(300)
+  createdBy         String?   @map("created_by") @db.Uuid
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, applicationId])
+  @@index([tenantId, studentId])
+  @@map("placement_offers")
+}
+
+model SavedReport {
+  id             String    @id @default(uuid()) @db.Uuid
+  tenantId       String    @map("tenant_id") @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  reportCode     String    @map("report_code") @db.VarChar(50)
+  name           String    @db.VarChar(150)
+  filters        Json      @default("{}")
+  isShared       Boolean   @default(false) @map("is_shared")
+  schedule       String    @default("NONE") @db.VarChar(10)
+  scheduleFormat String    @default("XLSX") @map("schedule_format") @db.VarChar(10)
+  lastSentAt     DateTime? @map("last_sent_at") @db.Timestamptz(6)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, userId])
+  @@map("saved_reports")
+}
+
+model ExportJob {
+  id            String    @id @default(uuid()) @db.Uuid
+  tenantId      String    @map("tenant_id") @db.Uuid
+  userId        String    @map("user_id") @db.Uuid
+  savedReportId String?   @map("saved_report_id") @db.Uuid
+  reportCode    String    @map("report_code") @db.VarChar(50)
+  filters       Json      @default("{}")
+  format        String    @db.VarChar(10)
+  status        String    @default("QUEUED") @db.VarChar(20)
+  rowCount      Int?      @map("row_count")
+  storageKey    String?   @unique @map("storage_key") @db.VarChar(500)
+  fileName      String?   @map("file_name") @db.VarChar(200)
+  sizeBytes     Int?      @map("size_bytes")
+  error         String?   @db.VarChar(500)
+  startedAt     DateTime? @map("started_at") @db.Timestamptz(6)
+  finishedAt    DateTime? @map("finished_at") @db.Timestamptz(6)
+  expiresAt     DateTime? @map("expires_at") @db.Timestamptz(6)
+  downloads     Int       @default(0)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, userId, createdAt])
+  @@index([status, createdAt])
+  @@map("export_jobs")
+}

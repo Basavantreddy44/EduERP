@@ -122,6 +122,8 @@ export const PERMISSIONS = {
   ACT_READ: 'activities.read',
   ACT_MANAGE: 'activities.manage',
   ACH_ADD: 'achievements.add',
+  PLACE_READ: 'placements.read',
+  PLACE_MANAGE: 'placements.manage',
 } as const;
 
 export type PermissionCode = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -246,6 +248,8 @@ export const PERMISSION_CATALOGUE: { code: PermissionCode; module: string; descr
   { code: PERMISSIONS.ACT_READ, module: 'SPORTS', description: 'See activities, teams, competitions and achievements' },
   { code: PERMISSIONS.ACT_MANAGE, module: 'SPORTS', description: 'Activities, members, competitions and results; verify achievements' },
   { code: PERMISSIONS.ACH_ADD, module: 'SPORTS', description: 'Record a student achievement (verified by a coordinator)' },
+  { code: PERMISSIONS.PLACE_READ, module: 'PLACEMENTS', description: 'See companies, drives, applications, offers and placement statistics' },
+  { code: PERMISSIONS.PLACE_MANAGE, module: 'PLACEMENTS', description: 'Companies, student placement profiles (CGPA and backlogs), drives, applications and offers' },
 ];
 
 /** A teacher: own classes (CD-73), attendance, homework, marks, parents, staff meetings, complaints and requests. */
@@ -281,6 +285,7 @@ export const SYSTEM_ROLES: { code: string; name: string; permissions: Permission
   { code: 'STORE_KEEPER', name: 'Store keeper', permissions: [PERMISSIONS.ORG_CAMPUS_READ, PERMISSIONS.INV_READ, PERMISSIONS.INV_SETUP, PERMISSIONS.INV_RECEIVE, PERMISSIONS.INV_ISSUE, PERMISSIONS.INV_COUNT, PERMISSIONS.DEPT_REQ_HANDLE, PERMISSIONS.MEETING_ATTEND, PERMISSIONS.LEAVE_SELF, PERMISSIONS.DEPT_REQ_RAISE, PERMISSIONS.FEED_READ, PERMISSIONS.EVENT_READ] },
   { code: 'LAB_ASSISTANT', name: 'Lab assistant', permissions: [PERMISSIONS.ORG_CAMPUS_READ, PERMISSIONS.LAB_READ, PERMISSIONS.LAB_MANAGE, PERMISSIONS.LAB_SESSION, PERMISSIONS.INV_READ, PERMISSIONS.INV_ISSUE, PERMISSIONS.INV_COUNT, PERMISSIONS.MEETING_ATTEND, PERMISSIONS.LEAVE_SELF, PERMISSIONS.DEPT_REQ_RAISE, PERMISSIONS.FEED_READ, PERMISSIONS.EVENT_READ] },
   { code: 'SPORTS_COORDINATOR', name: 'Sports & activities coordinator', permissions: [PERMISSIONS.ORG_CAMPUS_READ, PERMISSIONS.ACT_READ, PERMISSIONS.ACT_MANAGE, PERMISSIONS.ACH_ADD, PERMISSIONS.EVENT_READ, PERMISSIONS.FEED_READ, PERMISSIONS.FEED_POST, PERMISSIONS.MEETING_ATTEND, PERMISSIONS.LEAVE_SELF, PERMISSIONS.DEPT_REQ_RAISE] },
+  { code: 'PLACEMENT_OFFICER', name: 'Placement officer', permissions: [PERMISSIONS.ORG_CAMPUS_READ, PERMISSIONS.ORG_ACADEMIC_READ, PERMISSIONS.PLACE_READ, PERMISSIONS.PLACE_MANAGE, PERMISSIONS.STU_STUDENT_READ, PERMISSIONS.MEETING_ATTEND, PERMISSIONS.LEAVE_SELF, PERMISSIONS.DEPT_REQ_RAISE, PERMISSIONS.FEED_READ, PERMISSIONS.FEED_POST, PERMISSIONS.EVENT_READ] },
   { code: 'COUNSELLOR', name: 'Counsellor', permissions: [PERMISSIONS.ORG_CAMPUS_READ, PERMISSIONS.COUNSEL, PERMISSIONS.DISC_MANAGE, PERMISSIONS.DISC_REPORT, PERMISSIONS.MEETING_ATTEND, PERMISSIONS.LEAVE_SELF, PERMISSIONS.DEPT_REQ_RAISE, PERMISSIONS.FEED_READ, PERMISSIONS.EVENT_READ] },
 ];
 

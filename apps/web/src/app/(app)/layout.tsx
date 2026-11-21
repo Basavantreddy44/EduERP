@@ -28,6 +28,8 @@ const NAV: { section: MessageKey; items: NavItem[] }[] = [
     items: [
       { href: '/dashboard', label: 'nav.dashboard', icon: 'home' },
       { href: '/approvals', label: 'nav.approvals', icon: 'approvals' },
+      { href: '/reports', label: 'nav.reports', icon: 'grid' },
+      { href: '/reports/exports', label: 'nav.repExports', icon: 'download' },
     ],
   },
   {
@@ -116,6 +118,15 @@ const NAV: { section: MessageKey; items: NavItem[] }[] = [
       { href: '/library/catalogue', label: 'nav.libCatalogue', icon: 'layers', module: 'LIBRARY' },
       { href: '/library/my', label: 'nav.libMine', icon: 'clipboard', module: 'LIBRARY' },
       { href: '/library/manage', label: 'nav.libManage', icon: 'settings', module: 'LIBRARY', permission: PERMISSIONS.LIB_MANAGE },
+    ],
+  },
+  {
+    section: 'nav.placements',
+    items: [
+      { href: '/placements', label: 'nav.plcDrives', icon: 'file', module: 'PLACEMENTS', permission: PERMISSIONS.PLACE_READ },
+      { href: '/placements/students', label: 'nav.plcStudents', icon: 'users', module: 'PLACEMENTS', permission: PERMISSIONS.PLACE_READ },
+      { href: '/placements/companies', label: 'nav.plcCompanies', icon: 'building', module: 'PLACEMENTS', permission: PERMISSIONS.PLACE_READ },
+      { href: '/placements/stats', label: 'nav.plcStats', icon: 'grid', module: 'PLACEMENTS', permission: PERMISSIONS.PLACE_READ },
     ],
   },
   {

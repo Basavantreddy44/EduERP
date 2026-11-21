@@ -43,6 +43,9 @@ export const NOTIFICATION_EVENTS = {
   INFIRMARY_VISIT: { code: 'INFIRMARY_VISIT', label: 'Child seen in the school infirmary', channels: ['IN_APP', 'EMAIL'], mandatory: false, variables: ['student', 'complaint', 'outcome', 'time'] },
   DISCIPLINE_INCIDENT: { code: 'DISCIPLINE_INCIDENT', label: 'Behaviour incident', channels: ['IN_APP', 'EMAIL'], mandatory: false, variables: ['student', 'type', 'date'] },
   ACHIEVEMENT: { code: 'ACHIEVEMENT', label: 'A child’s achievement', channels: ['IN_APP', 'EMAIL'], mandatory: false, variables: ['student', 'title', 'level'] },
+  PLACEMENT_DRIVE: { code: 'PLACEMENT_DRIVE', label: 'Placement drive open', channels: ['IN_APP', 'EMAIL'], mandatory: false, variables: ['company', 'role', 'lastDate'] },
+  PLACEMENT_UPDATE: { code: 'PLACEMENT_UPDATE', label: 'Placement application update', channels: ['IN_APP', 'EMAIL'], mandatory: false, variables: ['company', 'role', 'status'] },
+  REPORT_READY: { code: 'REPORT_READY', label: 'Report export ready', channels: ['IN_APP', 'EMAIL'], mandatory: false, variables: ['report', 'rows'] },
   INVENTORY_LOW: { code: 'INVENTORY_LOW', label: 'Store items running low', channels: ['IN_APP', 'EMAIL'], mandatory: false, variables: ['store', 'count', 'items'] },
 } as const satisfies Record<string, NotificationEvent>;
 
@@ -161,6 +164,19 @@ export const DEFAULT_TEMPLATES: TemplateText[] = [
   { eventCode: 'ACHIEVEMENT', channel: 'IN_APP', language: 'kn', subject: 'ಅಭಿನಂದನೆಗಳು, {{student}}!', body: '{{student}}: {{title}} ({{level}}).' },
   { eventCode: 'ACHIEVEMENT', channel: 'EMAIL', language: 'en', subject: 'Well done, {{student}}!', body: 'Dear parent,\n\nWe are happy to share that {{student}} has achieved: {{title}} ({{level}}).\n\nIt is now on {{student}}’s record in the parent app.' },
   { eventCode: 'ACHIEVEMENT', channel: 'EMAIL', language: 'kn', subject: 'ಅಭಿನಂದನೆಗಳು, {{student}}!', body: 'ಆತ್ಮೀಯ ಪೋಷಕರೇ,\n\n{{student}} ಅವರ ಸಾಧನೆ: {{title}} ({{level}}) ಎಂದು ತಿಳಿಸಲು ಸಂತೋಷವಾಗುತ್ತದೆ.\n\nಇದು ಈಗ ಪೋಷಕರ ಆ್ಯಪ್‌ನಲ್ಲಿ {{student}} ಅವರ ದಾಖಲೆಯಲ್ಲಿದೆ.' },
+  // PLACEMENT_DRIVE, PLACEMENT_UPDATE, REPORT_READY (Phase 19)
+  { eventCode: 'PLACEMENT_DRIVE', channel: 'IN_APP', language: 'en', subject: 'New placement drive: {{company}}', body: '{{role}} — you are eligible. Apply by {{lastDate}}.' },
+  { eventCode: 'PLACEMENT_DRIVE', channel: 'IN_APP', language: 'kn', subject: 'ಹೊಸ ನೇಮಕಾತಿ ಅಭಿಯಾನ: {{company}}', body: '{{role}} — ನೀವು ಅರ್ಹರು. {{lastDate}} ರೊಳಗೆ ಅರ್ಜಿ ಸಲ್ಲಿಸಿ.' },
+  { eventCode: 'PLACEMENT_DRIVE', channel: 'EMAIL', language: 'en', subject: 'New placement drive: {{company}}', body: 'Hello,\n\n{{company}} is hiring for {{role}} and you are eligible.\n\nApply in the EduERP app by {{lastDate}}.' },
+  { eventCode: 'PLACEMENT_DRIVE', channel: 'EMAIL', language: 'kn', subject: 'ಹೊಸ ನೇಮಕಾತಿ ಅಭಿಯಾನ: {{company}}', body: 'ನಮಸ್ಕಾರ,\n\n{{company}} ಸಂಸ್ಥೆ {{role}} ಹುದ್ದೆಗೆ ನೇಮಕ ಮಾಡುತ್ತಿದೆ ಮತ್ತು ನೀವು ಅರ್ಹರು.\n\n{{lastDate}} ರೊಳಗೆ EduERP ಆ್ಯಪ್‌ನಲ್ಲಿ ಅರ್ಜಿ ಸಲ್ಲಿಸಿ.' },
+  { eventCode: 'PLACEMENT_UPDATE', channel: 'IN_APP', language: 'en', subject: '{{company}}: {{status}}', body: 'Your application for {{role}} at {{company}}: {{status}}.' },
+  { eventCode: 'PLACEMENT_UPDATE', channel: 'IN_APP', language: 'kn', subject: '{{company}}: {{status}}', body: '{{company}} ನಲ್ಲಿ {{role}} ಹುದ್ದೆಗೆ ನಿಮ್ಮ ಅರ್ಜಿ: {{status}}.' },
+  { eventCode: 'PLACEMENT_UPDATE', channel: 'EMAIL', language: 'en', subject: '{{company}}: {{status}}', body: 'Hello,\n\nYour application for {{role}} at {{company}}: {{status}}.\n\nSee the details in the EduERP app.' },
+  { eventCode: 'PLACEMENT_UPDATE', channel: 'EMAIL', language: 'kn', subject: '{{company}}: {{status}}', body: 'ನಮಸ್ಕಾರ,\n\n{{company}} ನಲ್ಲಿ {{role}} ಹುದ್ದೆಗೆ ನಿಮ್ಮ ಅರ್ಜಿ: {{status}}.\n\nವಿವರಗಳನ್ನು EduERP ಆ್ಯಪ್‌ನಲ್ಲಿ ನೋಡಿ.' },
+  { eventCode: 'REPORT_READY', channel: 'IN_APP', language: 'en', subject: 'Your report is ready: {{report}}', body: '{{rows}} row(s). Download it from Reports → My exports within 7 days.' },
+  { eventCode: 'REPORT_READY', channel: 'IN_APP', language: 'kn', subject: 'ನಿಮ್ಮ ವರದಿ ಸಿದ್ಧವಾಗಿದೆ: {{report}}', body: '{{rows}} ಸಾಲು(ಗಳು). 7 ದಿನಗಳೊಳಗೆ ವರದಿಗಳು → ನನ್ನ ರಫ್ತುಗಳಿಂದ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ.' },
+  { eventCode: 'REPORT_READY', channel: 'EMAIL', language: 'en', subject: 'Your report is ready: {{report}}', body: 'Hello,\n\nYour report "{{report}}" ({{rows}} rows) is ready.\n\nDownload it in EduERP → Reports → My exports. The file is kept for 7 days.' },
+  { eventCode: 'REPORT_READY', channel: 'EMAIL', language: 'kn', subject: 'ನಿಮ್ಮ ವರದಿ ಸಿದ್ಧವಾಗಿದೆ: {{report}}', body: 'ನಮಸ್ಕಾರ,\n\nನಿಮ್ಮ ವರದಿ "{{report}}" ({{rows}} ಸಾಲುಗಳು) ಸಿದ್ಧವಾಗಿದೆ.\n\nEduERP → ವರದಿಗಳು → ನನ್ನ ರಫ್ತುಗಳಲ್ಲಿ ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ. ಫೈಲ್ 7 ದಿನ ಇರುತ್ತದೆ.' },
   // INVENTORY_LOW (Phase 17)
   { eventCode: 'INVENTORY_LOW', channel: 'IN_APP', language: 'en', subject: '{{count}} item(s) running low in {{store}}', body: 'At or below the reorder level: {{items}}. Raise a purchase request.' },
   { eventCode: 'INVENTORY_LOW', channel: 'IN_APP', language: 'kn', subject: '{{store}} ನಲ್ಲಿ {{count}} ವಸ್ತು(ಗಳು) ಕಡಿಮೆಯಾಗುತ್ತಿವೆ', body: 'ಮರು ಆದೇಶ ಮಟ್ಟ ಅಥವಾ ಅದಕ್ಕಿಂತ ಕಡಿಮೆ: {{items}}. ಖರೀದಿ ವಿನಂತಿ ಸಲ್ಲಿಸಿ.' },

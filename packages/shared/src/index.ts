@@ -29,3 +29,4 @@ export * from './payroll';
 export * from './campuslife';
 export * from './inventory';
 export * from './activities';
+export * from './placements';

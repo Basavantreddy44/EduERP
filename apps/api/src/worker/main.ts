@@ -8,6 +8,7 @@ import { TransportFleetService } from '../modules/transport/fleet.service';
 import { ComplaintsService } from '../modules/engagement/complaints.service';
 import { LibraryService } from '../modules/campuslife/library.service';
 import { InventoryService } from '../modules/inventory/inventory.service';
+import { ReportsService } from '../modules/reports/reports.service';
 import { config } from '../config';
 
 /** Background worker process: `pnpm --filter @eduerp/api worker`. Run one or more next to the API. */
@@ -56,7 +57,23 @@ async function main(): Promise<void> {
   const lowStock = () => inventory.alertAll().then((n) => n && console.log(`Low-stock notices: ${n}`)).catch((e) => console.error('Low-stock notices failed:', e instanceof Error ? e.message : e));
   const stockFirst = setTimeout(lowStock, 300_000);
   const stockTimer = setInterval(lowStock, 3_600_000);
+  // Reports: queued exports every 10 seconds (one pass at a time); saved reports due by email, hourly.
+  const reports = app.get(ReportsService);
+  let exporting = false;
+  const exportTimer = setInterval(async () => {
+    if (exporting) return;
+    exporting = true;
+    try { const n = await reports.processQueued(); if (n) console.log(`Exports built: ${n}`); }
+    catch (e) { console.error('Exports failed:', e instanceof Error ? e.message : e); }
+    finally { exporting = false; }
+  }, 10_000);
+  const scheduled = () => reports.queueScheduled().then((n) => n && console.log(`Scheduled reports queued: ${n}`)).catch((e) => console.error('Scheduled reports failed:', e instanceof Error ? e.message : e));
+  const scheduleFirst = setTimeout(scheduled, 360_000);
+  const scheduleTimer = setInterval(scheduled, 3_600_000);
   const shutdown = async () => {
+    clearInterval(exportTimer);
+    clearTimeout(scheduleFirst);
+    clearInterval(scheduleTimer);
     clearTimeout(stockFirst);
     clearInterval(stockTimer);
     clearTimeout(libraryFirst);

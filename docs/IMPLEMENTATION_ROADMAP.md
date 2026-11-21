@@ -380,6 +380,23 @@ Design: docs/tables/B6_operations.md §2 (labs, lab equipment, lab sessions, lab
 - **AC93 Activities (M18.3):** a student is a member of an activity once per year; members show on the student profile and in the parent app for their own child only; isolation.
 - **AC94 Competitions & achievements (M18.4):** a student is entered once per competition and category; an achievement from a result keeps the link; only verified achievements reach the profile, the parent app, parents and the news feed; isolation.
 
+## 2v. Phase 19 — Placements, and Reports & exports (B6 part 3; after Phase 18, 2026-11-21; complete 2026-11-21)
+
+Design: docs/tables/B6_operations.md §4 (companies, student placement profiles, placement drives, applications, offers) and §5 (saved reports, export jobs). Builds on Phase 1 programmes and students, the files store, the outbox / pg-boss worker and email, and the reports already inside each module. Modules `PLACEMENTS` and `REPORTS`. Owner decisions 2026-11-21: (1) until university CBCS is built, the placement cell enters each student's CGPA (or percentage) and backlogs in the placement profile, marked verified; CBCS will fill them later and the manual entry stays as history; (2) background exports are Excel (.xlsx) and CSV only, kept 7 days; PDF stays "Print / save as PDF" from the browser.
+
+| Milestone | Scope | Not in scope |
+|---|---|---|
+| **M19.1 Companies & placement profiles** | Companies with industry, website, HR contact, address, status (active / blacklisted with reason); a placement profile per student: opted in, skills, preferred locations, resume (file), passing year, CGPA or percentage and backlogs entered and verified by the placement cell (who and when), placed flag | Company portal, student-uploaded marks, automatic CGPA (CBCS phase) |
+| **M19.2 Drives & applications** | Drives per campus and company: role, full-time / internship, CTC range, eligible programmes, passing year, minimum CGPA, maximum backlogs, last date to apply, drive date, rounds, status draft → open → closed → completed; eligible students listed (opted in, verified, programme, year, CGPA, backlogs, not blacklisted company); students apply from the student app or the officer enrols them (eligibility snapshot kept); applications move round by round (shortlisted, in process, selected, rejected, withdrawn); eligible students told when a drive opens | Online tests, interview scheduling per slot, company feedback forms |
+| **M19.3 Offers & statistics** | Offers for selected students with CTC, offer and joining dates, offer letter (file), status offered → accepted / declined / revoked; a student is placed when an offer is accepted (one accepted full-time offer per student unless the officer allows more); statistics per batch: opted in, placed and %, highest / average / median CTC, by programme and by company; the student's own placement view in the app | Alumni tracking after joining, placement fees |
+| **M19.4 Reports & exports** | A report catalogue across modules (students, fee dues, fee collection, attendance summary, staff, library overdue, stock value, achievements, placements), each with its filters and the right that reads it; run on screen; saved reports with filters (private or shared); background exports to Excel / CSV through the job queue with row count, a download link kept 7 days and an export log; optional weekly / monthly email of a saved report to its owner | Report designer, server-made PDF (owner decision), charts builder, emailing outside the institution |
+
+### Acceptance criteria
+- **AC95 Companies & profiles (M19.1):** one profile per student; CGPA 0–10 or percentage 0–100 and backlogs ≥ 0 are kept with who verified them; a blacklisted company cannot get a new drive; isolation.
+- **AC96 Drives & applications (M19.2):** only opted-in, verified students who meet programme, year, CGPA and backlog rules can apply, and only while the drive is open and before the last date; one application per student and drive, with the eligibility snapshot; a student sees only their own applications; isolation.
+- **AC97 Offers & statistics (M19.3):** offers only for selected applications; accepting marks the student placed; a second accepted full-time offer is refused unless allowed; statistics match the offers; isolation.
+- **AC98 Reports & exports (M19.4):** a report runs only with its right and within the user's campuses; an export produces the same rows as the screen, in Excel and CSV, logged with the row count, downloadable only by its owner until it expires; saved reports are private unless shared; isolation.
+
 ## 2t. Order after Phase 17 (owner, 2026-11-20)
 
 1. **Phase 18:** Labs, and Sports & activities.

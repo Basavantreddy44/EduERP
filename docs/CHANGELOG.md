@@ -1,5 +1,17 @@
 # Changelog
 
+## [Unreleased] — 2026-11-21 (Phase 19 Placements, and Reports & exports)
+### Added
+- Placements: companies (active / blacklisted with a reason); a placement profile per student with CGPA or percentage and backlogs entered and verified by the placement cell (until university results come in), skills, preferred locations and resume.
+- Placement drives with eligibility (programmes, passing year, minimum score, most backlogs, already-placed students), last date and rounds; eligible students with a login are told when a drive opens.
+- Students apply from the student app (parents can follow but not apply); the officer can enrol eligible students; each application keeps a snapshot of the score it was made with.
+- Applications move round by round; offers with CTC, dates and offer letter; accepting marks the student placed; a second accepted full-time offer is refused unless the drive allows placed students.
+- Placement statistics per batch: placed %, highest / average / median CTC, by programme and by company.
+- Reports: nine standard reports (students, fee dues, fee collection, attendance summary, staff, library overdue, stock value, achievements, placement offers), each read with its module's own right and campus; saved filters, private or shared; background exports to Excel and CSV kept 7 days with a download log; weekly / monthly email of a saved report.
+- Built-in role: Placement officer. The worker now builds exports and sends scheduled reports.
+### Fixed
+- Phone layout: on some pages (students, admissions, leave, fee set-up, accounts payments / vouchers / vendors / set-up, HR leave balances and set-up) the page loaded wider than the phone and the phone zoomed out. The main content area no longer widens the page, and long tab rows scroll inside themselves. All 74 staff pages and every tab of the parent / student app now measure exactly the phone's width. The earlier phone checks compared the page with itself and missed this; they now compare with the phone's width.
+
 ## [Unreleased] — 2026-11-20 (Phase 18 Labs, and Sports & activities)
 ### Added
 - Labs with their in-charge, assistant, seats and own store; an equipment register with asset tags (unique per institution), condition and calibration dates, and a calibration due list.
