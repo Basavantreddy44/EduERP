@@ -6,6 +6,7 @@ import { AuthContext, canAccessCampus, scopeFor } from '../../common/auth-contex
 import { Conflict, Forbidden, NotFound } from '../../common/problem';
 import type { ClientInfo } from '../../common/decorators';
 import { AccountLinksService } from '../auth/account-links.service';
+import { assertAdminRemains, assertCanGrant } from './access.service';
 
 @Injectable()
 export class UsersService {
@@ -73,6 +74,9 @@ export class UsersService {
     const tenantId = auth.tenantId!;
     // The users policy only reveals a global user to an exact login/invite lookup.
     await tx.$executeRaw`SELECT set_config('app.login_identifier', ${m.email}, true)`;
+    // Nobody invites someone into rights they do not hold themselves for that reach (also covers bulk import).
+    const rights = await tx.rolePermission.findMany({ where: { roleId: m.role.id }, select: { permission: { select: { code: true } } } });
+    assertCanGrant(auth, rights.map((r) => r.permission.code), m.campusId);
     const user =
       (await tx.user.findUnique({ where: { email: m.email }, select: { id: true } })) ??
       (await tx.user.create({ data: { email: m.email, fullName: m.fullName }, select: { id: true } }));
@@ -96,6 +100,7 @@ export class UsersService {
     return this.db.run({ tenantId, userId: auth.userId }, async (tx) => {
       const m = await tx.userTenant.findUnique({ where: { tenantId_userId: { tenantId, userId } } });
       if (!m || m.status === 'REMOVED') throw NotFound('Member');
+      await assertAdminRemains(tx, tenantId, { userId });
       await tx.userTenant.update({ where: { id: m.id }, data: { status: 'REMOVED', updatedBy: auth.userId } });
       const roles = await tx.userRole.findMany({ where: { userId }, select: { roleId: true, campusId: true } });
       await tx.userRole.deleteMany({ where: { userId } });

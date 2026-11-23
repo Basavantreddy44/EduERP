@@ -220,6 +220,7 @@ const NAV: { section: MessageKey; items: NavItem[] }[] = [
       { href: '/classes', label: 'nav.classes', icon: 'layers', permission: PERMISSIONS.ORG_ACADEMIC_READ },
       { href: '/holidays', label: 'nav.holidays', icon: 'holiday', permission: PERMISSIONS.ORG_ACADEMIC_READ },
       { href: '/users', label: 'nav.users', icon: 'users', permission: PERMISSIONS.IAM_USER_READ },
+      { href: '/users/roles', label: 'nav.roles', icon: 'shield', permission: PERMISSIONS.IAM_USER_READ },
       { href: '/imports', label: 'nav.imports', icon: 'upload', anyOf: [PERMISSIONS.ORG_ACADEMIC_MANAGE, PERMISSIONS.IAM_USER_INVITE] },
       { href: '/settings', label: 'nav.settings', icon: 'settings', permission: PERMISSIONS.ORG_SETTINGS_READ },
     ],

@@ -2,7 +2,7 @@
 
 A comprehensive School & College ERP platform designed to digitize and streamline educational institution operations, including student admissions, academics, attendance, examinations, fees, HR, library, transport, and parent communication.
 
-> **Status (21 Nov 2026):** all **32 modules are built** (Phases 1–19), in English and Kannada, and tested: 40 API test suites / 437 tests pass, with browser walk-throughs per role, in Kannada and at phone width. Not yet released to institutions — release follows Phase 20 (SaaS billing for institutions) and the final testing / private pilot; university CBCS comes after. Progress: [docs/DEVELOPMENT_STATUS.md](docs/DEVELOPMENT_STATUS.md) · plan: [docs/IMPLEMENTATION_ROADMAP.md](docs/IMPLEMENTATION_ROADMAP.md) · decisions: [docs/DECISION_LOG.md](docs/DECISION_LOG.md) · changes: [docs/CHANGELOG.md](docs/CHANGELOG.md).
+> **Status (23 Nov 2026):** all **32 modules are built** (Phases 1–19), in English and Kannada, and tested: 40 API test suites / 437 tests pass, with browser walk-throughs per role, in Kannada and at phone width. Not yet released to institutions — release follows Phase 20 (SaaS billing for institutions) and the final testing / private pilot; university CBCS comes after. Progress: [docs/DEVELOPMENT_STATUS.md](docs/DEVELOPMENT_STATUS.md) · plan: [docs/IMPLEMENTATION_ROADMAP.md](docs/IMPLEMENTATION_ROADMAP.md) · decisions: [docs/DECISION_LOG.md](docs/DECISION_LOG.md) · changes: [docs/CHANGELOG.md](docs/CHANGELOG.md).
 
 EDUErp is a multi-tenant, multi-campus ERP for schools, PU colleges and degree colleges in Karnataka. It covers the full student lifecycle (enquiry → admission → academics → exams → certificates → alumni), full double-entry accounting that replaces Tally, HR and payroll, and campus operations (hostel, transport, library, store and purchase, labs), with a parent & student app that installs on a phone.
 
@@ -18,7 +18,7 @@ EDUErp is a multi-tenant, multi-campus ERP for schools, PU colleges and degree c
 | Engagement | News feed · parent-teacher and staff meetings · events & calendar · complaints |
 | Platform | Institutions, plans and module switches per institution (platform console) |
 
-Built-in roles include Institution Admin, Campus Viewer, Head of Department, Teacher, Accountant, HR officer, Exam cell, Front desk, Librarian, School nurse, Counsellor, Store keeper, Lab assistant, Sports & activities coordinator and Placement officer; each institution can edit them or add its own.
+Built-in roles include Institution Admin, Campus Viewer, Head of Department, Teacher, Accountant, HR officer, Exam cell, Front desk, Librarian, School nurse, Counsellor, Store keeper, Lab assistant, Sports & activities coordinator and Placement officer. They are fixed templates: an institution copies one to make its own version, or makes a new role, under **Users → Roles & rights**, and gives each person roles for all campuses or for one campus (so every campus can have its own HOD or principal).
 
 ## Source of truth
 

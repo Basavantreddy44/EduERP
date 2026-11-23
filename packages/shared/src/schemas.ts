@@ -71,6 +71,16 @@ export const inviteUserSchema = z.object({
 });
 export type InviteUserInput = z.infer<typeof inviteUserSchema>;
 
+/** A custom role (built-in roles are fixed templates — copy one to customise). */
+export const roleSchema = z.object({
+  name: z.string().trim().min(2).max(100),
+  permissionCodes: z.array(z.string().trim().min(3).max(100)).min(1, 'Choose at least one right').max(500),
+});
+export type RoleInput = z.infer<typeof roleSchema>;
+/** Gives a user a role for all campuses (null) or one campus. */
+export const assignRoleSchema = z.object({ roleId: z.string().uuid(), campusId: z.string().uuid().nullable().optional() });
+export type AssignRoleInput = z.infer<typeof assignRoleSchema>;
+
 export const pageQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(25),

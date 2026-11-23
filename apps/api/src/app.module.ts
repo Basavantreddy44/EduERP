@@ -17,6 +17,7 @@ import { CampusesService } from './modules/campuses/campuses.service';
 import { CampusesController } from './modules/campuses/campuses.controller';
 import { UsersService } from './modules/users/users.service';
 import { UsersController } from './modules/users/users.controller';
+import { AccessService } from './modules/users/access.service';
 import { AuditController } from './modules/audit/audit.controller';
 import { HealthController } from './modules/health/health.controller';
 import { OutboxService } from './common/outbox.service';
@@ -226,6 +227,7 @@ const isTest = process.env.NODE_ENV === 'test';
     TenantsService,
     CampusesService,
     UsersService,
+    AccessService,
     OutboxService,
     SettingsService,
     NumberingService,

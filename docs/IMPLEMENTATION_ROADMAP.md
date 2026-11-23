@@ -397,6 +397,24 @@ Design: docs/tables/B6_operations.md §4 (companies, student placement profiles,
 - **AC97 Offers & statistics (M19.3):** offers only for selected applications; accepting marks the student placed; a second accepted full-time offer is refused unless allowed; statistics match the offers; isolation.
 - **AC98 Reports & exports (M19.4):** a report runs only with its right and within the user's campuses; an export produces the same rows as the screen, in Excel and CSV, logged with the row count, downloadable only by its owner until it expires; saved reports are private unless shared; isolation.
 
+## 2w. Improvement round — module by module (owner, 2026-11-23)
+
+After Phase 19 the owner asked to go module by module, improving each module and its links to the others, in the order the owner names, and to check that the product fits two target customers: a **Morarji Desai residential school** (Karnataka government residential school) and **VTU** (university with affiliated colleges). First module named: **access control**.
+
+### 2w.1 Access control — roles master and user access (2026-11-23) — ✅ complete 2026-11-23
+
+Owner decisions 2026-11-23: (1) built-in roles are **fixed templates** that stay up to date with each release; a school customises access by **copying** a built-in role and editing the copy (custom roles are never changed by releases); (2) access is limited per **campus** — each campus has its own role holders (e.g. a separate HOD for each campus), and one person may hold several roles, each for all campuses or one campus.
+
+| Milestone | Scope | Not in scope |
+|---|---|---|
+| **A1 Roles master** | One screen listing built-in roles (read-only, with "Copy") and the school's own roles; a role editor with every right grouped by module in plain English / Kannada, select-all per module, search, only modules the school has; create from scratch or from a copy; rename; delete a custom role nobody holds; who holds each role | Department-level limits (owner: per campus is enough for now), time-limited roles |
+| **A2 User access** | From the users list, one page per person: their roles with the campus each applies to, add a role for all campuses or one campus, remove a role, everything the person can do grouped by module (read-only), send a password link, remove from the institution; the linked staff / student / parent record shown | Single sign-on, two-factor sign-in (later) |
+| **A3 Safety rules** | Only people with the role-management right edit roles; nobody can give a role with rights they do not hold themselves, or for a campus outside their own reach; the institution always keeps at least one all-campus Institution Admin; nobody removes their own admin access; changes apply at the person's next click and are written to the audit log | — |
+
+### Acceptance criteria
+- **AC99 Roles master (A1):** built-in roles cannot be changed or deleted; a copy holds the same rights and can be edited; custom role names are unique; a role held by anyone cannot be deleted; only rights of the school's modules are offered; isolation.
+- **AC100 User access (A2, A3):** a role is given for all campuses or one campus and takes effect on the next request; the same role twice for the same reach is refused; nobody grants rights they do not hold or a campus they cannot reach; the last all-campus Institution Admin cannot be removed; the effective-rights view matches what the API allows; every change is audited; isolation.
+
 ## 2t. Order after Phase 17 (owner, 2026-11-20)
 
 1. **Phase 18:** Labs, and Sports & activities.

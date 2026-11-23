@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { PERMISSIONS, inviteUserSchema } from '@eduerp/shared';
 import { api, newIdempotencyKey, ApiError } from '@/lib/api';
 import { useSession } from '@/lib/session';
@@ -39,6 +40,7 @@ export default function UsersPage() {
   const [roles, setRoles] = useState<Role[]>([]);
   const [campusNames, setCampusNames] = useState<Record<string, string>>({});
   const [query, setQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState('');
   const [open, setOpen] = useState(false);
   const [removing, setRemoving] = useState<Member | null>(null);
   const [form, setForm] = useState({ fullName: '', email: '', roleCode: '', campusId: '' });
@@ -57,8 +59,8 @@ export default function UsersPage() {
 
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return (rows ?? []).filter((m) => m.membershipStatus !== 'REMOVED' && (!q || m.fullName.toLowerCase().includes(q) || (m.email ?? '').includes(q)));
-  }, [rows, query]);
+    return (rows ?? []).filter((m) => m.membershipStatus !== 'REMOVED' && (!roleFilter || m.roles.some((r) => r.code === roleFilter)) && (!q || m.fullName.toLowerCase().includes(q) || (m.email ?? '').includes(q)));
+  }, [rows, query, roleFilter]);
 
   function openInvite() {
     setIdemKey(newIdempotencyKey());
@@ -107,7 +109,7 @@ export default function UsersPage() {
         eyebrow={t('nav.setup')}
         title={t('nav.users')}
         description={t('users.desc')}
-        actions={<><ExportButton type="USERS" />{canInvite && <button className="btn btn-primary" onClick={openInvite}><Icon name="plus" /> {t('users.invite')}</button>}</>}
+        actions={<><Link href="/users/roles" className="btn"><Icon name="shield" /> {t('acc.rolesTitle')}</Link><ExportButton type="USERS" />{canInvite && <button className="btn btn-primary" onClick={openInvite}><Icon name="plus" /> {t('users.invite')}</button>}</>}
       />
 
       {rows === null ? (
@@ -119,10 +121,14 @@ export default function UsersPage() {
               <Icon name="search" size={16} />
               <input placeholder={t('users.search')} value={query} onChange={(e) => setQuery(e.target.value)} aria-label={t('users.search')} />
             </label>
+            <select className="acc-role-filter" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} aria-label={t('acc.filterRole')}>
+              <option value="">{t('acc.allRoles')}</option>
+              {roles.map((r) => <option key={r.id} value={r.code}>{r.name}</option>)}
+            </select>
             <span className="muted">{shown.length === 1 ? t('users.countOne') : t('users.count', { n: shown.length })}</span>
           </div>
           {shown.length === 0 ? (
-            <EmptyState icon="users" title={query ? t('common.noMatches') : t('users.emptyTitle')} text={query ? undefined : t('users.emptyText')} />
+            <EmptyState icon="users" title={query || roleFilter ? t('common.noMatches') : t('users.emptyTitle')} text={query || roleFilter ? undefined : t('users.emptyText')} />
           ) : (
             <DataTable
               rows={shown}
@@ -138,7 +144,7 @@ export default function UsersPage() {
                     <div className="person">
                       <span className="avatar small" aria-hidden>{initials(m.fullName)}</span>
                       <span>
-                        <strong>{m.fullName}</strong>
+                        <Link href={`/users/${m.id}`}><strong>{m.fullName}</strong></Link>
                         <span className="muted sub-line">{m.email ?? m.phone}</span>
                       </span>
                     </div>
@@ -152,6 +158,7 @@ export default function UsersPage() {
                 },
                 { key: 'last', header: t('users.lastSignIn'), sort: (m) => (m.lastLoginAt ? new Date(m.lastLoginAt).getTime() : null), cell: (m) => <span className="muted">{lastSeen(m.lastLoginAt, locale, t('users.never'))}</span> },
                 { key: 'status', header: t('common.status'), sort: (m) => m.membershipStatus, cell: (m) => <StatusBadge status={m.membershipStatus} /> },
+                { key: 'open', header: <span className="sr-only">{t('acc.manageAccess')}</span>, align: 'right' as const, cell: (m: Member) => <Link href={`/users/${m.id}`} className="btn btn-sm btn-ghost">{canInvite ? t('acc.manageAccess') : t('acc.view')}</Link> },
                 ...(allScope
                   ? [{ key: 'actions', header: <span className="sr-only">{t('users.remove')}</span>, align: 'right' as const, cell: (m: Member) => (m.id !== session?.user.id ? <button className="btn btn-sm btn-ghost" onClick={() => setRemoving(m)}>{t('users.remove')}</button> : null) }]
                   : []),

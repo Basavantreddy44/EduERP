@@ -1,5 +1,13 @@
 # Changelog
 
+## [Unreleased] — 2026-11-23 (Improvement round: access control — roles master and user access)
+### Added
+- **Roles & rights** (Users → Roles & rights): built-in roles are fixed templates (view and copy); the institution's own roles are created from scratch or from a copy, renamed, given rights and deleted when nobody holds them. Every right is shown in plain English and Kannada, grouped by module with an "all rights of this module" box and a search; only the modules the institution has are offered; who holds each role is listed.
+- **One page per person** (Users → a name): their roles and the campus each applies to (all campuses, or one campus — so each campus can have its own HOD or principal), give a role, take one away, send a password-reset link or the invitation again, the staff / student / parent record the login belongs to, and everything they can do grouped by module with the campuses where each right works.
+- Users list: filter by role, "Manage access" on each row. New right "Create and edit the institution's own roles" (Institution Admin has it).
+### Security
+- Nobody can give a role — or invite someone into one, including by bulk import — that carries rights they do not hold themselves, or for a campus they do not manage. The institution always keeps at least one Institution Admin for all campuses; nobody can remove their own admin access. Changes apply on the person's next click and are written to the audit log.
+
 ## [Unreleased] — 2026-11-21 (Phase 19 Placements, and Reports & exports)
 ### Added
 - Placements: companies (active / blacklisted with a reason); a placement profile per student with CGPA or percentage and backlogs entered and verified by the placement cell (until university results come in), skills, preferred locations and resume.
