@@ -437,6 +437,42 @@ From the fit check for a Morarji Desai residential school (KREIS): five gaps. Ow
 
 Findings reported to the owner on 2026-11-23 (no build yet): for a **VTU-affiliated engineering college** EduERP covers admissions, fees, accounts, HR / payroll, hostel, transport, library, labs, placements, attendance and timetable; missing are **CBCS** (credits, SGPA / CGPA, backlogs, CIE / SEE split per the VTU scheme — planned after Phase 20), **outcome-based education** for NBA (CO–PO mapping and attainment) and the **ABC ID** (APAAR exists; the USN can use the admission number). For **VTU itself** (the university) a further layer is needed: affiliated colleges and approved intake, central examinations (registration, hall tickets, evaluation, revaluation, results), convocation and migration certificates, credit upload to ABC. Open question to the owner: is the target an affiliated college or the university itself.
 
+## 2x. Editions plan — one product, editions (approved 2026-11-24; VTU moved to the next version)
+
+The owner asked (2026-11-24) for three products — standard EduERP, a Morarji Desai residential school and hostel ERP, and VTU — where "what we want we enable, otherwise it works the same". Decision: **one code base, editions**. An edition is a ready-made set-up chosen when an institution is created: which modules are switched on, the starting roles, names on screens, branding and starting settings. Module switches, roles by campus and plans already exist; the editions build on them. Separate servers (for example a government data centre for KREIS) run the same code. Nothing is copied into separate projects.
+
+**Owner decision (2026-11-24):** everything except VTU is built in this version; VTU (the University edition and its phases) is planned in the next version.
+
+| Edition | For | On by default | Off by default |
+|---|---|---|---|
+| **EduERP** (standard) | Private schools, PU and degree colleges | All school / college modules as today | — |
+| **EduERP Residential** | Morarji Desai / KREIS and similar government residential schools | Hostel, mess, diet & meals, welfare, SATS / UDISE+, health, attendance, academics, exams, schools overview by district, inventory | Fees and online payment, placements, payroll (treasury pays) |
+| *EduERP University* — next version | VTU-affiliated colleges; optionally VTU itself | CBCS, outcome-based education, placements, labs, exams, fees, accounts | School-only modules |
+
+Any module of another edition can still be switched on for one institution. The edition list is built so a University edition can be added later without changing the others.
+
+### Phases in this version
+
+| Phase | Scope | Size |
+|---|---|---|
+| **20 Editions** | Edition templates in the platform console (modules, starting roles, settings) applied when an institution is created and changeable later; an institution's edition shown in the console; names on screens per edition (for example "Head office" for the all-campus admin, "School" for campus in Residential); branding per institution (logo and name on the sign-in page, letters, report cards and receipts); module groups in the menu follow the edition; a demo institution per edition | Medium |
+| **21 Residential edition** | KREIS head-office set-up: allotment list import (students allotted by the entrance / counselling), transfer of a student or staff member between schools with history, monthly MIS report for head office (enrolment, attendance, hostel, meals, welfare, results by school and district), hostel-wise health check-up camps, warden daily report, Kannada-first screens | Medium |
+| **22 SaaS billing** (was Phase 20) | As planned in 2t, with a price per edition and per student; grace period and billing cycle to be confirmed by the owner before the phase starts | Medium |
+| **B7 Final testing / private pilot** | One pilot institution per edition, release | — |
+
+**Count:** 3 phases (20–22) plus the final testing. Order: Editions → Residential → SaaS billing → B7.
+
+### Next version — VTU (not built now)
+
+| Phase | Scope | Size |
+|---|---|---|
+| CBCS | VTU scheme set-up (credits, L-T-P, CIE / SEE, pass rules), course registration, electives, CIE and SEE marks, SGPA / CGPA, backlogs and make-up exams, grade card, USN; placement CGPA filled automatically | Large |
+| Outcome-based education | COs per course, CO–PO / PSO mapping, marks per question, attainment, NBA and NAAC formats | Large |
+| Academic records | ABC ID, transcripts, provisional / degree / migration certificates with QR verification | Small |
+| Affiliation, central examinations, convocation & university analytics | Only if VTU itself is the customer | Large / very large / medium |
+
+**Open questions for the owner:** (1) for SaaS billing — grace period and billing cycle (asked before Phase 22); (2) does KREIS need its own server (government data centre)? — affects hosting only, not the build.
+
 ## 2t. Order after Phase 17 (owner, 2026-11-20)
 
 1. **Phase 18:** Labs, and Sports & activities.
