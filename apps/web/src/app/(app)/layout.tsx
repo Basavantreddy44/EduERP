@@ -30,6 +30,7 @@ const NAV: { section: MessageKey; items: NavItem[] }[] = [
       { href: '/approvals', label: 'nav.approvals', icon: 'approvals' },
       { href: '/reports', label: 'nav.reports', icon: 'grid' },
       { href: '/reports/exports', label: 'nav.repExports', icon: 'download' },
+      { href: '/overview', label: 'nav.schools', icon: 'building', permission: PERMISSIONS.OVERVIEW_READ },
     ],
   },
   {
@@ -45,6 +46,8 @@ const NAV: { section: MessageKey; items: NavItem[] }[] = [
       { href: '/students', label: 'nav.studentList', icon: 'cap', permission: PERMISSIONS.STU_STUDENT_READ, module: 'STUDENTS' },
       { href: '/students/promotion', label: 'nav.promotion', icon: 'layers', permission: PERMISSIONS.STU_PROMOTE, module: 'STUDENTS' },
       { href: '/certificates', label: 'nav.certificates', icon: 'file', permission: PERMISSIONS.CERT_READ, module: 'STUDENTS' },
+      { href: '/students/govt', label: 'nav.govData', icon: 'file', permission: PERMISSIONS.STU_STUDENT_READ, module: 'STUDENTS' },
+      { href: '/welfare', label: 'nav.welfare', icon: 'star', module: 'STUDENTS', anyOf: [PERMISSIONS.WELFARE_READ, PERMISSIONS.WELFARE_GIVE, PERMISSIONS.WELFARE_MANAGE] },
     ],
   },
   {
@@ -209,6 +212,7 @@ const NAV: { section: MessageKey; items: NavItem[] }[] = [
     items: [
       { href: '/hostel', label: 'nav.hostels', icon: 'building', permission: PERMISSIONS.HOSTEL_READ, module: 'HOSTEL' },
       { href: '/hostel/mess', label: 'nav.mess', icon: 'clipboard', permission: PERMISSIONS.HOSTEL_READ, module: 'HOSTEL' },
+      { href: '/hostel/diet', label: 'nav.diet', icon: 'clipboard', module: 'HOSTEL', anyOf: [PERMISSIONS.HOSTEL_READ, PERMISSIONS.MEALS_RECORD, PERMISSIONS.DIET_MANAGE] },
     ],
   },
   {

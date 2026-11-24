@@ -19,6 +19,7 @@ import { StudentFees } from '@/components/StudentFees';
 import { AppAccess } from '@/components/portal-access';
 import { StudentBus } from '@/components/StudentBus';
 import { StudentHostel } from '@/components/StudentHostel';
+import { StudentGov } from '@/components/govt';
 import { StudentActivities } from '@/components/activities';
 import { EmptyState, SkeletonRows, StatusBadge, useToast } from '@/components/ui';
 import { todayIST, useDay } from '@/components/admissions';
@@ -46,7 +47,7 @@ interface TcLite { id: string; tcNo: string; issueDate: string; status: string }
 interface NoDues { clear: boolean; balance: string; pendingRefunds: number; openBills: { invoiceNo: string; description: string; balanceAmount: string }[] }
 interface Lookup { id: string; name: string; phone: string; children: (Sibling & { relation: string })[]; otherChildren: number }
 
-type Tab = 'details' | 'parents' | 'class' | 'history' | 'fees' | 'bus' | 'hostel' | 'activities' | 'documents';
+type Tab = 'details' | 'parents' | 'class' | 'history' | 'fees' | 'bus' | 'hostel' | 'activities' | 'govt' | 'documents';
 type Dialog = null | 'edit' | 'status' | 'section' | 'addParent' | 'tc' | { editParent: GuardianLink } | { removeParent: GuardianLink };
 
 const orNull = (v: string) => (v.trim() === '' ? null : v.trim());
@@ -111,6 +112,7 @@ export default function StudentProfilePage() {
     ...(can(PERMISSIONS.TRANSPORT_READ) && hasModule('TRANSPORT') ? [{ key: 'bus' as Tab, label: t('tr.tab.bus') }] : []),
     ...(can(PERMISSIONS.HOSTEL_READ) && hasModule('HOSTEL') ? [{ key: 'hostel' as Tab, label: t('hs.tab.hostel') }] : []),
     ...(hasModule('SPORTS') ? [{ key: 'activities' as Tab, label: t('act.stu.tab') }] : []),
+    { key: 'govt' as Tab, label: t('gov.tab') },
     ...(can(PERMISSIONS.FILES_FILE_READ) ? [{ key: 'documents' as Tab, label: t('app.docs.title') }] : []),
   ];
 
@@ -274,6 +276,7 @@ export default function StudentProfilePage() {
 
         {tab === 'hostel' && <StudentHostel studentId={s.id} active={s.status === 'ACTIVE'} />}
         {tab === 'activities' && <StudentActivities path={`/activities/students/${s.id}`} />}
+        {tab === 'govt' && <StudentGov studentId={s.id} />}
 
         {tab === 'documents' && (
           <Documents

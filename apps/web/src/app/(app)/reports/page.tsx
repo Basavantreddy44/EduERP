@@ -12,13 +12,13 @@ import { EmptyState, PageHeader, SkeletonRows, useToast } from '@/components/ui'
 import { fmtDay } from '@/components/activities';
 import { inrFull } from '@/components/placements';
 
-type FilterKey = 'campusId' | 'sectionId' | 'storeId' | 'from' | 'to' | 'status' | 'mode' | 'passingYear' | 'minBalance';
+type FilterKey = 'campusId' | 'sectionId' | 'storeId' | 'from' | 'to' | 'status' | 'mode' | 'passingYear' | 'minBalance' | 'schemeId';
 interface Col { key: string; label: string; type: 'text' | 'money' | 'number' | 'date' | 'percent' }
 interface Report { code: string; group: string; title: string; filters: FilterKey[]; columns: Col[] }
 interface Result { code: string; columns: Col[]; total: number; rows: Record<string, string | number | null>[]; truncated: boolean; totals: Record<string, string> | null }
 interface Saved { id: string; reportCode: string; name: string; filters: Record<string, string | number>; isShared: boolean; schedule: string; scheduleFormat: string; mine: boolean; owner: string }
-interface Opts { campuses: { id: string; name: string }[]; sections: { id: string; name: string; campusId: string }[]; stores: { id: string; name: string; campusId: string }[] }
-const STATUS: Record<string, string[]> = { STUDENT_LIST: ['ACTIVE', 'INACTIVE', 'DROPPED', 'TRANSFERRED', 'PASSED_OUT'], STAFF_LIST: ['ACTIVE', 'ON_LEAVE', 'RESIGNED', 'TERMINATED'], PLACEMENT_OFFERS: ['OFFERED', 'ACCEPTED', 'DECLINED', 'REVOKED'] };
+interface Opts { campuses: { id: string; name: string }[]; sections: { id: string; name: string; campusId: string }[]; stores: { id: string; name: string; campusId: string }[]; schemes?: { id: string; name: string }[] }
+const STATUS: Record<string, string[]> = { STUDENT_LIST: ['ACTIVE', 'INACTIVE', 'DROPPED', 'TRANSFERRED', 'PASSED_OUT'], STAFF_LIST: ['ACTIVE', 'ON_LEAVE', 'RESIGNED', 'TERMINATED'], STAFF_GOVT: ['ACTIVE', 'ON_LEAVE', 'RESIGNED', 'TERMINATED'], PLACEMENT_OFFERS: ['OFFERED', 'ACCEPTED', 'DECLINED', 'REVOKED'] };
 const MODES = ['CASH', 'CHEQUE', 'DD', 'UPI', 'CARD', 'BANK_TRANSFER', 'ONLINE'];
 
 /** Reports (M19.4): run a standard report, save its filters, export to Excel or CSV in the background. */
@@ -110,6 +110,7 @@ export default function ReportsPage() {
                   {rep.filters.includes('status') && STATUS[rep.code] && <label className="inv-f">{t('act.status')}<select value={filters.status ?? ''} onChange={(e) => set('status', e.target.value)}><option value="">{rep.code === 'STUDENT_LIST' ? t('rep.f.current') : t('act.all')}</option>{STATUS[rep.code].map((s) => <option key={s} value={s}>{t(`rep.st.${s}` as MessageKey)}</option>)}</select></label>}
                   {rep.filters.includes('mode') && <label className="inv-f">{t('rep.f.mode')}<select value={filters.mode ?? ''} onChange={(e) => set('mode', e.target.value)}><option value="">{t('act.all')}</option>{MODES.map((m) => <option key={m} value={m}>{t(`rep.mode.${m}` as MessageKey)}</option>)}</select></label>}
                   {rep.filters.includes('passingYear') && <label className="inv-f">{t('plc.passingYear')}<input inputMode="numeric" value={filters.passingYear ?? ''} onChange={(e) => set('passingYear', e.target.value)} /></label>}
+                  {rep.filters.includes('schemeId') && <label className="inv-f">{t('wf.scheme')}<select value={filters.schemeId ?? ''} onChange={(e) => set('schemeId', e.target.value)}><option value="">{t('rep.f.allSchemes')}</option>{(opts?.schemes ?? []).map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></label>}
                   {rep.filters.includes('minBalance') && <label className="inv-f">{t('rep.f.minBalance')}<input inputMode="decimal" value={filters.minBalance ?? ''} onChange={(e) => set('minBalance', e.target.value)} /></label>}
                 </div>
                 {errors.to && <p className="field-error">{errors.to}</p>}
@@ -131,7 +132,7 @@ export default function ReportsPage() {
                 </div>
                 <div className="table-wrap" role="region" aria-label={title(result.code)} tabIndex={0}>
                   <table className="table">
-                    <thead><tr>{result.columns.map((c) => <th key={c.key} scope="col" className={['money', 'number', 'percent'].includes(c.type) ? 'num' : undefined}>{t(`rep.col.${c.key}` as MessageKey)}</th>)}</tr></thead>
+                    <thead><tr>{result.columns.map((c) => <th key={c.key} scope="col" className={['money', 'number', 'percent'].includes(c.type) ? 'num' : undefined}>{result.code.startsWith('GOV_') ? c.label : t(`rep.col.${c.key}` as MessageKey)}</th>)}</tr></thead>
                     <tbody>{result.rows.map((r, i) => <tr key={i}>{result.columns.map((c) => <td key={c.key} className={['money', 'number', 'percent'].includes(c.type) ? 'num' : undefined}>{fmt(c, r[c.key])}</td>)}</tr>)}</tbody>
                     {result.totals && <tfoot><tr>{result.columns.map((c, i) => <td key={c.key} className={c.type === 'money' ? 'num' : undefined}>{i === 0 ? <strong>{t('inv.total')}</strong> : result.totals![c.key] != null ? <strong>{inrFull(result.totals![c.key])}</strong> : ''}</td>)}</tr></tfoot>}
                   </table>

@@ -1,5 +1,16 @@
 # Changelog
 
+## [Unreleased] — 2026-11-23 (Improvement round: government residential school pack — SATS / UDISE+, welfare, diet, schools overview)
+### Added
+- **SATS & UDISE+** (Students → SATS & UDISE+): a "Government data" tab on every student (SATS student ID, UDISE+ PEN, ration card, EWS, minority group, child with special needs, medium of instruction, distance from home, previous school) showing what each export still misses; readiness by school and a list of students with missing fields; SATS and UDISE+ exports to Excel / CSV whose columns the institution can rename, reorder, add or remove to match each year's portal template, and reset to the standard.
+- **Welfare items & allowances** (Students → Welfare items): schemes per academic year (uniforms, kits, notebooks from the store, or cash allowances) for chosen classes and boys / girls; hand out to a class at once — nobody gets more than the entitlement, stock leaves the store as a welfare movement, cash needs the payment reference; who received what on the student's page and in a report.
+- **Diet & meals** (Hostel → Diet & meals): the diet scale (quantity of each food item per child per day, set once for every campus), the daily meal register by class (filled in from the hostel roll call), and a diet report comparing what the scale allows for the children fed with what the stores issued, flagging items outside an allowed difference.
+- **Government service details** on the staff profile (employment type, KGID, HRMS ID, PRAN / GPF, pay scale, government service date) and the DDO code of each school; report "Staff for HRMS".
+- **Schools overview** (Overview → Schools overview): every school (campus) side by side, grouped by district with totals — students, staff, today's attendance and hostel roll call, children fed yesterday, diet items off this month, welfare handed out, SATS / UDISE+ readiness and the latest pass percentage. A principal sees only their own school.
+- Reports: SATS student data, UDISE+ student data, Staff for HRMS, Welfare by student.
+### Changed
+- The item ledger knows a new movement, "Welfare". Nothing else in the existing modules changed.
+
 ## [Unreleased] — 2026-11-23 (Improvement round: access control — roles master and user access)
 ### Added
 - **Roles & rights** (Users → Roles & rights): built-in roles are fixed templates (view and copy); the institution's own roles are created from scratch or from a copy, renamed, given rights and deleted when nobody holds them. Every right is shown in plain English and Kannada, grouped by module with an "all rights of this module" box and a search; only the modules the institution has are offered; who holds each role is listed.

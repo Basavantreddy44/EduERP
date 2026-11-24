@@ -88,7 +88,7 @@ export const offerStatusSchema = z.object({ status: z.enum(['ACCEPTED', 'DECLINE
 
 // ───────────── Reports & exports ─────────────
 
-export const CATALOGUE_REPORT_CODES = ['STUDENT_LIST', 'FEE_DUES', 'FEE_COLLECTION', 'ATTENDANCE_SUMMARY', 'STAFF_LIST', 'LIBRARY_OVERDUE', 'STOCK_VALUE', 'ACHIEVEMENTS', 'PLACEMENT_OFFERS'] as const;
+export const CATALOGUE_REPORT_CODES = ['STUDENT_LIST', 'FEE_DUES', 'FEE_COLLECTION', 'ATTENDANCE_SUMMARY', 'STAFF_LIST', 'LIBRARY_OVERDUE', 'STOCK_VALUE', 'ACHIEVEMENTS', 'PLACEMENT_OFFERS', 'GOV_SATS', 'GOV_UDISE', 'STAFF_GOVT', 'WELFARE_STATUS'] as const;
 export type CatalogueReportCode = (typeof CATALOGUE_REPORT_CODES)[number];
 /** Filters every report understands; each report uses the ones it needs. */
 export const reportFiltersSchema = z.object({
@@ -101,6 +101,7 @@ export const reportFiltersSchema = z.object({
   mode: z.string().trim().max(20).optional(),
   passingYear: z.coerce.number().int().min(2000).max(2100).optional(),
   minBalance: z.coerce.number().min(0).optional(),
+  schemeId: uuid.optional(),
 }).refine((v) => !v.from || !v.to || v.to >= v.from, { path: ['to'], message: 'The end is before the start' });
 export type ReportFilters = z.infer<typeof reportFiltersSchema>;
 

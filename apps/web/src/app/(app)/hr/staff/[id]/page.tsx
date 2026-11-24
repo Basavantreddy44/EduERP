@@ -12,6 +12,7 @@ import type { MessageKey } from '@/lib/i18n/messages';
 import { Icon } from '@/components/Icon';
 import { Field, Modal } from '@/components/Modal';
 import { EmptyState, PageHeader, SkeletonRows, useToast } from '@/components/ui';
+import { StaffGov } from '@/components/govt';
 
 interface Profile {
   employee: { id: string; employeeCode: string; name: string; gender: string; dob: string | null; phone: string | null; email: string | null; employeeType: string; joiningDate: string; leftOn: string | null; status: string; campus: string; department: string | null; designationId: string | null; designation: string | null };
@@ -115,6 +116,7 @@ export default function HrProfilePage() {
             <div><dt>{t('hr.bank')}</dt><dd>{d.bankName ? <>{d.bankName}<span className="sub-line small">{shown.bankAccountNo ?? d.bankAccount ?? ''}{d.ifsc ? ` · ${d.ifsc}` : ''}</span>{canReveal && d.bankAccount && !shown.bankAccountNo && <button type="button" className="link-btn" onClick={() => void reveal('bankAccountNo')}> {t('ac2.show')}</button>}</> : dash(null)}</dd></div>
           </dl>
         </section>
+        <StaffGov employeeId={e.id} />
         <section className="card p12-block" aria-labelledby="hr-quals">
           <div className="panel-head"><h2 id="hr-quals" className="section-title">{t('hr.qualifications')}</h2>{p.canEdit && <button type="button" className="btn btn-sm" onClick={() => { setSub({ qualification: '', institution: '', yearOfPassing: '', percentage: '' }); setErrors({}); setError(null); setAddQ(true); }}><Icon name="plus" size={14} /> {t('hr.add')}</button>}</div>
           {!p.qualifications.length ? <p className="muted">{t('hr.noQuals')}</p> : <ul className="p12-action-list">{p.qualifications.map((q) => <li key={q.id}><span><strong>{q.qualification}</strong><span className="sub-line muted small">{q.institution} · {q.yearOfPassing}{q.percentage != null ? ` · ${q.percentage}%` : ''}</span></span>{p.canEdit && <button type="button" className="btn btn-sm btn-ghost" aria-label={t('hr.removeOf', { name: q.qualification })} onClick={() => void remove('qualifications', q.id)}><Icon name="trash" size={14} /></button>}</li>)}</ul>}

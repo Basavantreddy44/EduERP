@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import ExcelJS from 'exceljs';
-import { CatalogueReportCode, EXPORT_KEEP_DAYS, ExportInput, PERMISSIONS, ReportFilters, SavedReportInput, fromPaise, toPaise } from '@eduerp/shared';
+import { CatalogueReportCode, EXPORT_KEEP_DAYS, GOV_FIELDS, GOV_STANDARD_LAYOUTS, ExportInput, PERMISSIONS, ReportFilters, SavedReportInput, fromPaise, toPaise } from '@eduerp/shared';
 import { Db, Tx } from '../../common/prisma.service';
 import { AuditService } from '../../common/audit.service';
 import { AuthContext, CampusScope, scopeFor } from '../../common/auth-context';
@@ -12,12 +12,14 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { EntitlementsService } from '../platform/entitlements.service';
 import { dec } from '../accounts/books';
 import { day, fullName, iso, todayIST } from '../campuslife/common';
+import { govColumns, govRows } from '../govt/gov-rows';
+import { welfareStatusRows } from '../govt/welfare.service';
 
 type Perm = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 type Cell = string | number | null;
 export interface Column { key: string; label: string; type: 'text' | 'money' | 'number' | 'date' | 'percent' }
-type Filter = 'campusId' | 'sectionId' | 'storeId' | 'from' | 'to' | 'status' | 'mode' | 'passingYear' | 'minBalance';
-interface ReportDef { code: CatalogueReportCode; module: string; group: string; title: string; perm: Perm; filters: Filter[]; columns: Column[]; run: (tx: Tx, campuses: string[] | null, f: ReportFilters) => Promise<Record<string, Cell>[]> }
+type Filter = 'campusId' | 'sectionId' | 'storeId' | 'from' | 'to' | 'status' | 'mode' | 'passingYear' | 'minBalance' | 'schemeId';
+interface ReportDef { code: CatalogueReportCode; module: string; group: string; title: string; perm: Perm; filters: Filter[]; columns: Column[]; /** Columns the institution can change (government exports). */ columnsFor?: (tx: Tx) => Promise<Column[]>; run: (tx: Tx, campuses: string[] | null, f: ReportFilters) => Promise<Record<string, Cell>[]> }
 
 const SCREEN_ROWS = 500;
 const EXPORT_MAX = 50_000;
@@ -146,6 +148,33 @@ const REPORTS: ReportDef[] = [
       return offers.map((o) => { const d = drives.find((x) => x.id === apps.find((a) => a.id === o.applicationId)!.driveId)!; const s = st.get(o.studentId); return { student: s ? fullName(s) : '', admissionNo: s?.admissionNo ?? '', company: comp.get(d.companyId) ?? '', role: d.title, jobType: d.jobType, ctc: dec(o.ctc), offerDate: iso(o.offerDate), status: o.status }; });
     },
   },
+  {
+    code: 'GOV_SATS', module: 'STUDENTS', group: 'GOVERNMENT', title: 'SATS student data', perm: PERMISSIONS.STU_STUDENT_READ, filters: ['campusId', 'sectionId'],
+    columns: GOV_STANDARD_LAYOUTS.SATS.map((k) => ({ key: k, label: GOV_FIELDS.find((f) => f.key === k)!.label, type: GOV_FIELDS.find((f) => f.key === k)!.type })),
+    columnsFor: (tx) => govColumns(tx, 'SATS'),
+    run: async (tx, c, f) => (await govRows(tx, c, { campusId: f.campusId, sectionId: f.sectionId }, EXPORT_MAX)) as unknown as Record<string, Cell>[],
+  },
+  {
+    code: 'GOV_UDISE', module: 'STUDENTS', group: 'GOVERNMENT', title: 'UDISE+ student data', perm: PERMISSIONS.STU_STUDENT_READ, filters: ['campusId', 'sectionId'],
+    columns: GOV_STANDARD_LAYOUTS.UDISE.map((k) => ({ key: k, label: GOV_FIELDS.find((f) => f.key === k)!.label, type: GOV_FIELDS.find((f) => f.key === k)!.type })),
+    columnsFor: (tx) => govColumns(tx, 'UDISE'),
+    run: async (tx, c, f) => (await govRows(tx, c, { campusId: f.campusId, sectionId: f.sectionId }, EXPORT_MAX)) as unknown as Record<string, Cell>[],
+  },
+  {
+    code: 'STAFF_GOVT', module: 'SETUP', group: 'STAFF', title: 'Staff for HRMS (government details)', perm: PERMISSIONS.HR_PROFILE_READ, filters: ['campusId', 'status'],
+    columns: [{ key: 'code', label: 'Staff code', type: 'text' }, { key: 'name', label: 'Name', type: 'text' }, { key: 'designation', label: 'Designation', type: 'text' }, { key: 'campus', label: 'School (campus)', type: 'text' }, { key: 'ddoCode', label: 'DDO code', type: 'text' }, { key: 'employment', label: 'Employment', type: 'text' }, { key: 'kgidNo', label: 'KGID no', type: 'text' }, { key: 'hrmsId', label: 'HRMS ID', type: 'text' }, { key: 'pranNo', label: 'PRAN', type: 'text' }, { key: 'gpfNo', label: 'GPF no', type: 'text' }, { key: 'payScale', label: 'Pay scale', type: 'text' }, { key: 'govtServiceDate', label: 'In government service from', type: 'date' }, { key: 'joiningDate', label: 'Joined this school on', type: 'date' }, { key: 'status', label: 'Status', type: 'text' }],
+    run: async (tx, c, f) => {
+      const rows = await tx.employee.findMany({ where: { campusId: cw(c, f.campusId) as never, ...(f.status ? { status: f.status } : { status: { notIn: ['RESIGNED', 'TERMINATED'] } }) }, orderBy: [{ firstName: 'asc' }], take: EXPORT_MAX });
+      const det = new Map((await tx.employeeDetail.findMany({ where: { employeeId: { in: rows.map((e) => e.id) } } })).map((d) => [d.employeeId, d]));
+      const camp = new Map((await tx.campus.findMany({ select: { id: true, name: true, ddoCode: true } })).map((x) => [x.id, x]));
+      return rows.map((e) => { const d = det.get(e.id); const cp = camp.get(e.campusId); return { code: e.employeeCode, name: fullName(e), designation: e.designation, campus: cp?.name ?? null, ddoCode: cp?.ddoCode ?? null, employment: d?.govtEmployment ?? null, kgidNo: d?.kgidNo ?? null, hrmsId: d?.hrmsId ?? null, pranNo: d?.pranNo ?? null, gpfNo: d?.gpfNo ?? null, payScale: d?.payScale ?? null, govtServiceDate: iso(d?.govtServiceDate), joiningDate: iso(e.joiningDate), status: e.status }; });
+    },
+  },
+  {
+    code: 'WELFARE_STATUS', module: 'STUDENTS', group: 'GOVERNMENT', title: 'Welfare items and allowances by student', perm: PERMISSIONS.WELFARE_READ, filters: ['campusId', 'sectionId', 'schemeId'],
+    columns: [{ key: 'scheme', label: 'Scheme', type: 'text' }, { key: 'kind', label: 'Kind', type: 'text' }, { key: 'student', label: 'Student', type: 'text' }, { key: 'admissionNo', label: 'Admission no', type: 'text' }, { key: 'className', label: 'Class', type: 'text' }, { key: 'entitled', label: 'Entitled', type: 'number' }, { key: 'received', label: 'Received', type: 'number' }, { key: 'pending', label: 'Pending', type: 'number' }, { key: 'lastGiven', label: 'Last given on', type: 'date' }],
+    run: (tx, c, f) => welfareStatusRows(tx, c, f),
+  },
 ];
 const DEF = new Map(REPORTS.map((r) => [r.code, r]));
 
@@ -181,7 +210,8 @@ export class ReportsService {
   catalogue(auth: AuthContext) {
     return this.db.run(this.ctx(auth), async (tx) => {
       const on = await this.enabled(tx);
-      return REPORTS.filter((d) => this.scope(auth, d) !== false && (d.module === 'SETUP' || on.has(d.module))).map((d) => ({ code: d.code, group: d.group, title: d.title, filters: d.filters, columns: d.columns }));
+      const list = REPORTS.filter((d) => this.scope(auth, d) !== false && (d.module === 'SETUP' || on.has(d.module)));
+      return Promise.all(list.map(async (d) => ({ code: d.code, group: d.group, title: d.title, filters: d.filters, columns: await this.cols(tx, d) })));
     });
   }
 
@@ -192,7 +222,9 @@ export class ReportsService {
         tx.section.findMany({ where: { status: 'ACTIVE', academicYear: { isCurrent: true } }, orderBy: [{ level: { sequence: 'asc' } }, { name: 'asc' }], select: { id: true, name: true, campusId: true, level: { select: { name: true } } } }),
         tx.store.findMany({ where: { isActive: true }, orderBy: { name: 'asc' }, select: { id: true, name: true, campusId: true } }).catch(() => []),
       ]);
-      return { campuses, stores, sections: sections.map((s) => ({ id: s.id, name: `${s.level.name} ${s.name}`, campusId: s.campusId })) };
+      const year = await tx.academicYear.findFirst({ where: { isCurrent: true }, select: { id: true } });
+      const schemes = year ? await tx.welfareScheme.findMany({ where: { academicYearId: year.id }, orderBy: { name: 'asc' }, select: { id: true, name: true } }) : [];
+      return { campuses, stores, schemes, sections: sections.map((s) => ({ id: s.id, name: `${s.level.name} ${s.name}`, campusId: s.campusId })) };
     });
   }
 
@@ -200,8 +232,12 @@ export class ReportsService {
     return this.db.run(this.ctx(auth), async (tx) => {
       const { d, campuses } = await this.allowed(tx, auth, code);
       const rows = await d.run(tx, campuses, filters);
-      return { code: d.code, title: d.title, columns: d.columns, total: rows.length, rows: rows.slice(0, SCREEN_ROWS), truncated: rows.length > SCREEN_ROWS, totals: this.totals(d, rows) };
+      return { code: d.code, title: d.title, columns: await this.cols(tx, d), total: rows.length, rows: rows.slice(0, SCREEN_ROWS), truncated: rows.length > SCREEN_ROWS, totals: this.totals(d, rows) };
     });
+  }
+
+  private cols(tx: Tx, d: ReportDef): Promise<Column[]> {
+    return d.columnsFor ? d.columnsFor(tx) : Promise.resolve(d.columns);
   }
 
   private totals(d: ReportDef, rows: Record<string, Cell>[]) {
@@ -290,22 +326,22 @@ export class ReportsService {
       const result = await this.db.run({ tenantId, userId: job.userId }, async (tx) => {
         const auth = await this.authFor(tx, tenantId, job.userId);
         const { d, campuses } = await this.allowed(tx, auth, job.reportCode);
-        return { d, rows: await d.run(tx, campuses, job.filters as ReportFilters) };
+        return { d, columns: await this.cols(tx, d), rows: await d.run(tx, campuses, job.filters as ReportFilters) };
       });
-      const { d, rows } = result;
+      const { d, rows, columns } = result;
       const stamp = todayIST();
       let buffer: Buffer;
       if (job.format === 'CSV') {
         const esc = (v: Cell) => (v == null ? '' : /[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v));
-        buffer = Buffer.from(`﻿${[d.columns.map((c) => esc(c.label)).join(','), ...rows.map((r) => d.columns.map((c) => esc(r[c.key])).join(','))].join('\r\n')}\r\n`, 'utf8');
+        buffer = Buffer.from(`﻿${[columns.map((c) => esc(c.label)).join(','), ...rows.map((r) => columns.map((c) => esc(r[c.key])).join(','))].join('\r\n')}\r\n`, 'utf8');
       } else {
         const wb = new ExcelJS.Workbook();
         wb.creator = 'EduERP';
         const ws = wb.addWorksheet(d.title.slice(0, 31));
-        ws.columns = d.columns.map((c) => ({ header: c.label, key: c.key, width: Math.min(40, Math.max(12, c.label.length + 4)), style: c.type === 'money' ? { numFmt: '#,##,##0.00' } : c.type === 'percent' ? { numFmt: '0.0' } : {} }));
+        ws.columns = columns.map((c) => ({ header: c.label, key: c.key, width: Math.min(40, Math.max(12, c.label.length + 4)), style: c.type === 'money' ? { numFmt: '#,##,##0.00' } : c.type === 'percent' ? { numFmt: '0.0' } : {} }));
         ws.getRow(1).font = { bold: true };
         ws.views = [{ state: 'frozen', ySplit: 1 }];
-        for (const r of rows) ws.addRow(Object.fromEntries(d.columns.map((c) => [c.key, r[c.key] == null ? null : c.type === 'money' || c.type === 'number' || c.type === 'percent' ? Number(r[c.key]) : c.type === 'date' ? new Date(`${r[c.key]}T00:00:00Z`) : r[c.key]])));
+        for (const r of rows) ws.addRow(Object.fromEntries(columns.map((c) => [c.key, r[c.key] == null ? null : c.type === 'money' || c.type === 'number' || c.type === 'percent' ? Number(r[c.key]) : c.type === 'date' ? new Date(`${r[c.key]}T00:00:00Z`) : r[c.key]])));
         buffer = Buffer.from(await wb.xlsx.writeBuffer());
       }
       const ext = job.format === 'CSV' ? 'csv' : 'xlsx';

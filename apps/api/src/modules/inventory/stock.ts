@@ -13,7 +13,7 @@ export const fromQh = fromPaise;
 const rate4 = (valuePaise: number, quantityH: number) => (quantityH > 0 ? (valuePaise / quantityH).toFixed(4) : '0.0000');
 
 export type TxnType = 'OPENING' | 'GRN_IN' | 'ISSUE_OUT' | 'TRANSFER_OUT' | 'TRANSFER_IN' | 'ADJUST_IN' | 'ADJUST_OUT';
-export type RefType = 'OPENING' | 'GRN' | 'ISSUE' | 'TRANSFER' | 'COUNT';
+export type RefType = 'OPENING' | 'GRN' | 'ISSUE' | 'TRANSFER' | 'COUNT' | 'WELFARE';
 const OUT: TxnType[] = ['ISSUE_OUT', 'TRANSFER_OUT', 'ADJUST_OUT'];
 
 export interface Move { tenantId: string; storeId: string; itemId: string; quantityH: number; date: string; txnType: TxnType; refType: RefType; refId: string | null; userId: string | null; remarks?: string | null; /** Receipts: rate per unit (paise); issues use the average. */ ratePaise?: number; /** Transfers in: the exact value that left the other store. */ valuePaise?: number }

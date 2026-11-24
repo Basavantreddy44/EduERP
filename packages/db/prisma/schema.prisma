@@ -59,6 +59,7 @@ model Campus {
   campusType          String   @map("campus_type") @db.VarChar(20)
   affiliationNo       String?  @map("affiliation_no") @db.VarChar(50)
   udiseCode           String?  @map("udise_code") @db.VarChar(20)
+  ddoCode             String?  @map("ddo_code") @db.VarChar(20)
   address             String?  @db.VarChar(500)
   city                String?  @db.VarChar(100)
   district            String?  @db.VarChar(100)
@@ -4036,6 +4037,13 @@ model EmployeeDetail {
   reportingToId         String?   @map("reporting_to_id") @db.Uuid
   confirmationDate      DateTime? @map("confirmation_date") @db.Date
   probationEndDate      DateTime? @map("probation_end_date") @db.Date
+  govtEmployment        String?   @map("govt_employment") @db.VarChar(12)
+  kgidNo                String?   @map("kgid_no") @db.VarChar(20)
+  hrmsId                String?   @map("hrms_id") @db.VarChar(20)
+  pranNo                String?   @map("pran_no") @db.VarChar(12)
+  gpfNo                 String?   @map("gpf_no") @db.VarChar(30)
+  payScale              String?   @map("pay_scale") @db.VarChar(60)
+  govtServiceDate       DateTime? @map("govt_service_date") @db.Date
   createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt             DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   updatedBy             String?   @map("updated_by") @db.Uuid
@@ -5438,4 +5446,128 @@ model ExportJob {
   @@index([tenantId, userId, createdAt])
   @@index([status, createdAt])
   @@map("export_jobs")
+}
+
+// ───────────── Government school pack (improvement round G1–G5) ─────────────
+// Foreign keys and checks live in the migration's hand-written section (no Prisma relations, so the
+// existing models stay unchanged).
+
+/// Government data of a student (SATS / UDISE+) beyond the student master (G1).
+model StudentGovProfile {
+  id                  String   @id @default(uuid()) @db.Uuid
+  tenantId            String   @map("tenant_id") @db.Uuid
+  studentId           String   @map("student_id") @db.Uuid
+  satsId              String?  @map("sats_id") @db.VarChar(20)
+  penNo               String?  @map("pen_no") @db.VarChar(20)
+  rationCardType      String?  @map("ration_card_type") @db.VarChar(5)
+  isEws               Boolean? @map("is_ews")
+  minorityGroup       String?  @map("minority_group") @db.VarChar(20)
+  isCwsn              Boolean  @default(false) @map("is_cwsn")
+  disabilityType      String?  @map("disability_type") @db.VarChar(60)
+  mediumOfInstruction String?  @map("medium_of_instruction") @db.VarChar(20)
+  distanceKm          Decimal? @map("distance_km") @db.Decimal(6, 1)
+  previousSchool      String?  @map("previous_school") @db.VarChar(200)
+  updatedBy           String?  @map("updated_by") @db.Uuid
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, studentId])
+  @@map("student_gov_profiles")
+}
+
+/// The institution's column layout of a government export (G1); absent = the standard layout.
+model GovExportLayout {
+  id         String   @id @default(uuid()) @db.Uuid
+  tenantId   String   @map("tenant_id") @db.Uuid
+  exportCode String   @map("export_code") @db.VarChar(10)
+  columns    Json
+  updatedBy  String?  @map("updated_by") @db.Uuid
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, exportCode])
+  @@map("gov_export_layouts")
+}
+
+/// A welfare item or cash allowance for one academic year (G2).
+model WelfareScheme {
+  id                 String   @id @default(uuid()) @db.Uuid
+  tenantId           String   @map("tenant_id") @db.Uuid
+  academicYearId     String   @map("academic_year_id") @db.Uuid
+  name               String   @db.VarChar(120)
+  kind               String   @db.VarChar(5)
+  inventoryItemId    String?  @map("inventory_item_id") @db.Uuid
+  quantityPerStudent Decimal? @map("quantity_per_student") @db.Decimal(10, 2)
+  amountPerStudent   Decimal? @map("amount_per_student") @db.Decimal(12, 2)
+  levelNames         String[] @map("level_names") @db.VarChar(50)
+  gender             String   @default("ALL") @db.VarChar(6)
+  status             String   @default("ACTIVE") @db.VarChar(10)
+  createdBy          String?  @map("created_by") @db.Uuid
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, academicYearId, name])
+  @@map("welfare_schemes")
+}
+
+/// What one student received under a scheme (G2).
+model WelfareDistribution {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  schemeId  String   @map("scheme_id") @db.Uuid
+  studentId String   @map("student_id") @db.Uuid
+  campusId  String   @map("campus_id") @db.Uuid
+  givenOn   DateTime @map("given_on") @db.Date
+  quantity  Decimal? @db.Decimal(10, 2)
+  amount    Decimal? @db.Decimal(12, 2)
+  storeId   String?  @map("store_id") @db.Uuid
+  reference String?  @db.VarChar(60)
+  remarks   String?  @db.VarChar(200)
+  createdBy String   @map("created_by") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, schemeId, studentId])
+  @@index([tenantId, studentId])
+  @@map("welfare_distributions")
+}
+
+/// The diet scale: quantity of a food item per child per day, for all classes or the named ones (G3).
+model DietScaleItem {
+  id               String    @id @default(uuid()) @db.Uuid
+  tenantId         String    @map("tenant_id") @db.Uuid
+  inventoryItemId  String    @map("inventory_item_id") @db.Uuid
+  quantityPerChild Decimal   @map("quantity_per_child") @db.Decimal(10, 3)
+  levelNames       String[]  @map("level_names") @db.VarChar(50)
+  effectiveFrom    DateTime  @map("effective_from") @db.Date
+  effectiveTo      DateTime? @map("effective_to") @db.Date
+  createdBy        String?   @map("created_by") @db.Uuid
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, inventoryItemId])
+  @@map("diet_scale_items")
+}
+
+/// Children who ate each meal on a day, by class, at one campus (G3).
+model MealCount {
+  id         String   @id @default(uuid()) @db.Uuid
+  tenantId   String   @map("tenant_id") @db.Uuid
+  campusId   String   @map("campus_id") @db.Uuid
+  mealDate   DateTime @map("meal_date") @db.Date
+  levelName  String   @map("level_name") @db.VarChar(50)
+  breakfast  Int      @default(0)
+  lunch      Int      @default(0)
+  snacks     Int      @default(0)
+  dinner     Int      @default(0)
+  updatedBy  String?  @map("updated_by") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, campusId, mealDate, levelName])
+  @@index([tenantId, campusId, mealDate])
+  @@map("meal_counts")
 }

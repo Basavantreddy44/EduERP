@@ -124,6 +124,10 @@ import { SportsService } from './modules/activities/sports.service';
 import { PlacementsController, ReportsController } from './modules/placements/placements.controller';
 import { PlacementsService } from './modules/placements/placements.service';
 import { ReportsService } from './modules/reports/reports.service';
+import { DietController, GovtController, WelfareController } from './modules/govt/govt.controller';
+import { GovtService } from './modules/govt/govt.service';
+import { WelfareService } from './modules/govt/welfare.service';
+import { DietService } from './modules/govt/diet.service';
 import { PurchaseService } from './modules/inventory/purchase.service';
 import { PayrollSetupService } from './modules/payroll/payroll-setup.service';
 import { PayrollRunsService } from './modules/payroll/payroll-runs.service';
@@ -218,6 +222,9 @@ const isTest = process.env.NODE_ENV === 'test';
     LabsController,
     ActivitiesController,
     PlacementsController,
+    GovtController,
+    WelfareController,
+    DietController,
     ReportsController,
   ],
   providers: [
@@ -296,6 +303,9 @@ const isTest = process.env.NODE_ENV === 'test';
     AccountPaymentsService,
     BankReconService,
     AccountsReportsService,
+    GovtService,
+    WelfareService,
+    DietService,
     HrService,
     PayrollSetupService,
     PayrollRunsService,

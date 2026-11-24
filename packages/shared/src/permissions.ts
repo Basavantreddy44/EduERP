@@ -125,6 +125,13 @@ export const PERMISSIONS = {
   ACH_ADD: 'achievements.add',
   PLACE_READ: 'placements.read',
   PLACE_MANAGE: 'placements.manage',
+  GOV_EXPORT_MANAGE: 'students.govexport.manage',
+  WELFARE_READ: 'welfare.read',
+  WELFARE_MANAGE: 'welfare.manage',
+  WELFARE_GIVE: 'welfare.give',
+  DIET_MANAGE: 'hostel.diet.manage',
+  MEALS_RECORD: 'hostel.meals.record',
+  OVERVIEW_READ: 'overview.read',
 } as const;
 
 export type PermissionCode = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -252,6 +259,13 @@ export const PERMISSION_CATALOGUE: { code: PermissionCode; module: string; descr
   { code: PERMISSIONS.ACH_ADD, module: 'SPORTS', description: 'Record a student achievement (verified by a coordinator)' },
   { code: PERMISSIONS.PLACE_READ, module: 'PLACEMENTS', description: 'See companies, drives, applications, offers and placement statistics' },
   { code: PERMISSIONS.PLACE_MANAGE, module: 'PLACEMENTS', description: 'Companies, student placement profiles (CGPA and backlogs), drives, applications and offers' },
+  { code: PERMISSIONS.GOV_EXPORT_MANAGE, module: 'STUDENTS', description: 'Change the column layout of the SATS and UDISE+ exports' },
+  { code: PERMISSIONS.WELFARE_READ, module: 'STUDENTS', description: 'View welfare schemes and who received what' },
+  { code: PERMISSIONS.WELFARE_MANAGE, module: 'STUDENTS', description: 'Set up welfare items and allowances' },
+  { code: PERMISSIONS.WELFARE_GIVE, module: 'STUDENTS', description: 'Hand out welfare items and record allowances' },
+  { code: PERMISSIONS.DIET_MANAGE, module: 'HOSTEL', description: 'Set the diet scale (quantity per child per day)' },
+  { code: PERMISSIONS.MEALS_RECORD, module: 'HOSTEL', description: 'Record the daily meal register' },
+  { code: PERMISSIONS.OVERVIEW_READ, module: 'REPORTS', description: 'View the overview of schools (campuses) by district' },
 ];
 
 /** A teacher: own classes (CD-73), attendance, homework, marks, parents, staff meetings, complaints and requests. */
