@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import type { PermissionCode, PortalMe } from '@eduerp/shared';
+import type { EditionCode, PermissionCode, PortalMe } from '@eduerp/shared';
 import { api, refreshSession, setAccessToken, setSessionLostHandler, SessionPayload } from './api';
 import { hasDeviceChoice, useI18n } from './i18n';
 
@@ -11,6 +11,18 @@ interface PermissionEntry {
   allCampuses: boolean;
   campusIds: string[];
 }
+
+/** Name and logo of the signed-in institution (Phase 20 E4). */
+export interface InstitutionBrand {
+  name: string;
+  nameLocal: string | null;
+  slug: string;
+  logoVersion: string | null;
+}
+
+/** Same-origin URL of an institution's logo (public, cached briefly); null when it has none. */
+export const logoUrl = (b: { slug: string; logoVersion: string | null } | null | undefined): string | null =>
+  b?.logoVersion ? `/api/v1/public/branding/${encodeURIComponent(b.slug)}/logo?v=${b.logoVersion}` : null;
 
 export interface PlanInfo {
   plan: { name: string; code: string };
@@ -24,6 +36,11 @@ interface SessionState {
   /** Enabled module codes of the current institution (core modules always included). */
   modules: string[];
   plan: PlanInfo | null;
+  /** The institution's edition (Standard unless set by the platform). */
+  edition: EditionCode;
+  institution: InstitutionBrand | null;
+  /** Reloads name and logo after the institution profile is saved. */
+  refreshInstitution: () => Promise<void>;
   hasModule: (code: string) => boolean;
   /** Parent & student app: the children this login can see (null before loading or outside an institution). */
   portal: PortalMe | null;
@@ -47,9 +64,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [permissions, setPermissions] = useState<PermissionEntry[]>([]);
   const [modules, setModules] = useState<string[]>([]);
   const [plan, setPlan] = useState<PlanInfo | null>(null);
+  const [edition, setEditionState] = useState<EditionCode>('STANDARD');
+  const [institution, setInstitution] = useState<InstitutionBrand | null>(null);
   const [portal, setPortal] = useState<PortalMe | null>(null);
   const [campusId, setCampusId] = useState<string | null>(null);
-  const { lang, setLang } = useI18n();
+  const { lang, setLang, setEdition } = useI18n();
 
   // Language: a choice made on this device wins (and is saved to the account, which also sets the email
   // language); otherwise the account's saved language is used.
@@ -72,19 +91,29 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if (s.tenantId) {
       const [p, m, pm] = await Promise.all([
         api<{ permissions: PermissionEntry[] }>('/me/permissions'),
-        api<{ enabled: string[]; subscription: PlanInfo | null }>('/me/modules').catch(() => ({ enabled: [], subscription: null })),
+        api<{ enabled: string[]; subscription: PlanInfo | null; edition?: EditionCode; institution?: InstitutionBrand | null }>('/me/modules').catch(() => ({ enabled: [], subscription: null, edition: 'STANDARD' as EditionCode, institution: null })),
         api<PortalMe>('/portal/me').catch(() => null),
       ]);
       setPermissions(p.permissions);
       setPortal(pm);
       setModules(m.enabled);
       setPlan(m.subscription);
+      setEditionState(m.edition ?? 'STANDARD');
+      setEdition(m.edition ?? 'STANDARD');
+      setInstitution(m.institution ?? null);
     } else {
       setPermissions([]);
       setModules([]);
       setPlan(null);
+      setEditionState('STANDARD');
+      setEdition('STANDARD');
+      setInstitution(null);
       setPortal(null);
     }
+  }, [setEdition]);
+  const refreshInstitution = useCallback(async () => {
+    const m = await api<{ institution?: InstitutionBrand | null }>('/me/modules').catch(() => null);
+    if (m) setInstitution(m.institution ?? null);
   }, []);
   const refreshPortal = useCallback(async () => { setPortal(await api<PortalMe>('/portal/me').catch(() => null)); }, []);
 
@@ -113,6 +142,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       permissions,
       modules,
       plan,
+      edition,
+      institution,
+      refreshInstitution,
       hasModule: (code) => modules.includes(code),
       portal,
       refreshPortal,
@@ -129,10 +161,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         setAccessToken(null);
         setSession(null);
         setPermissions([]);
+        setEdition('STANDARD');
+        setInstitution(null);
         router.replace('/login');
       },
     }),
-    [loading, session, permissions, modules, plan, portal, refreshPortal, campusId, applySession, router],
+    [loading, session, permissions, modules, plan, edition, institution, refreshInstitution, portal, refreshPortal, campusId, applySession, router, setEdition],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

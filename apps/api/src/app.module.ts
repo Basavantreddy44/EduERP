@@ -141,6 +141,9 @@ import { BankReconService } from './modules/accounts/bank.service';
 import { AccountsReportsService } from './modules/accounts/reports.service';
 import { CertificatesController, CertificateVerifyController } from './modules/students/certificates.controller';
 
+import { BrandingController, InstitutionController } from './modules/institution/institution.controller';
+import { InstitutionService } from './modules/institution/institution.service';
+
 const isTest = process.env.NODE_ENV === 'test';
 
 @Module({
@@ -226,9 +229,12 @@ const isTest = process.env.NODE_ENV === 'test';
     WelfareController,
     DietController,
     ReportsController,
+    InstitutionController,
+    BrandingController,
   ],
   providers: [
     Db,
+    InstitutionService,
     AuditService,
     AuthService,
     TenantsService,

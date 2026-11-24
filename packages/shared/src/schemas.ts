@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { EDITION_CODES } from './editions';
 
 const phone = z.string().regex(/^[6-9]\d{9}$/, 'Enter a 10-digit Indian mobile number');
 const pincode = z.string().regex(/^\d{6}$/, 'Pincode must be 6 digits');
@@ -25,6 +26,7 @@ export const createTenantSchema = z.object({
   city: optionalText(100),
   state: optionalText(100),
   defaultLanguage: z.enum(['en', 'kn']).default('en'),
+  edition: z.enum(EDITION_CODES).default('STANDARD'),
   admin: z.object({
     fullName: z.string().trim().min(2).max(150),
     email: z.string().trim().toLowerCase().email().max(150),

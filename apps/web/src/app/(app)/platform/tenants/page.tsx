@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { INSTITUTION_TYPES, assignPlanSchema, createTenantSchema } from '@eduerp/shared';
+import { MODULES, EDITIONS, EDITION_CODES, EditionCode, INSTITUTION_TYPES, assignPlanSchema, changeEditionSchema, createTenantSchema } from '@eduerp/shared';
 import { api, ApiError } from '@/lib/api';
 import { useSession } from '@/lib/session';
 import { apiErrors, FieldErrors, validate } from '@/lib/form';
@@ -9,7 +9,8 @@ import { Icon } from '@/components/Icon';
 import { Field, Modal } from '@/components/Modal';
 import { EmptyState, PageHeader, SkeletonRows, StatusBadge, useToast } from '@/components/ui';
 
-interface Tenant { id: string; name: string; slug: string; institutionType: string; city: string | null; status: string; createdAt: string }
+interface Tenant { id: string; name: string; slug: string; institutionType: string; city: string | null; status: string; edition: EditionCode; createdAt: string }
+interface EditionPreview { from: EditionCode; to: EditionCode; followsPlan: boolean; switchOn: { code: string; name: string }[]; switchOff: { code: string; name: string }[]; rolesAdded: { code: string; name: string }[] }
 interface Plan { id: string; name: string; code: string; pricePerStudent: number; billingCycle: string; maxStudents: number | null; isActive: boolean }
 interface Entitlements {
   subscription: { plan: { name: string; code: string }; status: string; startDate: string; endDate: string; studentCount: number; amount: number } | null;
@@ -17,7 +18,9 @@ interface Entitlements {
 }
 
 const TYPE_LABEL: Record<string, string> = { SCHOOL: 'School', PU_COLLEGE: 'PU college', DEGREE_COLLEGE: 'Degree college', UNIVERSITY: 'University', GROUP: 'Group of institutions' };
-const EMPTY = { name: '', slug: '', institutionType: 'SCHOOL', city: '', adminName: '', adminEmail: '', adminPassword: '' };
+const EMPTY = { name: '', slug: '', institutionType: 'SCHOOL', edition: 'STANDARD' as EditionCode, city: '', adminName: '', adminEmail: '', adminPassword: '' };
+const EditionBadge = ({ code }: { code: EditionCode }) => <span className={`edition-badge ed-${code.toLowerCase()}`}>{EDITIONS[code]?.name ?? code}</span>;
+const MODULE_NAME: Record<string, string> = Object.fromEntries(MODULES.map((m) => [m.code, m.name]));
 const inr = (n: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(n);
 const yearFromToday = () => {
   const s = new Date();
@@ -34,6 +37,11 @@ export default function PlatformTenants() {
   const [rows, setRows] = useState<Tenant[] | null>(null);
   const [plans, setPlans] = useState<Plan[]>([]);
   const [query, setQuery] = useState('');
+  const [edFilter, setEdFilter] = useState<'' | EditionCode>('');
+  const [edTo, setEdTo] = useState<EditionCode | ''>('');
+  const [edPreview, setEdPreview] = useState<EditionPreview | null>(null);
+  const [edReason, setEdReason] = useState('');
+  const [edError, setEdError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(EMPTY);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -53,20 +61,20 @@ export default function PlatformTenants() {
 
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return (rows ?? []).filter((t) => !q || t.name.toLowerCase().includes(q) || t.slug.includes(q) || (t.city ?? '').toLowerCase().includes(q));
-  }, [rows, query]);
+    return (rows ?? []).filter((t) => (!edFilter || t.edition === edFilter) && (!q || t.name.toLowerCase().includes(q) || t.slug.includes(q) || (t.city ?? '').toLowerCase().includes(q)));
+  }, [rows, query, edFilter]);
 
   if (!session?.user.platformRole) return <div className="alert">Platform staff only.</div>;
 
   async function create() {
-    const payload = { name: form.name, slug: form.slug, institutionType: form.institutionType, city: form.city || undefined, admin: { fullName: form.adminName, email: form.adminEmail, password: form.adminPassword } };
+    const payload = { name: form.name, slug: form.slug, institutionType: form.institutionType, edition: form.edition, city: form.city || undefined, admin: { fullName: form.adminName, email: form.adminEmail, password: form.adminPassword } };
     const v = validate(createTenantSchema, payload);
     if (!v.ok) return setErrors(v.errors);
     setSaving(true);
     try {
       await api('/platform/tenants', { method: 'POST', body: JSON.stringify(v.data) });
       setOpen(false);
-      toast(`${v.data.name} created — trial with every module`);
+      toast(v.data.edition === 'STANDARD' ? `${v.data.name} created — trial with every module` : `${v.data.name} created — ${EDITIONS[v.data.edition].name} trial`);
       load();
     } catch (err) {
       const { fields, message } = apiErrors(err);
@@ -80,6 +88,10 @@ export default function PlatformTenants() {
   async function manage(t: Tenant) {
     setManaging(t);
     setEnt(null);
+    setEdTo('');
+    setEdPreview(null);
+    setEdReason('');
+    setEdError(null);
     setSubErrors({});
     const e = await api<Entitlements>(`/platform/tenants/${t.id}/entitlements`);
     setEnt(e);
@@ -98,6 +110,39 @@ export default function PlatformTenants() {
     } catch (e) {
       const { fields, message } = apiErrors(e);
       setSubErrors({ ...fields, ...(message ? { form: message } : {}) });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function previewEdition(to: EditionCode | '') {
+    setEdTo(to);
+    setEdPreview(null);
+    setEdError(null);
+    if (!managing || !to) return;
+    try {
+      setEdPreview(await api<EditionPreview>(`/platform/tenants/${managing.id}/edition-preview?edition=${to}`));
+    } catch (e) {
+      setEdError(e instanceof ApiError ? e.message : 'Could not load the changes');
+    }
+  }
+
+  async function changeEdition() {
+    if (!managing || !edTo) return;
+    const v = validate(changeEditionSchema, { edition: edTo, reason: edReason });
+    if (!v.ok) return setEdError(v.errors.reason ?? 'Check the form');
+    setSaving(true);
+    try {
+      const t = await api<Tenant>(`/platform/tenants/${managing.id}/edition`, { method: 'PATCH', body: JSON.stringify(v.data) });
+      toast(`${managing.name} is now ${EDITIONS[t.edition].name}`);
+      setManaging({ ...managing, edition: t.edition });
+      setEnt(await api<Entitlements>(`/platform/tenants/${managing.id}/entitlements`));
+      setEdTo('');
+      setEdPreview(null);
+      setEdReason('');
+      load();
+    } catch (e) {
+      setEdError(e instanceof ApiError ? e.message : 'Could not change the edition');
     } finally {
       setSaving(false);
     }
@@ -149,15 +194,20 @@ export default function PlatformTenants() {
               <Icon name="search" size={16} />
               <input placeholder="Search by name, short name or city" value={query} onChange={(e) => setQuery(e.target.value)} aria-label="Search institutions" />
             </label>
+            <select value={edFilter} onChange={(e) => setEdFilter(e.target.value as '' | EditionCode)} aria-label="Edition">
+              <option value="">All editions</option>
+              {EDITION_CODES.map((c) => <option key={c} value={c}>{EDITIONS[c].name}</option>)}
+            </select>
             <span className="muted">{shown.length} of {rows.length}</span>
           </div>
           <div className="table-wrap">
             <table>
-              <thead><tr><th>Institution</th><th>Type</th><th>City</th><th>Status</th><th>Created</th><th /></tr></thead>
+              <thead><tr><th>Institution</th><th>Edition</th><th>Type</th><th>City</th><th>Status</th><th>Created</th><th /></tr></thead>
               <tbody>
                 {shown.map((t) => (
                   <tr key={t.id}>
                     <td><strong>{t.name}</strong><span className="muted sub-line">{t.slug}</span></td>
+                    <td><EditionBadge code={t.edition} /></td>
                     <td>{TYPE_LABEL[t.institutionType] ?? t.institutionType}</td>
                     <td>{t.city ?? <span className="muted">—</span>}</td>
                     <td><StatusBadge status={t.status} /></td>
@@ -171,7 +221,7 @@ export default function PlatformTenants() {
         </>
       )}
 
-      <Modal open={open} onClose={() => setOpen(false)} title="Add institution" subtitle="Creates the institution, its standard roles and its first administrator." onSubmit={create} submitLabel="Create institution" busy={saving} error={formError}>
+      <Modal open={open} onClose={() => setOpen(false)} title="Add institution" subtitle="Creates the institution, its starting roles and its first administrator." onSubmit={create} submitLabel="Create institution" busy={saving} error={formError}>
         <Field id="t-name" label="Institution name" error={errors.name}>
           <input id="t-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} autoFocus />
         </Field>
@@ -185,6 +235,17 @@ export default function PlatformTenants() {
             </select>
           </Field>
         </div>
+        <fieldset className="edition-pick">
+          <legend>Edition</legend>
+          {EDITION_CODES.map((c) => (
+            <label key={c} className={`edition-card ${form.edition === c ? 'on' : ''}`}>
+              <input type="radio" name="t-edition" value={c} checked={form.edition === c} onChange={() => setForm({ ...form, edition: c })} />
+              <span className="edition-card-name">{EDITIONS[c].name}</span>
+              <span className="edition-card-desc">{EDITIONS[c].description}</span>
+              {EDITIONS[c].modulesOff.length > 0 && <span className="edition-card-off">Starts without: {EDITIONS[c].modulesOff.map((m) => MODULE_NAME[m] ?? m).join(', ')}</span>}
+            </label>
+          ))}
+        </fieldset>
         <Field id="t-city" label="City" error={errors.city}>
           <input id="t-city" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
         </Field>
@@ -202,7 +263,7 @@ export default function PlatformTenants() {
         </div>
       </Modal>
 
-      <Modal open={!!managing} onClose={() => setManaging(null)} wide title={managing?.name ?? ''} subtitle={managing && <span className="manage-sub"><StatusBadge status={managing.status} /> {TYPE_LABEL[managing.institutionType]} · {managing.slug}</span>} onSubmit={saveSubscription} submitLabel="Save plan" busy={saving} error={subErrors.form}>
+      <Modal open={!!managing} onClose={() => setManaging(null)} wide title={managing?.name ?? ''} subtitle={managing && <span className="manage-sub"><StatusBadge status={managing.status} /> <EditionBadge code={managing.edition} /> {TYPE_LABEL[managing.institutionType]} · {managing.slug}</span>} onSubmit={saveSubscription} submitLabel="Save plan" busy={saving} error={subErrors.form}>
         {!ent ? (
           <div className="skeleton-wrap"><div className="skeleton" /><div className="skeleton" style={{ width: '60%' }} /></div>
         ) : (
@@ -260,6 +321,40 @@ export default function PlatformTenants() {
                 </div>
               </div>
             ))}
+
+            <h3 className="section-title">Edition</h3>
+            <p className="muted small">The edition is the starting set-up: modules, starting roles, the names on screens and the menu order. Changing it never deletes data or roles.</p>
+            {managing && (
+              <div className="edition-change">
+                <Field id="ed-to" label={`Now ${EDITIONS[managing.edition].name} — change to`}>
+                  <select id="ed-to" value={edTo} onChange={(e) => previewEdition(e.target.value as EditionCode | '')} disabled={!isSuper}>
+                    <option value="">Keep the current edition</option>
+                    {EDITION_CODES.filter((c) => c !== managing.edition).map((c) => <option key={c} value={c}>{EDITIONS[c].name}</option>)}
+                  </select>
+                </Field>
+                {edPreview && (
+                  <div className="edition-preview" aria-live="polite">
+                    {edPreview.followsPlan ? (
+                      <p><Icon name="info" /> Modules stay as the plan sets them; switch single modules below if needed.</p>
+                    ) : edPreview.switchOn.length + edPreview.switchOff.length === 0 ? (
+                      <p><Icon name="check" /> No module changes.</p>
+                    ) : (
+                      <>
+                        {edPreview.switchOn.length > 0 && <p><strong>Switches on:</strong> {edPreview.switchOn.map((m) => m.name).join(', ')}</p>}
+                        {edPreview.switchOff.length > 0 && <p><strong>Switches off:</strong> {edPreview.switchOff.map((m) => m.name).join(', ')} <span className="muted">(their data is kept and comes back when switched on)</span></p>}
+                      </>
+                    )}
+                    {edPreview.rolesAdded.length > 0 && <p><strong>Adds roles:</strong> {edPreview.rolesAdded.map((r) => r.name).join(', ')}</p>}
+                    <p className="muted small">Add-ons switched on or off by the platform stay as they are.</p>
+                    <Field id="ed-reason" label="Reason (kept in the audit log)" error={edError ?? undefined}>
+                      <input id="ed-reason" value={edReason} onChange={(e) => setEdReason(e.target.value)} />
+                    </Field>
+                    <button type="button" className="btn btn-primary" onClick={changeEdition} disabled={saving}>Change to {EDITIONS[edPreview.to].name}</button>
+                  </div>
+                )}
+                {!edPreview && edError && <p className="err">{edError}</p>}
+              </div>
+            )}
 
             {isSuper && managing && (
               <div className="danger-zone">

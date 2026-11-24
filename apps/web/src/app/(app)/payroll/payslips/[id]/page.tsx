@@ -9,6 +9,7 @@ import { useI18n } from '@/lib/i18n';
 import { Icon } from '@/components/Icon';
 import { EmptyState, SkeletonRows } from '@/components/ui';
 import { useMonthLabel } from '@/components/payroll';
+import { DocLogo } from '@/components/DocLogo';
 
 interface Line { name: string; amount: string }
 interface Slip {
@@ -41,9 +42,12 @@ export default function PayslipPage() {
       <article className={`receipt payslip ${s.isReleased ? '' : 'void'}`} aria-label={t('pay.slip.title', { m: label(s.month, s.year) })}>
         {!s.isReleased && <div className="receipt-stamp" aria-hidden>{t('pay.slip.draft')}</div>}
         <header className="receipt-head">
-          <div>
-            <h1>{s.institution}</h1>
-            <p className="muted small">{s.campus}{s.campusAddress ? ` · ${s.campusAddress}` : ''}</p>
+          <div className="doc-brand">
+            <DocLogo />
+            <div>
+              <h1>{s.institution}</h1>
+              <p className="muted small">{s.campus}{s.campusAddress ? ` · ${s.campusAddress}` : ''}</p>
+            </div>
           </div>
           <div className="receipt-title">
             <span>{t('pay.slip.heading')}</span>

@@ -140,13 +140,15 @@ export class FeeOnlineService implements OnModuleInit {
   async publicView(token: string) {
     return this.routed(`link:${sha(token)}`, async (tx, tenantId) => {
       const l = await this.linkByToken(tx, token);
-      const tenant = await tx.tenant.findUnique({ where: { id: tenantId }, select: { name: true, nameLocal: true } });
+      const tenant = await tx.tenant.findUnique({ where: { id: tenantId }, select: { name: true, nameLocal: true, slug: true, logoFileId: true } });
       const campus = await tx.campus.findUnique({ where: { id: l.campusId }, select: { name: true, city: true } });
       const { bills, duePaise } = await this.openBills(tx, l.studentId, l.invoiceIds);
       const paid = l.status === 'PAID' ? await tx.payment.findUnique({ where: { id: l.paidPaymentId! }, select: { id: true, receiptNo: true, amount: true, paymentDate: true } }) : null;
       const status = l.status === 'ACTIVE' && l.expiresAt < new Date() ? 'EXPIRED' : l.status === 'ACTIVE' && !duePaise ? 'NOTHING_DUE' : l.status;
       return {
-        status, school: tenant?.name ?? '', schoolLocal: tenant?.nameLocal ?? null, campus: campus ? `${campus.name}${campus.city ? `, ${campus.city}` : ''}` : '',
+        status, school: tenant?.name ?? '', schoolLocal: tenant?.nameLocal ?? null,
+        brand: tenant ? { slug: tenant.slug, logoVersion: tenant.logoFileId ? tenant.logoFileId.slice(0, 8) : null } : null,
+        campus: campus ? `${campus.name}${campus.city ? `, ${campus.city}` : ''}` : '',
         student: { name: `${l.student.firstName} ${l.student.lastName ?? ''}`.trim(), admissionNo: l.student.admissionNo },
         bills: bills.map((b) => ({ invoiceNo: b.invoiceNo, description: b.description, dueDate: b.dueDate, balance: b.balanceAmount })),
         amount: fromPaise(duePaise), expiresAt: l.expiresAt, gateway: this.gateway.mode, receipt: paid,

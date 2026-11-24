@@ -462,6 +462,21 @@ Any module of another edition can still be switched on for one institution. The 
 
 **Count:** 3 phases (20–22) plus the final testing. Order: Editions → Residential → SaaS billing → B7.
 
+### 2x.1 Phase 20 — Editions: build plan (2026-11-24) — ✅ complete 2026-11-24
+
+Existing institutions become the **Standard** edition and nothing changes for them. An edition only decides the starting set-up; afterwards every module, role and setting can still be changed as today.
+
+| Step | Scope |
+|---|---|
+| **E1 Editions catalogue** | A fixed list of editions in the code (Standard, Residential; a University edition can be added in the next version). Each edition lists the modules it switches on, the extra starting roles, the screen names and the starting menu order. Residential: everything on except Admissions, Fees, Transport and Placements (students come by allotment, education is free, all live on the campus); extra roles Principal (one school), Warden, Kitchen in-charge, Head office officer. New column `tenants.edition` (default Standard) |
+| **E2 Platform console** | Creating an institution: choose the edition (the trial switches on that edition's modules and creates its roles). Institutions list: edition shown and filterable. Institution page: change the edition — a preview shows the modules that will switch on or off and the roles that will be added; data is never deleted, platform overrides are kept, existing roles are not changed; audited |
+| **E3 Screen names** | Edition wording laid over the normal screen text in English and Kannada — Residential says "School / Schools" for campus and "Head office" for the whole institution. The edition comes with the signed-in session; Standard text is unchanged |
+| **E4 Institution profile & branding** | Settings → Institution profile: name (English, Kannada), contact, address and a logo (PNG / JPEG / WebP, up to 1 MB). The logo appears in the top bar, on the institution's own sign-in link (`/login?i=<address>`) and the institution chooser, and on receipts, report cards, certificates, transfer certificates, payslips, purchase orders and the online payment page. Only the name and logo of an institution are public (for its sign-in page) |
+| **E5 Menu** | Menu groups ordered by edition (Residential: hostel, meals and welfare near the top); modules that are off stay hidden as today |
+| **E6 Demo** | A second demo institution in the Residential edition (two schools in Mysuru and Chamarajanagar districts, head office, principals, a warden, students in the hostel, diet scale and meals) next to the existing Standard demo |
+
+Acceptance: **AC105** a new institution gets its edition's modules and roles; **AC106** changing the edition switches modules as previewed, keeps overrides, data and existing roles, and is audited; **AC107** Residential screens say "School" / "Head office" in both languages while Standard screens are unchanged; **AC108** the institution profile and logo save with checks (image types only, 1 MB) and the logo shows on the sign-in link and printed documents; the public branding answer holds nothing but the name and logo.
+
 ### Next version — VTU (not built now)
 
 | Phase | Scope | Size |

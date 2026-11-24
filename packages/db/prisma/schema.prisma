@@ -35,6 +35,8 @@ model Tenant {
   timezone        String   @default("Asia/Kolkata") @db.VarChar(50)
   defaultLanguage String   @default("en") @map("default_language") @db.VarChar(5)
   status          String   @default("TRIAL") @db.VarChar(20)
+  /// Edition (CD-125): STANDARD or RESIDENTIAL; decides the starting set-up, wording and menu order.
+  edition         String   @default("STANDARD") @db.VarChar(20)
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
   createdBy       String?  @map("created_by") @db.Uuid

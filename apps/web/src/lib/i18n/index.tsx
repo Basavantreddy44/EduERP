@@ -1,7 +1,9 @@
 'use client';
 
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import type { EditionCode } from '@eduerp/shared';
 import { en, kn, MessageKey } from './messages';
+import { editionText } from './editions';
 
 export type Lang = 'en' | 'kn';
 const STORE = 'eduerp.lang';
@@ -16,6 +18,9 @@ interface I18n {
   /** Locale for dates and numbers ('kn-IN' gives Kannada month names). */
   locale: string;
   setLang: (l: Lang) => void;
+  /** The signed-in institution's edition; changes the wording ("School" for campus in Residential). */
+  edition: EditionCode;
+  setEdition: (e: EditionCode) => void;
 }
 
 const Ctx = createContext<I18n | null>(null);
@@ -43,6 +48,7 @@ function stored(): Lang | null {
  */
 export function I18nProvider({ children, onChange }: { children: ReactNode; onChange?: (l: Lang) => void }) {
   const [lang, setLangState] = useState<Lang>('en');
+  const [edition, setEdition] = useState<EditionCode>('STANDARD');
 
   useEffect(() => {
     const s = stored();
@@ -68,8 +74,9 @@ export function I18nProvider({ children, onChange }: { children: ReactNode; onCh
 
   const value = useMemo<I18n>(() => {
     const dict = DICTS[lang];
-    return { lang, setLang, locale: lang === 'kn' ? 'kn-IN' : 'en-IN', t: (key, vars) => fill(dict[key] ?? en[key] ?? key, vars) };
-  }, [lang, setLang]);
+    const word = edition === 'STANDARD' ? (x: string) => x : (x: string) => editionText(edition, lang, x);
+    return { lang, setLang, edition, setEdition, locale: lang === 'kn' ? 'kn-IN' : 'en-IN', t: (key, vars) => fill(word(dict[key] ?? en[key] ?? key), vars) };
+  }, [lang, setLang, edition]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

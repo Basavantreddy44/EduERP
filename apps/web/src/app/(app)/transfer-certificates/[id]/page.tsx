@@ -10,6 +10,7 @@ import { Icon } from '@/components/Icon';
 import { EmptyState, SkeletonRows } from '@/components/ui';
 import { useDay } from '@/components/admissions';
 import { studentName } from '@/components/students';
+import { DocLogo } from '@/components/DocLogo';
 
 interface Tc {
   id: string; tcNo: string; issueDate: string; leavingDate: string; lastClass: string | null; lastYear: string | null; reason: string; conduct: string; remarks: string | null;
@@ -82,6 +83,7 @@ export default function TransferCertificatePage() {
       <article className={`receipt tc ${tc.status !== 'ISSUED' ? 'void' : ''}`} aria-label={`${t('stu.tc.title')} ${tc.tcNo}`}>
         {tc.status !== 'ISSUED' && <div className="receipt-stamp" aria-hidden>{t(`status.${tc.status}` as MessageKey)}</div>}
         <header className="tc-head">
+          <DocLogo className="doc-logo tc-logo" />
           <h1>{tc.institution}</h1>
           {tc.institutionLocal && <p lang="kn" className="tc-local">{tc.institutionLocal}</p>}
           <p className="muted small">{c.name}{c.address ? ` · ${c.address}` : ''}{c.city ? `, ${c.city}` : ''}{c.phone ? ` · ${c.phone}` : ''}</p>

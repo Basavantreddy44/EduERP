@@ -4,11 +4,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { formatINR, toPaise } from '@eduerp/shared';
 import { useI18n } from '@/lib/i18n';
+import { logoUrl } from '@/lib/session';
 import { Icon } from '@/components/Icon';
 
 interface View {
   status: 'ACTIVE' | 'PAID' | 'EXPIRED' | 'CANCELLED' | 'NOTHING_DUE';
   school: string; schoolLocal: string | null; campus: string;
+  brand?: { slug: string; logoVersion: string | null } | null;
   student: { name: string; admissionNo: string };
   bills: { invoiceNo: string; description: string; dueDate: string; balance: string }[];
   amount: string; expiresAt: string; gateway: 'razorpay' | 'simulated' | 'off';
@@ -132,6 +134,7 @@ export default function PayPage() {
         ) : (
           <>
             <div className="pay-school">
+              {logoUrl(v.brand) && <img className="doc-logo pay-logo" src={logoUrl(v.brand)!} alt="" width={56} height={56} />}
               <h1>{v.school}</h1>
               {v.schoolLocal && <p lang="kn">{v.schoolLocal}</p>}
               <p className="muted small">{v.campus}</p>

@@ -1,5 +1,5 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
-import { AssignPlanInput, CORE_MODULES, CreatePlanInput, MODULES, ModuleCode, ModuleOverrideInput } from '@eduerp/shared';
+import { AssignPlanInput, CORE_MODULES, CreatePlanInput, EditionCode, MODULES, ModuleCode, ModuleOverrideInput, editionModules } from '@eduerp/shared';
 import { Prisma } from '@eduerp/db';
 import { Db, Tx } from '../../common/prisma.service';
 import { AuditService } from '../../common/audit.service';
@@ -22,10 +22,10 @@ export class EntitlementsService {
     private readonly audit: AuditService,
   ) {}
 
-  /** New institutions start on a trial with every module switched on. */
-  static async seedTrialModules(tx: Tx, tenantId: string, userId: string | null): Promise<void> {
+  /** New institutions start on a trial with their edition's modules switched on (Standard: every module). */
+  static async seedTrialModules(tx: Tx, tenantId: string, userId: string | null, edition: EditionCode = 'STANDARD'): Promise<void> {
     await tx.tenantModule.createMany({
-      data: MODULES.map((m) => ({ tenantId, moduleCode: m.code, isEnabled: true, source: isCore(m.code) ? 'CORE' : 'PLAN', updatedBy: userId })),
+      data: editionModules(edition).map((m) => ({ tenantId, moduleCode: m.code, isEnabled: m.isEnabled, source: isCore(m.code) ? 'CORE' : 'PLAN', updatedBy: userId })),
       skipDuplicates: true,
     });
   }
@@ -134,8 +134,16 @@ export class EntitlementsService {
   /** The current institution's view (dashboard "Your plan", web menu). */
   async mine(auth: AuthContext) {
     return this.db.run({ tenantId: auth.tenantId, userId: auth.userId }, async (tx) => {
-      const d = await this.describe(tx, auth.tenantId!);
-      return { subscription: d.subscription, enabled: d.modules.filter((m) => m.isEnabled).map((m) => m.code as ModuleCode) };
+      const [d, t] = await Promise.all([
+        this.describe(tx, auth.tenantId!),
+        tx.tenant.findUnique({ where: { id: auth.tenantId! }, select: { name: true, nameLocal: true, slug: true, edition: true, logoFileId: true } }),
+      ]);
+      return {
+        subscription: d.subscription,
+        enabled: d.modules.filter((m) => m.isEnabled).map((m) => m.code as ModuleCode),
+        edition: (t?.edition ?? 'STANDARD') as EditionCode,
+        institution: t ? { name: t.name, nameLocal: t.nameLocal, slug: t.slug, logoVersion: t.logoFileId ? t.logoFileId.slice(0, 8) : null } : null,
+      };
     });
   }
 }

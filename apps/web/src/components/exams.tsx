@@ -2,6 +2,7 @@
 
 import { useI18n } from '@/lib/i18n';
 import type { MessageKey } from '@/lib/i18n/messages';
+import { Crest } from './DocLogo';
 
 /** Exams & report cards (Phase 9) shared pieces. */
 
@@ -41,7 +42,7 @@ export function ReportCard({ c }: { c: Card }) {
   return (
     <article className="rc" aria-label={t('ex.card.label', { name: c.student.name })}>
       <header className="rc-head">
-        <div className="rc-crest" aria-hidden="true">{c.school.slice(0, 1)}</div>
+        <Crest name={c.school} />
         <div>
           <h2 className="rc-school">{c.school}</h2>
           <p className="rc-sub">{c.campus} · {t('ex.card.title')} · {c.year}</p>

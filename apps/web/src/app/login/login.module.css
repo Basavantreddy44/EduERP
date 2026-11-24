@@ -420,3 +420,8 @@
 .headline:lang(kn) { font-size: clamp(30px, 3.2vw, 46px); line-height: 1.25; }
 .headline:lang(kn) em { font-style: normal; }
 .eyebrow:lang(kn), .divider:lang(kn) { letter-spacing: 0; text-transform: none; font-size: 13px; }
+
+/* Institution's own sign-in link (Phase 20) */
+.brandLogo { width: 56px; height: 56px; object-fit: contain; border-radius: 12px; background: #fff; border: 1px solid var(--line, #e7e3d9); margin-bottom: 22px; }
+.brandName { margin: 0 0 6px; display: grid; gap: 2px; color: var(--ink-soft); font-size: 14px; }
+.brandName strong { color: var(--ink, #141a2e); font-size: 15px; font-weight: 800; }

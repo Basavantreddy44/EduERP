@@ -1,11 +1,11 @@
 'use client';
 
-import { FormEvent, KeyboardEvent, ReactNode, useState } from 'react';
+import { FormEvent, KeyboardEvent, ReactNode, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { loginSchema } from '@eduerp/shared';
 import { api, ApiError, SessionPayload } from '@/lib/api';
-import { useSession } from '@/lib/session';
+import { logoUrl, useSession } from '@/lib/session';
 import { homeFor } from '@/lib/routes';
 import { useHydrated } from '@/lib/hydrated';
 import { LanguageSwitch, useI18n } from '@/lib/i18n';
@@ -41,6 +41,13 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [shake, setShake] = useState(0);
   const [busy, setBusy] = useState(false);
+  // The institution's own sign-in link (/login?i=<address>) shows its name and logo (Phase 20 E4).
+  const [brand, setBrand] = useState<{ name: string; nameLocal: string | null; slug: string; logoVersion: string | null } | null>(null);
+  useEffect(() => {
+    const slug = new URLSearchParams(window.location.search).get('i');
+    if (!slug || !/^[a-z0-9-]{3,50}$/.test(slug)) return;
+    fetch(`/api/v1/public/branding/${encodeURIComponent(slug)}`).then((r) => (r.ok ? r.json() : null)).then(setBrand).catch(() => setBrand(null));
+  }, []);
   // Enabled only after hydration: a click before JavaScript is ready must never fall back to a native submit.
   const ready = useHydrated();
 
@@ -59,7 +66,10 @@ export default function LoginPage() {
     }
     setBusy(true);
     try {
-      const session = await api<SessionPayload>('/auth/login', { method: 'POST', body: JSON.stringify(parsed.data) });
+      let session = await api<SessionPayload>('/auth/login', { method: 'POST', body: JSON.stringify(parsed.data) });
+      // Signed in from an institution's own link: open that institution when the person belongs to it.
+      const own = brand && session.memberships.find((m) => m.slug === brand.slug);
+      if (own && session.tenantId !== own.tenantId) session = await api<SessionPayload>('/auth/switch-tenant', { method: 'POST', body: JSON.stringify({ tenantId: own.tenantId }) });
       await applySession(session);
       router.replace(homeFor(session));
     } catch (err) {
@@ -115,9 +125,15 @@ export default function LoginPage() {
       <section className={s.formside}>
         <form key={shake} method="post" className={`${s.card} ${shake ? s.shake : ''}`} onSubmit={submit} noValidate>
           <div className={s.cardTop}>
-            <span className={s.cardMark}><Svg size={22}>{CAP}</Svg></span>
+            {brand && logoUrl(brand) ? <img className={s.brandLogo} src={logoUrl(brand)!} alt="" width={56} height={56} /> : <span className={s.cardMark}><Svg size={22}>{CAP}</Svg></span>}
             <LanguageSwitch />
           </div>
+          {brand && (
+            <p className={s.brandName}>
+              <strong>{brand.name}</strong>
+              {brand.nameLocal && <span lang="kn">{brand.nameLocal}</span>}
+            </p>
+          )}
           <h1 className={s.title}>{t('login.welcome')}</h1>
           <p className={s.sub}>{t('login.sub')}</p>
 

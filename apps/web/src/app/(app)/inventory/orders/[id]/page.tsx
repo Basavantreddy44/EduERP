@@ -11,6 +11,7 @@ import { Field, Modal } from '@/components/Modal';
 import { EmptyState, SkeletonRows, useToast } from '@/components/ui';
 import { AccPill, todayIST } from '@/components/accounts';
 import { InvPill, fmtDate, inr, qty, unitLabel } from '@/components/inventory';
+import { DocLogo } from '@/components/DocLogo';
 
 interface Receipt { id: string; grnNo: string; receiptDate: string; vendorChallanNo: string | null; receivedBy: string | null; remarks: string | null; items: { id: string; item: string; unit: string; receivedQty: string; acceptedQty: string; rejectedQty: string; rejectionReason: string | null; rate: string; taxPercent: number; billedQty: string; unbilledQty: string }[] }
 interface Po {
@@ -83,9 +84,12 @@ export default function PurchaseOrderPage() {
         {void_ && <div className="receipt-stamp" aria-hidden>{t(po.status === 'REJECTED' ? 'inv.st.REJECTED' : 'inv.st.CANCELLED')}</div>}
         {po.status === 'PENDING_APPROVAL' && <div className="receipt-stamp" aria-hidden>{t('inv.po.draft')}</div>}
         <header className="receipt-head">
-          <div>
-            <h1>{po.institution}</h1>
-            <p className="muted small">{po.campus}{po.campusAddress ? ` · ${po.campusAddress}` : ''}</p>
+          <div className="doc-brand">
+            <DocLogo />
+            <div>
+              <h1>{po.institution}</h1>
+              <p className="muted small">{po.campus}{po.campusAddress ? ` · ${po.campusAddress}` : ''}</p>
+            </div>
           </div>
           <div className="receipt-title">
             <span>{t('inv.po.heading')}</span>

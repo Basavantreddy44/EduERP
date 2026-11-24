@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { PERMISSIONS, PermissionCode } from '@eduerp/shared';
+import { EDITION_MENU_FIRST, PERMISSIONS, PermissionCode } from '@eduerp/shared';
 import { api } from '@/lib/api';
-import { useSession } from '@/lib/session';
+import { logoUrl, useSession } from '@/lib/session';
 import { LanguageSwitch, useI18n } from '@/lib/i18n';
 import type { MessageKey } from '@/lib/i18n/messages';
 import { Icon, IconName } from '@/components/Icon';
@@ -226,6 +226,7 @@ const NAV: { section: MessageKey; items: NavItem[] }[] = [
       { href: '/users', label: 'nav.users', icon: 'users', permission: PERMISSIONS.IAM_USER_READ },
       { href: '/users/roles', label: 'nav.roles', icon: 'shield', permission: PERMISSIONS.IAM_USER_READ },
       { href: '/imports', label: 'nav.imports', icon: 'upload', anyOf: [PERMISSIONS.ORG_ACADEMIC_MANAGE, PERMISSIONS.IAM_USER_INVITE] },
+      { href: '/settings/institution', label: 'nav.institutionProfile', icon: 'building', permission: PERMISSIONS.ORG_SETTINGS_READ },
       { href: '/settings', label: 'nav.settings', icon: 'settings', permission: PERMISSIONS.ORG_SETTINGS_READ },
     ],
   },
@@ -241,7 +242,7 @@ const NAV: { section: MessageKey; items: NavItem[] }[] = [
 const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]!.toUpperCase()).join('');
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
-  const { loading, session, can, hasModule, logout, campusId, setCampusId, permissions, portal } = useSession();
+  const { loading, session, can, hasModule, logout, campusId, setCampusId, permissions, portal, edition, institution } = useSession();
   const { t } = useI18n();
   const router = useRouter();
   const path = usePathname();
@@ -294,7 +295,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const tenant = session.memberships.find((m) => m.tenantId === session.tenantId);
   const canSwitch = session.memberships.length > 1 || (!!session.user.platformRole && session.memberships.length > 0);
 
-  const visible = NAV.map((g) => ({
+  const first = EDITION_MENU_FIRST[edition] ?? [];
+  const rank = (section: string) => (first.includes(section) ? first.indexOf(section) : first.length + NAV.findIndex((g) => g.section === section));
+  const ordered = first.length ? [...NAV].sort((a, b) => rank(a.section) - rank(b.section)) : NAV;
+  const visible = ordered.map((g) => ({
     ...g,
     items: g.items.filter((i) =>
       i.platform
@@ -337,7 +341,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <button className="btn btn-ghost icon-btn menu-toggle" aria-label={t('shell.openMenu')} aria-expanded={navOpen} onClick={() => setNavOpen(true)}>
               <Icon name="menu" size={20} />
             </button>
-            <span className="tenant-name">{tenant?.name ?? t('shell.platformConsole')}</span>
+            {session.tenantId && logoUrl(institution) && <img className="tenant-logo" src={logoUrl(institution)!} alt="" width={32} height={32} />}
+            <span className="tenant-name">{(session.tenantId && institution?.name) || tenant?.name || t('shell.platformConsole')}</span>
             {campuses.length > 1 && (
               <select className="campus-select" aria-label={t('common.campus')} value={campusId ?? ''} onChange={(e) => setCampusId(e.target.value || null)}>
                 <option value="">{t('shell.allMyCampuses')}</option>

@@ -13,6 +13,8 @@ export interface Membership {
   name: string;
   slug: string;
   status: string;
+  /** Changes when the logo changes (for the cached public logo URL); null without a logo. */
+  logoVersion: string | null;
 }
 
 export interface SessionResult {
@@ -145,10 +147,10 @@ export class AuthService {
     return this.db.run({ userId }, async (tx) => {
       const rows = await tx.userTenant.findMany({
         where: { userId, status: 'ACTIVE', tenant: { status: { not: 'CLOSED' } } },
-        select: { tenant: { select: { id: true, name: true, slug: true, status: true } } },
+        select: { tenant: { select: { id: true, name: true, slug: true, status: true, logoFileId: true } } },
         orderBy: { tenant: { name: 'asc' } },
       });
-      return rows.map((r) => ({ tenantId: r.tenant.id, name: r.tenant.name, slug: r.tenant.slug, status: r.tenant.status }));
+      return rows.map((r) => ({ tenantId: r.tenant.id, name: r.tenant.name, slug: r.tenant.slug, status: r.tenant.status, logoVersion: r.tenant.logoFileId ? r.tenant.logoFileId.slice(0, 8) : null }));
     });
   }
 

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ApiError } from '@/lib/api';
-import { useSession } from '@/lib/session';
+import { logoUrl, useSession } from '@/lib/session';
 import { Icon } from '@/components/Icon';
 import { StatusBadge } from '@/components/ui';
 import { useI18n } from '@/lib/i18n';
@@ -43,7 +43,7 @@ export default function SelectInstitution() {
         {session.memberships.length === 0 && <div className="notice"><Icon name="info" />{t('picker.none')}</div>}
         {session.memberships.map((m) => (
           <button key={m.tenantId} className="choice" disabled={!!busy} onClick={() => choose(m.tenantId)}>
-            <span className="choice-icon"><Icon name="building" size={20} /></span>
+            {logoUrl({ slug: m.slug, logoVersion: m.logoVersion ?? null }) ? <img className="choice-logo" src={logoUrl({ slug: m.slug, logoVersion: m.logoVersion ?? null })!} alt="" width={36} height={36} /> : <span className="choice-icon"><Icon name="building" size={20} /></span>}
             <span className="choice-text">
               <strong>{m.name}</strong>
               <span>{busy === m.tenantId ? t('picker.opening') : m.slug}</span>

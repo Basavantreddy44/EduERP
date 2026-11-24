@@ -27,7 +27,7 @@ export interface SessionPayload {
   expiresIn: number;
   tenantId: string | null;
   user: { id: string; fullName: string; platformRole: string | null; preferredLanguage?: string };
-  memberships: { tenantId: string; name: string; slug: string; status: string }[];
+  memberships: { tenantId: string; name: string; slug: string; status: string; logoVersion?: string | null }[];
 }
 
 let inflight: Promise<SessionPayload | null> | null = null;

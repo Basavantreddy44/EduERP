@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import { useI18n } from '@/lib/i18n';
+import { Crest } from './DocLogo';
 
 /** Certificates (Phase 10) shared pieces: the printed certificate with its QR code. */
 
@@ -31,7 +32,7 @@ export function CertificateSheet({ c }: { c: CertView }) {
     <article className={`cert${c.status === 'CANCELLED' ? ' cancelled' : ''}`} lang={lang} aria-label={c.title}>
       {c.status === 'CANCELLED' && <p className="cert-void" role="status">{t('ct.status.CANCELLED')}{c.cancelReason ? ` — ${c.cancelReason}` : ''}</p>}
       <header className="cert-head">
-        <div className="rc-crest" aria-hidden="true">{c.school.slice(0, 1)}</div>
+        <Crest name={c.school} />
         <div><h2 className="rc-school">{c.school}</h2><p className="rc-sub">{c.campus}</p></div>
       </header>
       <p className="cert-meta"><span>{t('ct.number')}: <strong>{c.certificateNo ?? '—'}</strong></span><span>{t('ct.date')}: <strong>{date(c.issueDate)}</strong></span></p>

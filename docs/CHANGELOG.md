@@ -1,5 +1,14 @@
 # Changelog
 
+## [Unreleased] — 2026-11-24 (Phase 20: Editions — Standard and Residential)
+### Added
+- **Editions.** Every institution has an edition, chosen by the platform when it is created: **EduERP** (standard, every module on) or **EduERP Residential** (government residential schools such as Morarji Desai / KREIS — starts without Admissions, Fees, Transport and Placements, and with the extra roles Principal, Warden, Kitchen in-charge and Head office officer). The platform console shows and filters institutions by edition and can change an institution's edition after a preview of what changes; data and roles are never deleted, platform add-ons stay, and with a plan the plan keeps deciding the modules.
+- **Residential wording and menu.** In the Residential edition the screens say "School / Schools" for campus and "Head office (all schools)" for the whole institution, in English and Kannada; hostel, student care and attendance come first in the menu.
+- **Institution profile** (Setup → Institution profile): name in English and Kannada, contact details, address and a logo (PNG / JPEG / WebP, up to 1 MB). The logo shows in the top bar, in the institution chooser, on the institution's own sign-in link (`/login?i=<address>`) and on fee receipts, report cards, certificates, transfer certificates, payslips, purchase orders and the online payment page.
+- A second demo institution in the Residential edition: two Morarji Desai residential schools (Hunsur, Mysuru; Kollegal, Chamarajanagar), head office, a principal per school, a warden and a kitchen in-charge, 30 students in the hostels, meals and a welfare hand-out.
+### Changed
+- Existing institutions are the Standard edition; their screens, modules and roles are unchanged. Signing in from an institution's own link opens that institution when the person belongs to several. Two-column and four-column form rows no longer push a long value past the edge of the screen.
+
 ## [Unreleased] — 2026-11-23 (Improvement round: government residential school pack — SATS / UDISE+, welfare, diet, schools overview)
 ### Added
 - **SATS & UDISE+** (Students → SATS & UDISE+): a "Government data" tab on every student (SATS student ID, UDISE+ PEN, ration card, EWS, minority group, child with special needs, medium of instruction, distance from home, previous school) showing what each export still misses; readiness by school and a list of students with missing fields; SATS and UDISE+ exports to Excel / CSV whose columns the institution can rename, reorder, add or remove to match each year's portal template, and reset to the standard.
