@@ -457,7 +457,7 @@ Any module of another edition can still be switched on for one institution. The 
 |---|---|---|
 | **20 Editions** | Edition templates in the platform console (modules, starting roles, settings) applied when an institution is created and changeable later; an institution's edition shown in the console; names on screens per edition (for example "Head office" for the all-campus admin, "School" for campus in Residential); branding per institution (logo and name on the sign-in page, letters, report cards and receipts); module groups in the menu follow the edition; a demo institution per edition | Medium |
 | **21 Residential edition** | KREIS head-office set-up: allotment list import (students allotted by the entrance / counselling), transfer of a student or staff member between schools with history, monthly MIS report for head office (enrolment, attendance, hostel, meals, welfare, results by school and district), hostel-wise health check-up camps, warden daily report, Kannada-first screens | Medium |
-| **22 SaaS billing** (was Phase 20) | As planned in 2t, with a price per edition and per student; grace period and billing cycle to be confirmed by the owner before the phase starts | Medium |
+| **22 SaaS billing** (was Phase 20) | As planned in 2t, with a price per edition and per student; grace period 30 days by default, changeable in the platform console (for all institutions and for one institution, e.g. 45 days); each institution chooses monthly or yearly billing (owner, 2026-11-24) | Medium |
 | **B7 Final testing / private pilot** | One pilot institution per edition, release | — |
 
 **Count:** 3 phases (20–22) plus the final testing. Order: Editions → Residential → SaaS billing → B7.
@@ -471,7 +471,7 @@ Any module of another edition can still be switched on for one institution. The 
 | Academic records | ABC ID, transcripts, provisional / degree / migration certificates with QR verification | Small |
 | Affiliation, central examinations, convocation & university analytics | Only if VTU itself is the customer | Large / very large / medium |
 
-**Open questions for the owner:** (1) for SaaS billing — grace period and billing cycle (asked before Phase 22); (2) does KREIS need its own server (government data centre)? — affects hosting only, not the build.
+**Open questions for the owner:** (1) does KREIS need its own server (government data centre)? — affects hosting only, not the build.
 
 ## 2t. Order after Phase 17 (owner, 2026-11-20)
 
