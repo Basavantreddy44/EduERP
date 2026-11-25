@@ -2369,3 +2369,48 @@ tr.inv-differs td { background: #fdf8ee; }
 .hd-stats { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 @media (max-width: 1100px) { .hd-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .hd-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ───────────── Phase 22: SaaS billing ───────────── */
+.acct-banner { display: flex; align-items: center; gap: 10px; padding: 10px 24px; font-size: 14px; font-weight: 600; border-bottom: 1px solid; }
+.acct-banner.warn { background: var(--warn-bg); color: #864c0e; border-color: #f0d9b5; }
+.acct-banner.bad { background: var(--bad-bg); color: #8f1c13; border-color: #f2cdc9; }
+.acct-banner > span { flex: 1; min-width: 0; }
+.acct-banner-link { color: inherit; text-decoration: underline; white-space: nowrap; font-weight: 800; }
+.notice.notice-bad { background: var(--bad-bg); color: #8f1c13; border-color: #f2cdc9; }
+.bill-stats, .bill-stats-5 { margin-bottom: 16px; }
+.bill-stats .stat, .bill-stats-5 .stat { flex-direction: column; align-items: flex-start; gap: 4px; }
+.bill-stats-5 { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+.bill-stats .stat-hint, .bill-stats-5 .stat-hint { font-size: 12.5px; color: var(--muted); }
+.bill-grid { gap: 16px; margin-bottom: 16px; align-items: start; }
+.bill-grid .card, .bill-grid ~ .card { margin-bottom: 16px; }
+.bill-grid > .card { margin-top: 0; }
+.bill-terms { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 14px; }
+.bill-cycles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; border: 0; padding: 0; margin: 12px 0; }
+.bill-cycle { display: grid; gap: 4px; padding: 12px 14px; border: 1.5px solid var(--border-strong); border-radius: var(--radius-sm); cursor: pointer; background: var(--surface); }
+.bill-cycle input { position: absolute; opacity: 0; pointer-events: none; }
+.bill-cycle.on { border-color: var(--navy); background: var(--gold-soft); box-shadow: inset 0 0 0 1px var(--navy); }
+.bill-cycle.off { cursor: not-allowed; opacity: .6; }
+.bill-cycle:focus-within { outline: 3px solid var(--focus); outline-offset: 2px; }
+.bill-cycle-name { display: flex; align-items: center; gap: 8px; font-weight: 800; color: var(--midnight); }
+.bill-cycle-price { font-size: 13px; color: var(--muted); }
+.saas-bank { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 18px; margin: 8px 0; }
+.saas-bank dt { font-size: 11.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.saas-bank dd { margin: 2px 0 0; font-weight: 600; overflow-wrap: anywhere; }
+.saas-invoice .receipt-lines tfoot.saas-totals th, .saas-invoice .receipt-lines tfoot.saas-totals td { border-top: 0; font-size: 14px; font-weight: 600; padding: 5px 4px; text-align: right; }
+.saas-invoice .receipt-lines tfoot.saas-totals th { color: var(--muted); }
+.saas-invoice .receipt-lines tfoot.saas-totals tr.grand th, .saas-invoice .receipt-lines tfoot.saas-totals tr.grand td { border-top: 2px solid var(--navy); font-size: 16px; font-weight: 800; color: var(--midnight); padding-top: 9px; }
+.saas-pay { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px; margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--border); }
+.saas-pay h2 { margin: 0 0 4px; font-size: 13px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--gold-ink); }
+.saas-pay > div { flex: 1 1 320px; min-width: 0; }
+.saas-paid { justify-self: end; margin: 4px 0; padding: 2px 12px; border: 2px solid var(--ok); border-radius: 6px; color: var(--ok); font-weight: 800; letter-spacing: .14em; text-transform: uppercase; font-size: 13px; transform: rotate(-4deg); }
+.plan-ed { display: flex; gap: 8px; align-items: center; }
+.edition-badge.ed-any { color: var(--muted); }
+.plan-price-alt { margin-top: 2px; }
+.plan-actions { display: flex; justify-content: flex-end; }
+.check-line { display: flex; gap: 10px; align-items: flex-start; margin: 10px 0; font-size: 14px; cursor: pointer; }
+.check-line input { margin-top: 3px; width: 18px; height: 18px; flex: none; accent-color: var(--navy); }
+@media (max-width: 640px) {
+  .acct-banner { padding: 10px 16px; flex-wrap: wrap; }
+  .bill-cycles, .saas-bank { grid-template-columns: minmax(0, 1fr); }
+}
+@media print { .saas-page { page: saasinvoice; } .saas-page .receipt { border: 0; box-shadow: none; padding: 0; } .acct-banner { display: none !important; } }

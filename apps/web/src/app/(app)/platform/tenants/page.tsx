@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { MODULES, EDITIONS, EDITION_CODES, EditionCode, INSTITUTION_TYPES, assignPlanSchema, changeEditionSchema, createTenantSchema } from '@eduerp/shared';
+import Link from 'next/link';
+import { MODULES, EDITIONS, EDITION_CODES, EditionCode, INSTITUTION_TYPES, assignPlanSchema, changeEditionSchema, createTenantSchema, termEnd } from '@eduerp/shared';
 import { api, ApiError } from '@/lib/api';
 import { useSession } from '@/lib/session';
 import { apiErrors, FieldErrors, validate } from '@/lib/form';
@@ -11,9 +12,9 @@ import { EmptyState, PageHeader, SkeletonRows, StatusBadge, useToast } from '@/c
 
 interface Tenant { id: string; name: string; slug: string; institutionType: string; city: string | null; status: string; edition: EditionCode; createdAt: string }
 interface EditionPreview { from: EditionCode; to: EditionCode; followsPlan: boolean; switchOn: { code: string; name: string }[]; switchOff: { code: string; name: string }[]; rolesAdded: { code: string; name: string }[] }
-interface Plan { id: string; name: string; code: string; pricePerStudent: number; billingCycle: string; maxStudents: number | null; isActive: boolean }
+interface Plan { id: string; name: string; code: string; pricePerStudent: number; billingCycle: string; priceMonthly: number | null; priceYearly: number | null; edition: EditionCode | null; maxStudents: number | null; isActive: boolean }
 interface Entitlements {
-  subscription: { plan: { name: string; code: string }; status: string; startDate: string; endDate: string; studentCount: number; amount: number } | null;
+  subscription: { plan: { name: string; code: string }; status: string; startDate: string; endDate: string; studentCount: number; amount: number; billingCycle: 'MONTHLY' | 'YEARLY'; nextCycle: string | null; rate: number } | null;
   modules: { code: string; name: string; group: string; core: boolean; isEnabled: boolean; source: string }[];
 }
 
@@ -50,7 +51,7 @@ export default function PlatformTenants() {
 
   const [managing, setManaging] = useState<Tenant | null>(null);
   const [ent, setEnt] = useState<Entitlements | null>(null);
-  const [sub, setSub] = useState({ planId: '', status: 'ACTIVE', startDate: '', endDate: '', studentCount: '0' });
+  const [sub, setSub] = useState({ planId: '', status: 'ACTIVE', startDate: '', endDate: '', studentCount: '0', billingCycle: 'YEARLY' as 'MONTHLY' | 'YEARLY', raiseInvoice: true });
   const [subErrors, setSubErrors] = useState<FieldErrors>({});
 
   const load = useCallback(() => {
@@ -96,12 +97,15 @@ export default function PlatformTenants() {
     const e = await api<Entitlements>(`/platform/tenants/${t.id}/entitlements`);
     setEnt(e);
     const plan = e.subscription ? plans.find((p) => p.code === e.subscription!.plan.code) : undefined;
-    setSub({ planId: plan?.id ?? plans[0]?.id ?? '', status: e.subscription?.status === 'TRIAL' ? 'TRIAL' : 'ACTIVE', ...(e.subscription ? { startDate: e.subscription.startDate, endDate: e.subscription.endDate } : yearFromToday()), studentCount: String(e.subscription?.studentCount ?? 0) });
+    const fits = plans.filter((p) => !p.edition || p.edition === t.edition);
+    const pick = plan ?? fits[0] ?? plans[0];
+    const cycle = (e.subscription?.billingCycle ?? (pick?.priceYearly != null ? 'YEARLY' : 'MONTHLY')) as 'MONTHLY' | 'YEARLY';
+    setSub({ planId: pick?.id ?? '', status: e.subscription?.status === 'TRIAL' ? 'TRIAL' : 'ACTIVE', ...(e.subscription ? { startDate: e.subscription.startDate, endDate: e.subscription.endDate } : yearFromToday()), studentCount: String(e.subscription?.studentCount ?? 0), billingCycle: cycle, raiseInvoice: !e.subscription });
   }
 
   async function saveSubscription() {
     if (!managing) return;
-    const v = validate(assignPlanSchema, { ...sub, studentCount: Number(sub.studentCount) });
+    const v = validate(assignPlanSchema, { ...sub, studentCount: Number(sub.studentCount), raiseInvoice: sub.status === 'ACTIVE' && sub.raiseInvoice });
     if (!v.ok) return setSubErrors(v.errors);
     setSaving(true);
     try {
@@ -172,6 +176,13 @@ export default function PlatformTenants() {
   }
 
   const price = plans.find((p) => p.id === sub.planId);
+  const rateOf = (p: Plan | undefined, c: 'MONTHLY' | 'YEARLY') => (p ? (c === 'MONTHLY' ? p.priceMonthly : p.priceYearly) : null);
+  const rate = rateOf(price, sub.billingCycle);
+  const setTerm = (patch: Partial<typeof sub>) => {
+    const n = { ...sub, ...patch };
+    if (n.startDate && (patch.startDate !== undefined || patch.billingCycle !== undefined)) n.endDate = termEnd(n.startDate, n.billingCycle);
+    setSub(n);
+  };
   const groups = ent ? [...new Set(ent.modules.map((m) => m.group))] : [];
 
   return (
@@ -279,7 +290,7 @@ export default function PlatformTenants() {
                 <div className="grid-3">
                   <Field id="s-plan" label="Plan" error={subErrors.planId}>
                     <select id="s-plan" value={sub.planId} onChange={(e) => setSub({ ...sub, planId: e.target.value })} disabled={!isSuper}>
-                      {plans.map((p) => <option key={p.id} value={p.id}>{p.name} · {inr(p.pricePerStudent)}/student</option>)}
+                      {plans.filter((p) => !p.edition || p.edition === managing?.edition || p.id === sub.planId).map((p) => <option key={p.id} value={p.id}>{p.name}{p.edition ? '' : ' (any edition)'}</option>)}
                     </select>
                   </Field>
                   <Field id="s-status" label="Status">
@@ -292,15 +303,30 @@ export default function PlatformTenants() {
                     <input id="s-count" type="number" min={0} value={sub.studentCount} onChange={(e) => setSub({ ...sub, studentCount: e.target.value })} disabled={!isSuper} />
                   </Field>
                 </div>
-                <div className="grid-2">
+                <div className="grid-3">
+                  <Field id="s-cycle" label="Billed" error={subErrors.billingCycle}>
+                    <select id="s-cycle" value={sub.billingCycle} onChange={(e) => setTerm({ billingCycle: e.target.value as 'MONTHLY' | 'YEARLY' })} disabled={!isSuper}>
+                      <option value="YEARLY" disabled={rateOf(price, 'YEARLY') == null}>Yearly{rateOf(price, 'YEARLY') != null ? ` · ${inr(rateOf(price, 'YEARLY')!)}/student` : ' (not offered)'}</option>
+                      <option value="MONTHLY" disabled={rateOf(price, 'MONTHLY') == null}>Monthly{rateOf(price, 'MONTHLY') != null ? ` · ${inr(rateOf(price, 'MONTHLY')!)}/student` : ' (not offered)'}</option>
+                    </select>
+                  </Field>
                   <Field id="s-start" label="From" error={subErrors.startDate}>
-                    <input id="s-start" type="date" value={sub.startDate} onChange={(e) => setSub({ ...sub, startDate: e.target.value })} disabled={!isSuper} />
+                    <input id="s-start" type="date" value={sub.startDate} onChange={(e) => setTerm({ startDate: e.target.value })} disabled={!isSuper} />
                   </Field>
                   <Field id="s-end" label="Until" error={subErrors.endDate}>
                     <input id="s-end" type="date" value={sub.endDate} onChange={(e) => setSub({ ...sub, endDate: e.target.value })} disabled={!isSuper} />
                   </Field>
                 </div>
-                {price && <p className="muted small">Amount per {price.billingCycle === 'YEARLY' ? 'year' : 'month'}: <strong>{inr(price.pricePerStudent * Number(sub.studentCount || 0))}</strong></p>}
+                {price && rate != null && <p className="muted small">Amount per {sub.billingCycle === 'YEARLY' ? 'year' : 'month'}: <strong>{inr(rate * Number(sub.studentCount || 0))}</strong> + GST</p>}
+                {price && rate == null && <p className="err">{price.name} is not sold {sub.billingCycle === 'YEARLY' ? 'yearly' : 'monthly'}.</p>}
+                {sub.status === 'ACTIVE' && (
+                  <label className="check-line">
+                    <input type="checkbox" checked={sub.raiseInvoice} onChange={(e) => setSub({ ...sub, raiseInvoice: e.target.checked })} disabled={!isSuper} />
+                    <span>Raise the tax invoice for this term now <span className="muted small">(the term must be one {sub.billingCycle === 'YEARLY' ? 'year' : 'month'}; later terms are billed automatically before they start)</span></span>
+                  </label>
+                )}
+                {subErrors.raiseInvoice && <p className="err">{subErrors.raiseInvoice}</p>}
+                {managing && <p className="small"><Link href={`/platform/billing/${managing.id}`}><Icon name="receipt" size={14} /> Bills, payments, grace period and statement</Link></p>}
               </>
             )}
 

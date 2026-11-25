@@ -47,6 +47,9 @@ export const NOTIFICATION_EVENTS = {
   PLACEMENT_UPDATE: { code: 'PLACEMENT_UPDATE', label: 'Placement application update', channels: ['IN_APP', 'EMAIL'], mandatory: false, variables: ['company', 'role', 'status'] },
   REPORT_READY: { code: 'REPORT_READY', label: 'Report export ready', channels: ['IN_APP', 'EMAIL'], mandatory: false, variables: ['report', 'rows'] },
   INVENTORY_LOW: { code: 'INVENTORY_LOW', label: 'Store items running low', channels: ['IN_APP', 'EMAIL'], mandatory: false, variables: ['store', 'count', 'items'] },
+  BILLING_DUE: { code: 'BILLING_DUE', label: 'EduERP bill due', channels: ['IN_APP', 'EMAIL'], mandatory: true, variables: ['invoiceNo', 'amount', 'dueDate'] },
+  BILLING_OVERDUE: { code: 'BILLING_OVERDUE', label: 'EduERP bill overdue', channels: ['IN_APP', 'EMAIL'], mandatory: true, variables: ['invoiceNo', 'amount', 'dueDate', 'lastDay'] },
+  BILLING_READONLY: { code: 'BILLING_READONLY', label: 'EduERP is read-only until the bill is paid', channels: ['IN_APP', 'EMAIL'], mandatory: true, variables: ['invoiceNo', 'amount'] },
 } as const satisfies Record<string, NotificationEvent>;
 
 export type NotificationEventCode = keyof typeof NOTIFICATION_EVENTS;
@@ -182,6 +185,19 @@ export const DEFAULT_TEMPLATES: TemplateText[] = [
   { eventCode: 'INVENTORY_LOW', channel: 'IN_APP', language: 'kn', subject: '{{store}} ನಲ್ಲಿ {{count}} ವಸ್ತು(ಗಳು) ಕಡಿಮೆಯಾಗುತ್ತಿವೆ', body: 'ಮರು ಆದೇಶ ಮಟ್ಟ ಅಥವಾ ಅದಕ್ಕಿಂತ ಕಡಿಮೆ: {{items}}. ಖರೀದಿ ವಿನಂತಿ ಸಲ್ಲಿಸಿ.' },
   { eventCode: 'INVENTORY_LOW', channel: 'EMAIL', language: 'en', subject: '{{count}} item(s) running low in {{store}}', body: 'Hello,\n\nThese items in {{store}} are at or below their reorder level: {{items}}.\n\nPlease raise a purchase request in EduERP → Inventory.' },
   { eventCode: 'INVENTORY_LOW', channel: 'EMAIL', language: 'kn', subject: '{{store}} ನಲ್ಲಿ {{count}} ವಸ್ತು(ಗಳು) ಕಡಿಮೆಯಾಗುತ್ತಿವೆ', body: 'ನಮಸ್ಕಾರ,\n\n{{store}} ನಲ್ಲಿನ ಈ ವಸ್ತುಗಳು ಮರು ಆದೇಶ ಮಟ್ಟದಲ್ಲಿ ಅಥವಾ ಅದಕ್ಕಿಂತ ಕಡಿಮೆ ಇವೆ: {{items}}.\n\nದಯವಿಟ್ಟು EduERP → ದಾಸ್ತಾನು ವಿಭಾಗದಲ್ಲಿ ಖರೀದಿ ವಿನಂತಿ ಸಲ್ಲಿಸಿ.' },
+  // BILLING_DUE, BILLING_OVERDUE, BILLING_READONLY (Phase 22)
+  { eventCode: 'BILLING_DUE', channel: 'IN_APP', language: 'en', subject: 'EduERP bill {{invoiceNo}}: {{amount}} due on {{dueDate}}', body: 'Please pay by {{dueDate}}. See Settings → Subscription & bills for the invoice and the bank and UPI details.' },
+  { eventCode: 'BILLING_DUE', channel: 'IN_APP', language: 'kn', subject: 'EduERP ಬಿಲ್ {{invoiceNo}}: {{amount}} — {{dueDate}} ರೊಳಗೆ ಪಾವತಿಸಿ', body: 'ದಯವಿಟ್ಟು {{dueDate}} ರೊಳಗೆ ಪಾವತಿಸಿ. ಇನ್‌ವಾಯ್ಸ್ ಮತ್ತು ಬ್ಯಾಂಕ್ / UPI ವಿವರಗಳು ಸೆಟ್ಟಿಂಗ್‌ಗಳು → ಚಂದಾದಾರಿಕೆ ಮತ್ತು ಬಿಲ್‌ಗಳು ಇಲ್ಲಿವೆ.' },
+  { eventCode: 'BILLING_DUE', channel: 'EMAIL', language: 'en', subject: 'EduERP bill {{invoiceNo}}: {{amount}} due on {{dueDate}}', body: 'Hello,\n\nYour EduERP bill {{invoiceNo}} for {{amount}} is due on {{dueDate}}.\n\nThe invoice and the bank and UPI details are in EduERP → Settings → Subscription & bills.' },
+  { eventCode: 'BILLING_DUE', channel: 'EMAIL', language: 'kn', subject: 'EduERP ಬಿಲ್ {{invoiceNo}}: {{amount}} — {{dueDate}} ರೊಳಗೆ ಪಾವತಿಸಿ', body: 'ನಮಸ್ಕಾರ,\n\nನಿಮ್ಮ EduERP ಬಿಲ್ {{invoiceNo}} ({{amount}}) ಪಾವತಿಯ ಕೊನೆಯ ದಿನಾಂಕ {{dueDate}}.\n\nಇನ್‌ವಾಯ್ಸ್ ಮತ್ತು ಬ್ಯಾಂಕ್ / UPI ವಿವರಗಳು EduERP → ಸೆಟ್ಟಿಂಗ್‌ಗಳು → ಚಂದಾದಾರಿಕೆ ಮತ್ತು ಬಿಲ್‌ಗಳು ಇಲ್ಲಿವೆ.' },
+  { eventCode: 'BILLING_OVERDUE', channel: 'IN_APP', language: 'en', subject: 'EduERP bill {{invoiceNo}} is overdue: {{amount}}', body: 'It was due on {{dueDate}}. Please pay by {{lastDay}}; after that EduERP becomes read-only until it is paid.' },
+  { eventCode: 'BILLING_OVERDUE', channel: 'IN_APP', language: 'kn', subject: 'EduERP ಬಿಲ್ {{invoiceNo}} ಬಾಕಿ ಇದೆ: {{amount}}', body: 'ಪಾವತಿ ದಿನಾಂಕ {{dueDate}} ಆಗಿತ್ತು. ದಯವಿಟ್ಟು {{lastDay}} ರೊಳಗೆ ಪಾವತಿಸಿ; ನಂತರ ಪಾವತಿಸುವವರೆಗೆ EduERP ನೋಡಲು ಮಾತ್ರ ಲಭ್ಯವಿರುತ್ತದೆ.' },
+  { eventCode: 'BILLING_OVERDUE', channel: 'EMAIL', language: 'en', subject: 'EduERP bill {{invoiceNo}} is overdue: {{amount}}', body: 'Hello,\n\nYour EduERP bill {{invoiceNo}} for {{amount}} was due on {{dueDate}}. Please pay by {{lastDay}}. After that day EduERP becomes read-only — you can still sign in and see everything, but nothing can be changed until the bill is paid.' },
+  { eventCode: 'BILLING_OVERDUE', channel: 'EMAIL', language: 'kn', subject: 'EduERP ಬಿಲ್ {{invoiceNo}} ಬಾಕಿ ಇದೆ: {{amount}}', body: 'ನಮಸ್ಕಾರ,\n\nನಿಮ್ಮ EduERP ಬಿಲ್ {{invoiceNo}} ({{amount}}) ಪಾವತಿ ದಿನಾಂಕ {{dueDate}} ಆಗಿತ್ತು. ದಯವಿಟ್ಟು {{lastDay}} ರೊಳಗೆ ಪಾವತಿಸಿ. ನಂತರ EduERP ನೋಡಲು ಮಾತ್ರ ಲಭ್ಯವಿರುತ್ತದೆ — ಬಿಲ್ ಪಾವತಿಸುವವರೆಗೆ ಯಾವುದನ್ನೂ ಬದಲಿಸಲು ಆಗುವುದಿಲ್ಲ.' },
+  { eventCode: 'BILLING_READONLY', channel: 'IN_APP', language: 'en', subject: 'EduERP is now read-only: bill {{invoiceNo}} unpaid', body: 'Everyone can still sign in and view, but nothing can be changed until {{amount}} is paid.' },
+  { eventCode: 'BILLING_READONLY', channel: 'IN_APP', language: 'kn', subject: 'EduERP ಈಗ ನೋಡಲು ಮಾತ್ರ: ಬಿಲ್ {{invoiceNo}} ಪಾವತಿಯಾಗಿಲ್ಲ', body: 'ಎಲ್ಲರೂ ಲಾಗಿನ್ ಆಗಿ ನೋಡಬಹುದು, ಆದರೆ {{amount}} ಪಾವತಿಸುವವರೆಗೆ ಯಾವುದನ್ನೂ ಬದಲಿಸಲು ಆಗುವುದಿಲ್ಲ.' },
+  { eventCode: 'BILLING_READONLY', channel: 'EMAIL', language: 'en', subject: 'EduERP is now read-only: bill {{invoiceNo}} unpaid', body: 'Hello,\n\nBecause bill {{invoiceNo}} ({{amount}}) is unpaid after the grace period, EduERP is now read-only for your institution. Everyone can still sign in and view. Pay the bill and everything works again at once.' },
+  { eventCode: 'BILLING_READONLY', channel: 'EMAIL', language: 'kn', subject: 'EduERP ಈಗ ನೋಡಲು ಮಾತ್ರ: ಬಿಲ್ {{invoiceNo}} ಪಾವತಿಯಾಗಿಲ್ಲ', body: 'ನಮಸ್ಕಾರ,\n\nಬಿಲ್ {{invoiceNo}} ({{amount}}) ಗ್ರೇಸ್ ಅವಧಿಯ ನಂತರವೂ ಪಾವತಿಯಾಗದ ಕಾರಣ EduERP ಈಗ ನಿಮ್ಮ ಸಂಸ್ಥೆಗೆ ನೋಡಲು ಮಾತ್ರ ಲಭ್ಯವಿದೆ. ಎಲ್ಲರೂ ಲಾಗಿನ್ ಆಗಿ ನೋಡಬಹುದು. ಬಿಲ್ ಪಾವತಿಸಿದ ತಕ್ಷಣ ಎಲ್ಲವೂ ಮತ್ತೆ ಕೆಲಸ ಮಾಡುತ್ತದೆ.' },
 ];
 
 /** Replaces {{name}} placeholders; unknown placeholders become empty. Values are plain text (no HTML). */

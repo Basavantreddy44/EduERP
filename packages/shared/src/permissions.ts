@@ -137,6 +137,7 @@ export const PERMISSIONS = {
   ALLOT_JOIN: 'students.allotment.join',
   STU_TRANSFER: 'students.transfer',
   HR_TRANSFER: 'hr.staff.transfer',
+  ORG_BILLING: 'org.billing.manage',
 } as const;
 
 export type PermissionCode = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -275,6 +276,7 @@ export const PERMISSION_CATALOGUE: { code: PermissionCode; module: string; descr
   { code: PERMISSIONS.ALLOT_JOIN, module: 'STUDENTS', description: 'Mark allotted children as joined or not reported' },
   { code: PERMISSIONS.STU_TRANSFER, module: 'STUDENTS', description: 'Move students to another school (campus)' },
   { code: PERMISSIONS.HR_TRANSFER, module: 'HR_PAYROLL', description: 'Move staff to another school (campus)' },
+  { code: PERMISSIONS.ORG_BILLING, module: 'SETUP', description: 'See the EduERP subscription and bills; choose monthly or yearly billing' },
 ];
 
 /** A teacher: own classes (CD-73), attendance, homework, marks, parents, staff meetings, complaints and requests. */

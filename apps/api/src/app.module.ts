@@ -36,6 +36,8 @@ import { AcademicService } from './modules/academic/academic.service';
 import { AcademicYearsController, DepartmentsController, HolidaysController } from './modules/academic/academic.controller';
 import { AccountLinksService } from './modules/auth/account-links.service';
 import { EntitlementsService } from './modules/platform/entitlements.service';
+import { BillingService } from './modules/billing/billing.service';
+import { InstitutionBillingController, PlatformBillingController } from './modules/billing/billing.controller';
 import { MyModulesController, PlansController } from './modules/platform/entitlements.controller';
 import { IdempotencyInterceptor } from './common/idempotency.interceptor';
 import { StructureService } from './modules/structure/structure.service';
@@ -187,6 +189,8 @@ const isTest = process.env.NODE_ENV === 'test';
     DepartmentsController,
     HolidaysController,
     PlansController,
+    PlatformBillingController,
+    InstitutionBillingController,
     MyModulesController,
     ImportsController,
     ExportsController,
@@ -267,6 +271,7 @@ const isTest = process.env.NODE_ENV === 'test';
     AcademicService,
     AccountLinksService,
     EntitlementsService,
+    BillingService,
     DepartmentsImporter,
     HolidaysImporter,
     UsersImporter,

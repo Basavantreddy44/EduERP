@@ -1,5 +1,5 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Put } from '@nestjs/common';
-import { AssignPlanInput, CreatePlanInput, ModuleOverrideInput, assignPlanSchema, createPlanSchema, moduleOverrideSchema } from '@eduerp/shared';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Patch, Post, Put } from '@nestjs/common';
+import { AssignPlanInput, CreatePlanInput, ModuleOverrideInput, UpdatePlanInput, assignPlanSchema, createPlanSchema, moduleOverrideSchema, updatePlanSchema } from '@eduerp/shared';
 import { Auth, Client, ClientInfo, PlatformRoute, TenantMember } from '../../common/decorators';
 import type { AuthContext } from '../../common/auth-context';
 import { zod } from '../../common/zod.pipe';
@@ -19,6 +19,12 @@ export class PlansController {
   @Post('plans')
   createPlan(@Body(zod(createPlanSchema)) body: CreatePlanInput) {
     return this.entitlements.createPlan(body);
+  }
+
+  @PlatformRoute('SUPER_ADMIN')
+  @Patch('plans/:id')
+  updatePlan(@Param('id', ParseUUIDPipe) id: string, @Body(zod(updatePlanSchema)) body: UpdatePlanInput) {
+    return this.entitlements.updatePlan(id, body);
   }
 
   @PlatformRoute('SUPER_ADMIN', 'SUPPORT')

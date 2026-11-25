@@ -18,6 +18,7 @@ import { ComplaintsService } from '../modules/engagement/complaints.service';
 import { LibraryService } from '../modules/campuslife/library.service';
 import { InventoryService } from '../modules/inventory/inventory.service';
 import { ReportsService } from '../modules/reports/reports.service';
+import { BillingService } from '../modules/billing/billing.service';
 import { LocalDiskStorage, STORAGE } from '../modules/files/storage';
 
 /** Everything the background worker needs; no HTTP. */
@@ -38,6 +39,7 @@ import { LocalDiskStorage, STORAGE } from '../modules/files/storage';
       inject: [ApprovalNotifier, EmailConsumer, AccountMailer],
     },
     JobsRunner,
+    BillingService,
     // Online payment re-check (missed webhooks / closed browsers).
     NumberingService,
     FeeBillingService,

@@ -1,5 +1,20 @@
 # Changelog
 
+## [Unreleased] — 2026-11-25 (Phase 22: SaaS billing)
+### Added
+- **Prices per edition, monthly or yearly** (Platform console → Plans): a plan can be for one edition or for any, with a price per student per month and / or per year; prices can be changed later (new terms only — a running term keeps its rate).
+- **Monthly or yearly by choice**: the platform chooses the cycle when assigning a plan; the institution's administrator can switch for the next renewal under Settings → **Subscription & bills** (the platform can too). The change applies from the next renewal.
+- **Tax invoices** to institutions: one bill per term, numbered per financial year without gaps (EDU/2026-27/00001), students × rate, GST split into CGST + SGST within the seller's state and IGST otherwise, due date, bank and UPI details, amount in words; printable by the platform and by the institution. "Raise the tax invoice for this term" when assigning a paid plan; renewal bills are raised automatically. An unpaid bill can be cancelled with a reason.
+- **Payments** (Platform console → Billing): bank transfer, UPI, cheque, cash or other with date and reference — never more than the balance, never a future date; a wrong payment is reversed with a reason. Paying a renewal in full extends the paid term. A statement per institution with the running balance. Paying online from the institution shows "Coming soon".
+- **Renewal, reminders, grace and read-only**: an hourly billing check (also "Run billing check now") raises the renewal bill 15 days before the term ends (for the larger of the students billed and the active students), reminds the institution's administrators 15, 7 and 1 days before the due date, on the due date and 7 days before read-only (each once, in the app and by e-mail, English or Kannada). An unpaid bill after its due date puts the institution in **Grace** — everything works and a banner shows the amount and the last day; after the grace period (**30 days by default, changeable for all institutions and for one institution, 1–90 days**) it becomes **read-only** automatically. Paying makes it active again at once. A suspension made by hand is not lifted by the billing check. A trial that ends without a paid plan follows the same steps.
+- **Billing settings** (super admin): grace period, renewal lead days, GST rate, bill number prefix, seller name, address, state, GSTIN, SAC code, bank account and UPI ID. Per institution: own grace period, GSTIN and billing state.
+- Billing page in the platform console: billed this financial year, received, outstanding and overdue, institutions in grace and read-only; bills with search and status filter.
+- Demo: sample seller and bank details; plans "Standard — complete" (₹45 a month / ₹450 a year per student) and "Residential schools" (₹25 / ₹250); the Standard demo on a yearly plan with its bill paid; the Residential demo on a monthly plan with November's bill unpaid and in grace.
+### Changed
+- Plans keep their old single price as the yearly or monthly price; existing subscriptions keep their plan's cycle and price. Assigning a plan without "raise the invoice" works exactly as before.
+- New right org.billing.manage (Institution Admin; not the Principal).
+- The Standard demo institution moved to the "Standard — complete" plan; all 32 modules are now on there (two had been off since its first test plan of 14 Nov).
+
 ## [Unreleased] — 2026-11-25 (Phase 21: Residential edition)
 ### Added
 - **Allotment list** (Students → Allotment list): head office imports the entrance / counselling allotment list (Setup → Imports → Allotment list; every row checked, duplicates refused; "1", "Cat-1" and "Category 1" all mean Category 1). Each school sees its allotted children and marks them **Joined** — the student record, parents, class place and admission number are created in one step — or **Not reported**; head office can cancel or reopen. Counts by school: allotted, joined, waiting, not reported.

@@ -40,7 +40,7 @@ const TONES: Record<string, 'ok' | 'warn' | 'bad' | 'info' | 'muted'> = {
   SUBMITTED: 'info', UNDER_REVIEW: 'info', WAITLISTED: 'warn', ENROLLED: 'ok',
   // students & fees
   DROPPED: 'bad', TRANSFERRED: 'muted', PASSED_OUT: 'muted', MOVED: 'muted', LEFT: 'muted', PROMOTED: 'ok', DETAINED: 'warn', COMPLETED: 'muted', ISSUED: 'ok', ON_LEAVE: 'warn', RESIGNED: 'muted', TERMINATED: 'bad',
-  DRAFT: 'info', UNPAID: 'warn', PARTIAL: 'info', WAIVED: 'ok', EXPIRED: 'muted', BOUNCED: 'bad', OVERDUE: 'bad',
+  DRAFT: 'info', UNPAID: 'warn', PARTIAL: 'info', PART_PAID: 'info', RECORDED: 'ok', REVERSED: 'muted', WAIVED: 'ok', EXPIRED: 'muted', BOUNCED: 'bad', OVERDUE: 'bad',
   // allotment list (Phase 21)
   ALLOTTED: 'info', JOINED: 'ok', NOT_REPORTED: 'warn',
 };

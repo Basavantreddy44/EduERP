@@ -37,6 +37,12 @@ model Tenant {
   status          String   @default("TRIAL") @db.VarChar(20)
   /// Edition (CD-125): STANDARD or RESIDENTIAL; decides the starting set-up, wording and menu order.
   edition         String   @default("STANDARD") @db.VarChar(20)
+  /// Phase 22 billing: own grace period (null = platform default), GSTIN and state on invoices.
+  graceDays       Int?     @map("grace_days")
+  gstin           String?  @db.VarChar(15)
+  billingState    String?  @map("billing_state") @db.VarChar(100)
+  /// True while the institution is read-only because of an unpaid bill (lifted by payment).
+  billingHold     Boolean  @default(false) @map("billing_hold")
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
   createdBy       String?  @map("created_by") @db.Uuid
@@ -606,6 +612,10 @@ model Plan {
   billingCycle    String   @map("billing_cycle") @db.VarChar(10)
   maxStudents     Int?     @map("max_students")
   isActive        Boolean  @default(true) @map("is_active")
+  /// Phase 22: edition the plan is for (null = any) and price per student per month / per year.
+  edition         String?  @db.VarChar(20)
+  priceMonthly    Decimal? @map("price_monthly") @db.Decimal(10, 2)
+  priceYearly     Decimal? @map("price_yearly") @db.Decimal(10, 2)
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
@@ -633,6 +643,10 @@ model TenantSubscription {
   endDate      DateTime @map("end_date") @db.Date
   studentCount Int      @default(0) @map("student_count")
   amount       Decimal  @default(0) @db.Decimal(14, 2)
+  /// Phase 22: monthly or yearly, price per student for this term, and the cycle chosen for the next renewal.
+  billingCycle String   @default("YEARLY") @map("billing_cycle") @db.VarChar(10)
+  rate         Decimal  @default(0) @db.Decimal(10, 2)
+  nextCycle    String?  @map("next_cycle") @db.VarChar(10)
   status       String   @db.VarChar(20)
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
@@ -642,6 +656,119 @@ model TenantSubscription {
 
   @@index([tenantId, status])
   @@map("tenant_subscriptions")
+}
+
+// ───────────── SaaS billing (Phase 22) ─────────────
+
+/// One row (id 1): grace period, renewal lead time, GST and the seller details printed on invoices.
+model PlatformBillingSettings {
+  id              Int      @id @default(1)
+  graceDays       Int      @default(30) @map("grace_days")
+  renewLeadDays   Int      @default(15) @map("renew_lead_days")
+  gstRate         Decimal  @default(18) @map("gst_rate") @db.Decimal(5, 2)
+  invoicePrefix   String   @default("EDU") @map("invoice_prefix") @db.VarChar(10)
+  sellerName      String   @default("EduERP") @map("seller_name") @db.VarChar(200)
+  sellerAddress   String   @default("") @map("seller_address") @db.VarChar(500)
+  sellerState     String   @default("Karnataka") @map("seller_state") @db.VarChar(100)
+  sellerGstin     String?  @map("seller_gstin") @db.VarChar(15)
+  sacCode         String?  @map("sac_code") @db.VarChar(8)
+  bankName        String?  @map("bank_name") @db.VarChar(100)
+  bankAccountName String?  @map("bank_account_name") @db.VarChar(150)
+  bankAccountNo   String?  @map("bank_account_no") @db.VarChar(20)
+  bankIfsc        String?  @map("bank_ifsc") @db.VarChar(11)
+  upiId           String?  @map("upi_id") @db.VarChar(100)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  updatedBy       String?  @map("updated_by") @db.Uuid
+
+  @@map("platform_billing_settings")
+}
+
+/// Invoice numbers per financial year, allocated under a row lock (no gaps).
+model PlatformInvoiceCounter {
+  fy     String @id @db.VarChar(7)
+  lastNo Int    @default(0) @map("last_no")
+
+  @@map("platform_invoice_counters")
+}
+
+/// A tax invoice from the platform to an institution for one term.
+model PlatformInvoice {
+  id             String    @id @default(uuid()) @db.Uuid
+  tenantId       String    @map("tenant_id") @db.Uuid
+  subscriptionId String    @map("subscription_id") @db.Uuid
+  invoiceNo      String    @unique @map("invoice_no") @db.VarChar(30)
+  fy             String    @db.VarChar(7)
+  seq            Int
+  kind           String    @db.VarChar(10)
+  planName       String    @map("plan_name") @db.VarChar(100)
+  edition        String    @db.VarChar(20)
+  billingCycle   String    @map("billing_cycle") @db.VarChar(10)
+  periodStart    DateTime  @map("period_start") @db.Date
+  periodEnd      DateTime  @map("period_end") @db.Date
+  studentCount   Int       @map("student_count")
+  rate           Decimal   @db.Decimal(10, 2)
+  taxable        Decimal   @db.Decimal(14, 2)
+  gstRate        Decimal   @map("gst_rate") @db.Decimal(5, 2)
+  cgst           Decimal   @default(0) @db.Decimal(14, 2)
+  sgst           Decimal   @default(0) @db.Decimal(14, 2)
+  igst           Decimal   @default(0) @db.Decimal(14, 2)
+  total          Decimal   @db.Decimal(14, 2)
+  paid           Decimal   @default(0) @db.Decimal(14, 2)
+  issueDate      DateTime  @map("issue_date") @db.Date
+  dueDate        DateTime  @map("due_date") @db.Date
+  status         String    @default("UNPAID") @db.VarChar(10)
+  buyer          Json
+  seller         Json
+  cancelReason   String?   @map("cancel_reason") @db.VarChar(300)
+  cancelledAt    DateTime? @map("cancelled_at") @db.Timestamptz(6)
+  cancelledBy    String?   @map("cancelled_by") @db.Uuid
+  createdBy      String?   @map("created_by") @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  payments PlatformPayment[]
+
+  @@unique([fy, seq])
+  @@index([tenantId, issueDate])
+  @@index([status, dueDate])
+  @@map("platform_invoices")
+}
+
+/// A payment received from an institution against an invoice (recorded by platform staff).
+model PlatformPayment {
+  id            String    @id @default(uuid()) @db.Uuid
+  tenantId      String    @map("tenant_id") @db.Uuid
+  invoiceId     String    @map("invoice_id") @db.Uuid
+  paidOn        DateTime  @map("paid_on") @db.Date
+  amount        Decimal   @db.Decimal(14, 2)
+  mode          String    @db.VarChar(15)
+  reference     String?   @db.VarChar(60)
+  note          String?   @db.VarChar(200)
+  status        String    @default("RECORDED") @db.VarChar(10)
+  reverseReason String?   @map("reverse_reason") @db.VarChar(300)
+  reversedAt    DateTime? @map("reversed_at") @db.Timestamptz(6)
+  reversedBy    String?   @map("reversed_by") @db.Uuid
+  createdBy     String?   @map("created_by") @db.Uuid
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  invoice PlatformInvoice @relation(fields: [invoiceId], references: [id])
+
+  @@index([tenantId, paidOn])
+  @@index([invoiceId])
+  @@map("platform_payments")
+}
+
+/// Each billing reminder is sent once per invoice (or trial) and kind.
+model BillingReminder {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  refId     String   @map("ref_id") @db.Uuid
+  kind      String   @db.VarChar(20)
+  sent      Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@unique([refId, kind])
+  @@map("billing_reminders")
 }
 
 /// Final on/off per institution (plan modules + platform overrides).

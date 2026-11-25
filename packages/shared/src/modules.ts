@@ -54,16 +54,38 @@ export const CORE_MODULES: ModuleCode[] = MODULES.filter((m) => 'core' in m && m
 
 const money = z.number().nonnegative().max(99_999_999.99).multipleOf(0.01);
 
+const optMoney = money.positive('Enter a price above 0').nullable().optional();
+
+/**
+ * A plan: modules plus a price per student per month and / or per year (Phase 22, CD-133). The older
+ * pricePerStudent + billingCycle pair is still accepted and read as the yearly or monthly price.
+ */
 export const createPlanSchema = z.object({
   name: z.string().trim().min(2).max(100),
   code: z.string().trim().toUpperCase().regex(/^[A-Z0-9_]{2,30}$/, '2–30 capital letters, digits or _'),
   description: z.string().trim().max(300).optional().nullable(),
-  pricePerStudent: money,
-  billingCycle: z.enum(['MONTHLY', 'YEARLY']),
+  pricePerStudent: money.optional(),
+  billingCycle: z.enum(['MONTHLY', 'YEARLY']).optional(),
+  priceMonthly: optMoney,
+  priceYearly: optMoney,
+  /** Edition the plan is sold for; empty = any edition. */
+  edition: z.enum(['STANDARD', 'RESIDENTIAL']).nullable().optional(),
   maxStudents: z.number().int().positive().nullable().optional(),
   modules: z.array(z.enum(MODULE_CODES)).max(MODULES.length),
-});
+}).refine((v) => v.priceMonthly != null || v.priceYearly != null || (v.pricePerStudent !== undefined && !!v.billingCycle), { message: 'Enter a monthly or a yearly price', path: ['priceYearly'] });
 export type CreatePlanInput = z.infer<typeof createPlanSchema>;
+
+/** Changing a plan: prices apply to new terms only; running terms keep their rate. */
+export const updatePlanSchema = z.object({
+  name: z.string().trim().min(2).max(100).optional(),
+  description: z.string().trim().max(300).nullable().optional(),
+  priceMonthly: optMoney,
+  priceYearly: optMoney,
+  edition: z.enum(['STANDARD', 'RESIDENTIAL']).nullable().optional(),
+  maxStudents: z.number().int().positive().nullable().optional(),
+  isActive: z.boolean().optional(),
+});
+export type UpdatePlanInput = z.infer<typeof updatePlanSchema>;
 
 export const assignPlanSchema = z.object({
   planId: z.string().uuid(),
@@ -71,7 +93,12 @@ export const assignPlanSchema = z.object({
   startDate: z.string().date(),
   endDate: z.string().date(),
   studentCount: z.number().int().min(0).max(1_000_000).default(0),
-}).refine((v) => v.endDate >= v.startDate, { message: 'End date must be on or after the start date', path: ['endDate'] });
+  /** Monthly or yearly (the institution's choice); default: the plan's own cycle. */
+  billingCycle: z.enum(['MONTHLY', 'YEARLY']).optional(),
+  /** Raise the tax invoice for this term now (paid plans only; the term must be one month or one year). */
+  raiseInvoice: z.boolean().optional().default(false),
+}).refine((v) => v.endDate >= v.startDate, { message: 'End date must be on or after the start date', path: ['endDate'] })
+  .refine((v) => !v.raiseInvoice || v.status === 'ACTIVE', { message: 'A trial has no invoice', path: ['raiseInvoice'] });
 export type AssignPlanInput = z.infer<typeof assignPlanSchema>;
 
 export const moduleOverrideSchema = z.object({

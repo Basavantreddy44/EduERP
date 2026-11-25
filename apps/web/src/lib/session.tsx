@@ -31,6 +31,12 @@ export interface PlanInfo {
   endDate: string;
 }
 
+/** Billing standing of the institution (Phase 22): grace and read-only banner. */
+export interface AccountInfo {
+  status: string;
+  overdue: { kind: 'INVOICE' | 'TRIAL'; invoiceNo: string | null; amount: number; dueDate: string; lastDay: string } | null;
+}
+
 interface SessionState {
   loading: boolean;
   /** Enabled module codes of the current institution (core modules always included). */
@@ -39,6 +45,7 @@ interface SessionState {
   /** The institution's edition (Standard unless set by the platform). */
   edition: EditionCode;
   institution: InstitutionBrand | null;
+  account: AccountInfo | null;
   /** Reloads name and logo after the institution profile is saved. */
   refreshInstitution: () => Promise<void>;
   hasModule: (code: string) => boolean;
@@ -66,6 +73,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [plan, setPlan] = useState<PlanInfo | null>(null);
   const [edition, setEditionState] = useState<EditionCode>('STANDARD');
   const [institution, setInstitution] = useState<InstitutionBrand | null>(null);
+  const [account, setAccount] = useState<AccountInfo | null>(null);
   const [portal, setPortal] = useState<PortalMe | null>(null);
   const [campusId, setCampusId] = useState<string | null>(null);
   const { lang, setLang, setEdition } = useI18n();
@@ -91,7 +99,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if (s.tenantId) {
       const [p, m, pm] = await Promise.all([
         api<{ permissions: PermissionEntry[] }>('/me/permissions'),
-        api<{ enabled: string[]; subscription: PlanInfo | null; edition?: EditionCode; institution?: InstitutionBrand | null }>('/me/modules').catch(() => ({ enabled: [], subscription: null, edition: 'STANDARD' as EditionCode, institution: null })),
+        api<{ enabled: string[]; subscription: PlanInfo | null; edition?: EditionCode; institution?: InstitutionBrand | null; account?: AccountInfo | null }>('/me/modules').catch(() => ({ enabled: [], subscription: null, edition: 'STANDARD' as EditionCode, institution: null, account: null })),
         api<PortalMe>('/portal/me').catch(() => null),
       ]);
       setPermissions(p.permissions);
@@ -101,7 +109,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setEditionState(m.edition ?? 'STANDARD');
       setEdition(m.edition ?? 'STANDARD');
       setInstitution(m.institution ?? null);
+      setAccount(m.account ?? null);
     } else {
+      setAccount(null);
       setPermissions([]);
       setModules([]);
       setPlan(null);
@@ -144,6 +154,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       plan,
       edition,
       institution,
+      account,
       refreshInstitution,
       hasModule: (code) => modules.includes(code),
       portal,
@@ -166,7 +177,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         router.replace('/login');
       },
     }),
-    [loading, session, permissions, modules, plan, edition, institution, refreshInstitution, portal, refreshPortal, campusId, applySession, router, setEdition],
+    [loading, session, permissions, modules, plan, edition, institution, account, refreshInstitution, portal, refreshPortal, campusId, applySession, router, setEdition],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

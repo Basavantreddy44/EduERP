@@ -145,7 +145,7 @@ export class TenantsService {
     return this.db.run({ isPlatform: true, tenantId: id }, async (tx) => {
       const before = await tx.tenant.findUnique({ where: { id }, select: TENANT_FIELDS });
       if (!before) throw NotFound('Institution');
-      const after = await tx.tenant.update({ where: { id }, data: { status, updatedBy: auth.userId }, select: TENANT_FIELDS });
+      const after = await tx.tenant.update({ where: { id }, data: { status, billingHold: false, updatedBy: auth.userId }, select: TENANT_FIELDS });
       await this.audit.log(tx, { tenantId: id, userId: auth.userId, action: 'STATUS_CHANGE', entityType: 'TENANT', entityId: id, oldValues: { status: before.status }, newValues: { status }, reason }, client);
       return after;
     });

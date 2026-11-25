@@ -9,6 +9,7 @@ import { ComplaintsService } from '../modules/engagement/complaints.service';
 import { LibraryService } from '../modules/campuslife/library.service';
 import { InventoryService } from '../modules/inventory/inventory.service';
 import { ReportsService } from '../modules/reports/reports.service';
+import { BillingService } from '../modules/billing/billing.service';
 import { config } from '../config';
 
 /** Background worker process: `pnpm --filter @eduerp/api worker`. Run one or more next to the API. */
@@ -70,7 +71,14 @@ async function main(): Promise<void> {
   const scheduled = () => reports.queueScheduled().then((n) => n && console.log(`Scheduled reports queued: ${n}`)).catch((e) => console.error('Scheduled reports failed:', e instanceof Error ? e.message : e));
   const scheduleFirst = setTimeout(scheduled, 360_000);
   const scheduleTimer = setInterval(scheduled, 3_600_000);
+  // SaaS billing (Phase 22): renewal invoices, grace / read-only and reminders; hourly, first pass seven minutes after start.
+  const billing = app.get(BillingService);
+  const billingCheck = () => billing.runAll().then((r) => (r.invoices || r.reminders || r.grace || r.readOnly || r.reactivated) && console.log(`Billing check: ${r.invoices} invoice(s), ${r.reminders} reminder(s), ${r.grace} to grace, ${r.readOnly} read-only, ${r.reactivated} active again`)).catch((e) => console.error('Billing check failed:', e instanceof Error ? e.message : e));
+  const billingFirst = setTimeout(billingCheck, 420_000);
+  const billingTimer = setInterval(billingCheck, 3_600_000);
   const shutdown = async () => {
+    clearTimeout(billingFirst);
+    clearInterval(billingTimer);
     clearInterval(exportTimer);
     clearTimeout(scheduleFirst);
     clearInterval(scheduleTimer);

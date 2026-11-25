@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { EDITION_MENU_FIRST, PERMISSIONS, PermissionCode } from '@eduerp/shared';
 import { api } from '@/lib/api';
-import { logoUrl, useSession } from '@/lib/session';
+import { AccountInfo, logoUrl, useSession } from '@/lib/session';
 import { LanguageSwitch, useI18n } from '@/lib/i18n';
 import type { MessageKey } from '@/lib/i18n/messages';
 import { Icon, IconName } from '@/components/Icon';
@@ -231,6 +231,7 @@ const NAV: { section: MessageKey; items: NavItem[] }[] = [
       { href: '/users/roles', label: 'nav.roles', icon: 'shield', permission: PERMISSIONS.IAM_USER_READ },
       { href: '/imports', label: 'nav.imports', icon: 'upload', anyOf: [PERMISSIONS.ORG_ACADEMIC_MANAGE, PERMISSIONS.IAM_USER_INVITE] },
       { href: '/settings/institution', label: 'nav.institutionProfile', icon: 'building', permission: PERMISSIONS.ORG_SETTINGS_READ },
+      { href: '/settings/billing', label: 'nav.subscription', icon: 'receipt', permission: PERMISSIONS.ORG_BILLING },
       { href: '/settings', label: 'nav.settings', icon: 'settings', permission: PERMISSIONS.ORG_SETTINGS_READ },
     ],
   },
@@ -239,14 +240,37 @@ const NAV: { section: MessageKey; items: NavItem[] }[] = [
     items: [
       { href: '/platform/tenants', label: 'nav.institutions', icon: 'building', platform: true },
       { href: '/platform/plans', label: 'nav.plans', icon: 'layers', platform: true },
+      { href: '/platform/billing', label: 'nav.platformBilling', icon: 'receipt', platform: true },
     ],
   },
 ];
 
+/** Grace and read-only notice for everyone in the institution (Phase 22); the bills link for those who can see them. */
+function AccountBanner({ account, canSee }: { account: AccountInfo; canSee: boolean }) {
+  const { t, locale } = useI18n();
+  const d = (x: string) => new Date(`${x}T00:00:00Z`).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+  const o = account.overdue;
+  const readOnly = account.status === 'SUSPENDED';
+  const text = readOnly
+    ? (o ? t('bill.bannerReadOnly') : t('bill.bannerSuspended'))
+    : o?.kind === 'TRIAL'
+      ? t('bill.bannerTrial', { last: d(o.lastDay) })
+      : o
+        ? t('bill.bannerGrace', { amount: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(o.amount), due: d(o.dueDate), last: d(o.lastDay) })
+        : t('bill.bannerGraceShort');
+  return (
+    <div className={`acct-banner ${readOnly ? 'bad' : 'warn'}`} role="status">
+      <Icon name={readOnly ? 'lock' : 'alert'} size={18} />
+      <span>{text}</span>
+      {canSee && (o || !readOnly) && <Link href="/settings/billing" className="acct-banner-link">{t('bill.seeBills')}</Link>}
+    </div>
+  );
+}
+
 const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]!.toUpperCase()).join('');
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
-  const { loading, session, can, hasModule, logout, campusId, setCampusId, permissions, portal, edition, institution } = useSession();
+  const { loading, session, can, hasModule, logout, campusId, setCampusId, permissions, portal, edition, institution, account } = useSession();
   const { t } = useI18n();
   const router = useRouter();
   const path = usePathname();
@@ -381,6 +405,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </header>
+        {session.tenantId && account && (account.status === 'GRACE' || account.status === 'SUSPENDED') && <AccountBanner account={account} canSee={can(PERMISSIONS.ORG_BILLING)} />}
         <main className="content" id="main" tabIndex={-1} key={path}>{children}</main>
       </div>
     </div>
