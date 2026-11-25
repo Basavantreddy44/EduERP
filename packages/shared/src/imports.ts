@@ -123,6 +123,27 @@ export const IMPORT_TYPES = {
       { key: 'rackLocation', header: 'Rack', required: false, example: 'R3-S2', help: '' },
     ],
   },
+  ALLOTMENTS: {
+    type: 'ALLOTMENTS',
+    label: 'Allotment list',
+    description: 'Children allotted to your schools by the entrance / counselling list, for the current academic year. Each school then marks who joined.',
+    columns: [
+      { key: 'entranceRegNo', header: 'Entrance reg no', required: true, example: 'MDRS26-004512', help: 'The registration number from the entrance test. Unique in the year.' },
+      { key: 'firstName', header: 'First name', required: true, example: 'Kavya', help: '1–100 characters.' },
+      { key: 'lastName', header: 'Last name', required: false, example: 'Gowda', help: 'Up to 100 characters.' },
+      { key: 'gender', header: 'Gender', required: true, example: 'Girl', help: 'Boy, Girl or Other.' },
+      { key: 'dob', header: 'Date of birth', required: true, example: '2015-03-14', help: 'YYYY-MM-DD or DD-MM-YYYY.' },
+      { key: 'category', header: 'Category', required: false, example: 'SC', help: 'GENERAL, SC, ST, OBC, CAT_1, 2A, 2B, 3A or 3B.' },
+      { key: 'quota', header: 'Quota', required: false, example: 'SC rural', help: 'The seat category in the allotment, up to 60 characters.' },
+      { key: 'rank', header: 'Rank', required: false, example: '1245', help: 'Merit rank, a whole number.' },
+      { key: 'campusCode', header: 'School code', required: true, example: 'HNS', help: 'The code of the allotted school (campus) from the Help sheet.' },
+      { key: 'className', header: 'Class', required: true, example: 'Class 6', help: 'The class the child joins, as named in your classes.' },
+      { key: 'fatherName', header: 'Father name', required: false, example: 'Ramesh Gowda', help: '' },
+      { key: 'motherName', header: 'Mother name', required: false, example: 'Lakshmamma', help: '' },
+      { key: 'parentPhone', header: 'Parent mobile', required: true, example: '9844012345', help: '10-digit mobile.' },
+      { key: 'address', header: 'Address', required: false, example: 'Bilikere, Hunsur taluk, Mysuru', help: 'Up to 500 characters.' },
+    ],
+  },
 } as const satisfies Record<string, ImportType>;
 
 export type ImportTypeCode = keyof typeof IMPORT_TYPES;

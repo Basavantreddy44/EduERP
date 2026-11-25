@@ -8,7 +8,7 @@
  */
 import { PrismaClient } from '@prisma/client';
 import { hash } from '@node-rs/argon2';
-import { CORE_MODULES, DEFAULT_TEMPLATES, MODULES, PERMISSION_CATALOGUE, SYSTEM_ROLES } from '@eduerp/shared';
+import { CORE_MODULES, DEFAULT_TEMPLATES, EDITIONS, MODULES, PERMISSION_CATALOGUE, SYSTEM_ROLES } from '@eduerp/shared';
 
 export async function seedPermissions(prisma: PrismaClient): Promise<void> {
   for (const p of PERMISSION_CATALOGUE) {
@@ -41,6 +41,19 @@ export async function syncSystemRoles(prisma: PrismaClient): Promise<number> {
         skipDuplicates: true,
       });
       added += res.count;
+    }
+  }
+  // Edition roles (CD-127) of institutions in that edition get rights added to their definition since.
+  for (const ed of Object.values(EDITIONS)) {
+    for (const def of ed.roles) {
+      const roles = await prisma.role.findMany({ where: { code: def.code, isSystem: true, tenant: { edition: ed.code } }, select: { id: true, tenantId: true } });
+      for (const role of roles) {
+        const res = await prisma.rolePermission.createMany({
+          data: def.permissions.filter((code) => perms.has(code)).map((code) => ({ tenantId: role.tenantId, roleId: role.id, permissionId: perms.get(code)! })),
+          skipDuplicates: true,
+        });
+        added += res.count;
+      }
     }
   }
   return added;

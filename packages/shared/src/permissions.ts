@@ -132,6 +132,11 @@ export const PERMISSIONS = {
   DIET_MANAGE: 'hostel.diet.manage',
   MEALS_RECORD: 'hostel.meals.record',
   OVERVIEW_READ: 'overview.read',
+  // Phase 21 — Residential edition
+  ALLOT_MANAGE: 'students.allotment.manage',
+  ALLOT_JOIN: 'students.allotment.join',
+  STU_TRANSFER: 'students.transfer',
+  HR_TRANSFER: 'hr.staff.transfer',
 } as const;
 
 export type PermissionCode = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
@@ -266,6 +271,10 @@ export const PERMISSION_CATALOGUE: { code: PermissionCode; module: string; descr
   { code: PERMISSIONS.DIET_MANAGE, module: 'HOSTEL', description: 'Set the diet scale (quantity per child per day)' },
   { code: PERMISSIONS.MEALS_RECORD, module: 'HOSTEL', description: 'Record the daily meal register' },
   { code: PERMISSIONS.OVERVIEW_READ, module: 'REPORTS', description: 'View the overview of schools (campuses) by district' },
+  { code: PERMISSIONS.ALLOT_MANAGE, module: 'STUDENTS', description: 'Import the allotment list and cancel allotments' },
+  { code: PERMISSIONS.ALLOT_JOIN, module: 'STUDENTS', description: 'Mark allotted children as joined or not reported' },
+  { code: PERMISSIONS.STU_TRANSFER, module: 'STUDENTS', description: 'Move students to another school (campus)' },
+  { code: PERMISSIONS.HR_TRANSFER, module: 'HR_PAYROLL', description: 'Move staff to another school (campus)' },
 ];
 
 /** A teacher: own classes (CD-73), attendance, homework, marks, parents, staff meetings, complaints and requests. */

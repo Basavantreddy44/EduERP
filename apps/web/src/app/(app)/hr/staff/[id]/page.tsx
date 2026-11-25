@@ -13,6 +13,7 @@ import { Icon } from '@/components/Icon';
 import { Field, Modal } from '@/components/Modal';
 import { EmptyState, PageHeader, SkeletonRows, useToast } from '@/components/ui';
 import { StaffGov } from '@/components/govt';
+import { MovesHistory, StaffMoveButton } from '@/components/residential';
 
 interface Profile {
   employee: { id: string; employeeCode: string; name: string; gender: string; dob: string | null; phone: string | null; email: string | null; employeeType: string; joiningDate: string; leftOn: string | null; status: string; campus: string; department: string | null; designationId: string | null; designation: string | null };
@@ -44,6 +45,7 @@ export default function HrProfilePage() {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [moved, setMoved] = useState(0);
   const load = useCallback(() => { api<Profile>(`/hr/staff/${id}`).then(setP).catch(() => setMissing(true)); }, [id]);
   useEffect(load, [load]);
   const openEdit = () => {
@@ -82,7 +84,7 @@ export default function HrProfilePage() {
     <>
       {!p.isSelf && <Link href={`/staff/${e.id}`} className="back-link"><Icon name="chevronRight" size={16} className="flip" /> {e.name}</Link>}
       <PageHeader eyebrow={`${e.employeeCode} · ${e.campus}`} title={p.isSelf ? t('hr.myProfile') : e.name} description={[e.designation, e.department].filter(Boolean).join(' · ') || undefined}
-        actions={p.canEdit && <button type="button" className="btn btn-primary" onClick={openEdit}><Icon name="edit" /> {t('hr.edit')}</button>} />
+        actions={(p.canEdit || !p.isSelf) && <>{!p.isSelf && e.status === 'ACTIVE' && <StaffMoveButton employeeId={e.id} campusName={e.campus} onDone={() => { load(); setMoved((n) => n + 1); }} />}{p.canEdit && <button type="button" className="btn btn-primary" onClick={openEdit}><Icon name="edit" /> {t('hr.edit')}</button>}</>} />
       {p.exit && <p className="notice"><Icon name="info" /> {p.exit.status === 'CLOSED' ? t('hr.leftOn', { d: dt(e.leftOn ?? p.exit.lastWorkingDate) }) : t('hr.exitInProgress', { d: dt(p.exit.lastWorkingDate) })} {can(PERMISSIONS.HR_EXIT) && <Link href={`/hr/exits/${p.exit.id}`}>{t('hr.openExit')}</Link>}</p>}
       <div className="hr-grid">
         <section className="card p12-block" aria-labelledby="hr-work">
@@ -117,6 +119,7 @@ export default function HrProfilePage() {
           </dl>
         </section>
         <StaffGov employeeId={e.id} />
+        <MovesHistory kind="staff" id={e.id} refresh={moved} />
         <section className="card p12-block" aria-labelledby="hr-quals">
           <div className="panel-head"><h2 id="hr-quals" className="section-title">{t('hr.qualifications')}</h2>{p.canEdit && <button type="button" className="btn btn-sm" onClick={() => { setSub({ qualification: '', institution: '', yearOfPassing: '', percentage: '' }); setErrors({}); setError(null); setAddQ(true); }}><Icon name="plus" size={14} /> {t('hr.add')}</button>}</div>
           {!p.qualifications.length ? <p className="muted">{t('hr.noQuals')}</p> : <ul className="p12-action-list">{p.qualifications.map((q) => <li key={q.id}><span><strong>{q.qualification}</strong><span className="sub-line muted small">{q.institution} · {q.yearOfPassing}{q.percentage != null ? ` · ${q.percentage}%` : ''}</span></span>{p.canEdit && <button type="button" className="btn btn-sm btn-ghost" aria-label={t('hr.removeOf', { name: q.qualification })} onClick={() => void remove('qualifications', q.id)}><Icon name="trash" size={14} /></button>}</li>)}</ul>}

@@ -20,6 +20,7 @@ import { AppAccess } from '@/components/portal-access';
 import { StudentBus } from '@/components/StudentBus';
 import { StudentHostel } from '@/components/StudentHostel';
 import { StudentGov } from '@/components/govt';
+import { MovesHistory, StudentMoveButton } from '@/components/residential';
 import { StudentActivities } from '@/components/activities';
 import { EmptyState, SkeletonRows, StatusBadge, useToast } from '@/components/ui';
 import { todayIST, useDay } from '@/components/admissions';
@@ -69,6 +70,7 @@ export default function StudentProfilePage() {
   const [tcs, setTcs] = useState<TcLite[]>([]);
   const router = useRouter();
 
+  const [moved, setMoved] = useState(0);
   const load = useCallback(() => {
     api<Student>(`/students/${id}`).then(setS).catch(() => setMissing(true));
     api<TcLite[]>(`/students/${id}/tcs`).then(setTcs).catch(() => setTcs([]));
@@ -135,11 +137,12 @@ export default function StudentProfilePage() {
             <li><StatusBadge status={s.status} /></li>
           </ul>
         </div>
-        {(manage || canTc || issuedTc) && (
+        {(manage || canTc || issuedTc || can(PERMISSIONS.STU_TRANSFER)) && (
           <div className="profile-actions">
             {manage && <button type="button" className="btn" onClick={() => open('edit')}><Icon name="edit" size={16} /> {t('stu.edit')}</button>}
             {manage && current && ['ACTIVE', 'INACTIVE'].includes(s.status) && <button type="button" className="btn" onClick={() => open('section')}><Icon name="swap" size={16} /> {t('stu.changeSection')}</button>}
             {manage && !left && <button type="button" className="btn" onClick={() => open('status')}><Icon name="clock" size={16} /> {t('stu.changeStatus')}</button>}
+            {current && ['ACTIVE', 'INACTIVE'].includes(s.status) && <StudentMoveButton studentId={s.id} onDone={() => { load(); setMoved((n) => n + 1); }} />}
             {issuedTc ? <Link className="btn" href={`/transfer-certificates/${issuedTc.id}`}><Icon name="file" size={16} /> {t('stu.tc.view', { no: issuedTc.tcNo })}</Link>
               : canTc && <button type="button" className="btn" onClick={() => open('tc')}><Icon name="file" size={16} /> {t('stu.tc.issue')}</button>}
           </div>
@@ -250,6 +253,7 @@ export default function StudentProfilePage() {
           )
         )}
 
+        {tab === 'history' && <MovesHistory kind="students" id={s.id} refresh={moved} />}
         {tab === 'history' && (
           <ol className="timeline">
             {s.statusHistory.map((h) => (

@@ -14,6 +14,7 @@ import { dec } from '../accounts/books';
 import { day, fullName, iso, todayIST } from '../campuslife/common';
 import { govColumns, govRows } from '../govt/gov-rows';
 import { welfareStatusRows } from '../govt/welfare.service';
+import { MIS_COLUMNS, misRows } from '../residential/mis';
 
 type Perm = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 type Cell = string | number | null;
@@ -174,6 +175,11 @@ const REPORTS: ReportDef[] = [
     code: 'WELFARE_STATUS', module: 'STUDENTS', group: 'GOVERNMENT', title: 'Welfare items and allowances by student', perm: PERMISSIONS.WELFARE_READ, filters: ['campusId', 'sectionId', 'schemeId'],
     columns: [{ key: 'scheme', label: 'Scheme', type: 'text' }, { key: 'kind', label: 'Kind', type: 'text' }, { key: 'student', label: 'Student', type: 'text' }, { key: 'admissionNo', label: 'Admission no', type: 'text' }, { key: 'className', label: 'Class', type: 'text' }, { key: 'entitled', label: 'Entitled', type: 'number' }, { key: 'received', label: 'Received', type: 'number' }, { key: 'pending', label: 'Pending', type: 'number' }, { key: 'lastGiven', label: 'Last given on', type: 'date' }],
     run: (tx, c, f) => welfareStatusRows(tx, c, f),
+  },
+  {
+    code: 'MIS_MONTHLY', module: 'STUDENTS', group: 'GOVERNMENT', title: 'Monthly report by school', perm: PERMISSIONS.OVERVIEW_READ, filters: ['campusId', 'from', 'to'],
+    columns: MIS_COLUMNS.map((c) => ({ ...c })) as Column[],
+    run: (tx, c, f) => misRows(tx, c, f),
   },
 ];
 const DEF = new Map(REPORTS.map((r) => [r.code, r]));

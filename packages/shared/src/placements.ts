@@ -88,7 +88,7 @@ export const offerStatusSchema = z.object({ status: z.enum(['ACCEPTED', 'DECLINE
 
 // ───────────── Reports & exports ─────────────
 
-export const CATALOGUE_REPORT_CODES = ['STUDENT_LIST', 'FEE_DUES', 'FEE_COLLECTION', 'ATTENDANCE_SUMMARY', 'STAFF_LIST', 'LIBRARY_OVERDUE', 'STOCK_VALUE', 'ACHIEVEMENTS', 'PLACEMENT_OFFERS', 'GOV_SATS', 'GOV_UDISE', 'STAFF_GOVT', 'WELFARE_STATUS'] as const;
+export const CATALOGUE_REPORT_CODES = ['STUDENT_LIST', 'FEE_DUES', 'FEE_COLLECTION', 'ATTENDANCE_SUMMARY', 'STAFF_LIST', 'LIBRARY_OVERDUE', 'STOCK_VALUE', 'ACHIEVEMENTS', 'PLACEMENT_OFFERS', 'GOV_SATS', 'GOV_UDISE', 'STAFF_GOVT', 'WELFARE_STATUS', 'MIS_MONTHLY'] as const;
 export type CatalogueReportCode = (typeof CATALOGUE_REPORT_CODES)[number];
 /** Filters every report understands; each report uses the ones it needs. */
 export const reportFiltersSchema = z.object({

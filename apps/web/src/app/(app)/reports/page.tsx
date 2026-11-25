@@ -65,6 +65,13 @@ export default function ReportsPage() {
     try { await api(`/reports/saved/${s.id}/delete`, { method: 'POST' }); toast(t('rep.saved.removed')); loadSaved(); }
     catch (x) { toast(apiErrors(x).message ?? t('en.failed'), 'bad'); }
   };
+  /** The total row of the monthly report by school comes in English from the server; show it in the reader's language. */
+  const misLabel = (v: unknown) => {
+    if (result?.code !== 'MIS_MONTHLY' || typeof v !== 'string') return null;
+    if (v === 'All districts') return <strong>{t('rep.mis.allDistricts')}</strong>;
+    const m = /^All (\d+) schools$/.exec(v);
+    return m ? <strong>{t('rep.mis.allSchools', { n: m[1] })}</strong> : null;
+  };
   const open = (s: Saved) => { setCode(s.reportCode); setFilters(Object.fromEntries(Object.entries(s.filters).map(([k, v]) => [k, String(v)]))); setResult(null); };
   const fmt = (c: Col, v: string | number | null) => (v == null || v === '' ? '' : c.type === 'money' ? inrFull(v) : c.type === 'date' ? fmtDay(locale, String(v)) : c.type === 'percent' ? `${v}%` : c.type === 'number' ? Number(v).toLocaleString('en-IN') : String(v));
   const set = (k: string, v: string) => setFilters((f) => ({ ...f, [k]: v }));
@@ -133,7 +140,7 @@ export default function ReportsPage() {
                 <div className="table-wrap" role="region" aria-label={title(result.code)} tabIndex={0}>
                   <table className="table">
                     <thead><tr>{result.columns.map((c) => <th key={c.key} scope="col" className={['money', 'number', 'percent'].includes(c.type) ? 'num' : undefined}>{result.code.startsWith('GOV_') ? c.label : t(`rep.col.${c.key}` as MessageKey)}</th>)}</tr></thead>
-                    <tbody>{result.rows.map((r, i) => <tr key={i}>{result.columns.map((c) => <td key={c.key} className={['money', 'number', 'percent'].includes(c.type) ? 'num' : undefined}>{fmt(c, r[c.key])}</td>)}</tr>)}</tbody>
+                    <tbody>{result.rows.map((r, i) => <tr key={i}>{result.columns.map((c) => <td key={c.key} className={['money', 'number', 'percent'].includes(c.type) ? 'num' : undefined}>{misLabel(r[c.key]) ?? fmt(c, r[c.key])}</td>)}</tr>)}</tbody>
                     {result.totals && <tfoot><tr>{result.columns.map((c, i) => <td key={c.key} className={c.type === 'money' ? 'num' : undefined}>{i === 0 ? <strong>{t('inv.total')}</strong> : result.totals![c.key] != null ? <strong>{inrFull(result.totals![c.key])}</strong> : ''}</td>)}</tr></tfoot>}
                   </table>
                 </div>

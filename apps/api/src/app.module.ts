@@ -144,6 +144,13 @@ import { CertificatesController, CertificateVerifyController } from './modules/s
 import { BrandingController, InstitutionController } from './modules/institution/institution.controller';
 import { InstitutionService } from './modules/institution/institution.service';
 
+import { AllotmentsController, HealthCampsController, HostelDayController, MovesController } from './modules/residential/residential.controller';
+import { AllotmentsService } from './modules/residential/allotments.service';
+import { AllotmentsImporter } from './modules/residential/allotments.importer';
+import { MovesService } from './modules/residential/moves.service';
+import { HostelDayService } from './modules/residential/hostel-day.service';
+import { HealthCampsService } from './modules/residential/health-camps.service';
+
 const isTest = process.env.NODE_ENV === 'test';
 
 @Module({
@@ -231,10 +238,19 @@ const isTest = process.env.NODE_ENV === 'test';
     ReportsController,
     InstitutionController,
     BrandingController,
+    AllotmentsController,
+    MovesController,
+    HostelDayController,
+    HealthCampsController,
   ],
   providers: [
     Db,
     InstitutionService,
+    AllotmentsService,
+    AllotmentsImporter,
+    MovesService,
+    HostelDayService,
+    HealthCampsService,
     AuditService,
     AuthService,
     TenantsService,
@@ -257,7 +273,7 @@ const isTest = process.env.NODE_ENV === 'test';
     {
       provide: IMPORTERS,
       useFactory: (...i: AnyImporter[]) => i,
-      inject: [DepartmentsImporter, HolidaysImporter, UsersImporter, StudentsImporter, StaffImporter, LibraryBooksImporter],
+      inject: [DepartmentsImporter, HolidaysImporter, UsersImporter, StudentsImporter, StaffImporter, LibraryBooksImporter, AllotmentsImporter],
     },
     ImportsService,
     ExportsService,

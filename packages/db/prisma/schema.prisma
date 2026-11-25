@@ -4637,6 +4637,13 @@ model HealthCheckup {
   findings       String   @db.VarChar(1000)
   recommendation String?  @db.VarChar(500)
   doctorName     String?  @map("doctor_name") @db.VarChar(150)
+  /// Phase 21 R5: entries made at a check-up camp.
+  campId         String?  @map("camp_id") @db.Uuid
+  vision         String?  @db.VarChar(30)
+  dental         String?  @db.VarChar(100)
+  skin           String?  @db.VarChar(100)
+  haemoglobin    Decimal? @db.Decimal(4, 1)
+  referred       Boolean  @default(false)
   createdBy      String   @map("created_by") @db.Uuid
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
@@ -5572,4 +5579,94 @@ model MealCount {
   @@unique([tenantId, campusId, mealDate, levelName])
   @@index([tenantId, campusId, mealDate])
   @@map("meal_counts")
+}
+
+// ───────────── Phase 21 — Residential edition ─────────────
+
+/// R1: a child allotted to a school by the entrance / counselling list; becomes a student on joining.
+model StudentAllotment {
+  id             String    @id @default(uuid()) @db.Uuid
+  tenantId       String    @map("tenant_id") @db.Uuid
+  campusId       String    @map("campus_id") @db.Uuid
+  academicYearId String    @map("academic_year_id") @db.Uuid
+  levelName      String    @map("level_name") @db.VarChar(50)
+  entranceRegNo  String    @map("entrance_reg_no") @db.VarChar(30)
+  firstName      String    @map("first_name") @db.VarChar(100)
+  lastName       String?   @map("last_name") @db.VarChar(100)
+  gender         String    @db.VarChar(10)
+  dob            DateTime  @db.Date
+  category       String?   @db.VarChar(10)
+  quota          String?   @db.VarChar(60)
+  rank           Int?
+  fatherName     String?   @map("father_name") @db.VarChar(150)
+  motherName     String?   @map("mother_name") @db.VarChar(150)
+  parentPhone    String    @map("parent_phone") @db.VarChar(15)
+  address        String?   @db.VarChar(500)
+  status         String    @default("ALLOTTED") @db.VarChar(15)
+  statusDate     DateTime? @map("status_date") @db.Date
+  statusReason   String?   @map("status_reason") @db.VarChar(300)
+  studentId      String?   @map("student_id") @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy      String?   @map("created_by") @db.Uuid
+  updatedBy      String?   @map("updated_by") @db.Uuid
+
+  @@unique([tenantId, academicYearId, entranceRegNo])
+  @@index([tenantId, campusId, status])
+  @@map("student_allotments")
+}
+
+/// R2: a student or staff member moved from one school (campus) to another.
+model CampusTransfer {
+  id           String   @id @default(uuid()) @db.Uuid
+  tenantId     String   @map("tenant_id") @db.Uuid
+  personType   String   @map("person_type") @db.VarChar(10)
+  studentId    String?  @map("student_id") @db.Uuid
+  employeeId   String?  @map("employee_id") @db.Uuid
+  fromCampusId String   @map("from_campus_id") @db.Uuid
+  toCampusId   String   @map("to_campus_id") @db.Uuid
+  transferDate DateTime @map("transfer_date") @db.Date
+  orderNo      String?  @map("order_no") @db.VarChar(60)
+  reason       String   @db.VarChar(300)
+  createdBy    String   @map("created_by") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([tenantId, transferDate])
+  @@index([tenantId, studentId])
+  @@index([tenantId, employeeId])
+  @@map("campus_transfers")
+}
+
+/// R4: remarks of the warden for one hostel and day.
+model HostelDailyNote {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @map("tenant_id") @db.Uuid
+  hostelId  String   @map("hostel_id") @db.Uuid
+  noteDate  DateTime @map("note_date") @db.Date
+  remarks   String   @db.VarChar(2000)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy String   @map("created_by") @db.Uuid
+  updatedBy String?  @map("updated_by") @db.Uuid
+
+  @@unique([tenantId, hostelId, noteDate])
+  @@map("hostel_daily_notes")
+}
+
+/// R5: a health check-up camp at one school.
+model HealthCamp {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.Uuid
+  campusId    String   @map("campus_id") @db.Uuid
+  campDate    DateTime @map("camp_date") @db.Date
+  title       String   @db.VarChar(150)
+  conductedBy String?  @map("conducted_by") @db.VarChar(200)
+  notes       String?  @db.VarChar(1000)
+  status      String   @default("OPEN") @db.VarChar(10)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+  createdBy   String   @map("created_by") @db.Uuid
+
+  @@index([tenantId, campusId, campDate])
+  @@map("health_camps")
 }

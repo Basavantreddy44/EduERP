@@ -2312,3 +2312,60 @@ tr.inv-differs td { background: #fdf8ee; }
 .tc-logo { display: block; margin: 0 auto 8px; }
 .rc-crest-logo { object-fit: contain; background: #fff; padding: 2px; }
 .pay-logo { width: 56px; height: 56px; display: block; margin: 0 auto 8px; }
+
+/* ───────────── Residential edition (Phase 21) ───────────── */
+.stat-warn .stat-icon { background: linear-gradient(160deg, #e0a04a, #a8641a); color: #fff; }
+.inline-field input[type="date"] { height: 38px; padding: 0 10px; border: 1px solid var(--border-strong); border-radius: 10px; font: 600 14px var(--font-sans), var(--font-kn), sans-serif; background: #fff; color: var(--text); }
+.al-actions { white-space: nowrap; }
+.al-actions .btn { margin-left: 6px; }
+.moves-card { margin-bottom: 16px; }
+.moves-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.moves-list li { display: grid; gap: 2px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2); }
+.moves-route { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.hd-sheet { display: grid; gap: 16px; }
+.hd-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.hd-head h2 { margin: 0; font-family: var(--font-display, Georgia, serif); color: var(--midnight); }
+.hd-head p { margin: 2px 0 0; }
+.hd-print-title { display: none; }
+.hd-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.hd-grid .card { margin: 0; }
+.hd-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.hd-list li { display: grid; gap: 2px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.hd-list li:last-child { border-bottom: 0; padding-bottom: 0; }
+.hd-meals { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.hd-meals div { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 10px; }
+.hd-meals dt { font-size: 12px; color: var(--muted); }
+.hd-meals dd { margin: 0; font-size: 20px; font-weight: 800; color: var(--midnight); }
+.hd-remarks textarea { width: 100%; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 10px 12px; font: inherit; resize: vertical; }
+.hd-remarks .form-actions { align-items: center; }
+.hd-remarks-print, .hd-sign { display: none; }
+.hc-layout { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 16px; align-items: start; }
+.hc-layout > .card { margin: 0; min-width: 0; }
+.hc-classes { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.hc-class { width: 100%; display: flex; justify-content: space-between; gap: 8px; align-items: baseline; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); font: inherit; color: var(--text); cursor: pointer; text-align: left; }
+.hc-class:hover { border-color: var(--navy-2); }
+.hc-class.on { border-color: var(--navy); background: var(--surface-2); box-shadow: inset 3px 0 0 var(--gold); font-weight: 700; }
+.hc-table input:not([type="checkbox"]) { height: 34px; border: 1px solid var(--border-strong); border-radius: 8px; padding: 0 8px; font: inherit; background: #fff; }
+.hc-table input:disabled { background: var(--surface-2); color: var(--text); }
+.hc-table .hc-num { width: 70px; }
+.hc-table .hc-short { width: 64px; }
+.hc-table .hc-text { width: 120px; }
+.hc-table .hc-text.wide { width: 180px; }
+.hc-table input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--navy); }
+.hc-table .center { text-align: center; }
+.hc-name { font-weight: 700; white-space: nowrap; }
+@media (max-width: 900px) {
+  .hd-grid, .hc-layout { grid-template-columns: minmax(0, 1fr); }
+  .hd-meals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media print {
+  .hd-print-title { display: block; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; font-size: 12px; }
+  .hd-remarks textarea, .hd-remarks .err { display: none; }
+  .hd-remarks-print { display: block; white-space: pre-wrap; }
+  .hd-sign { display: block; margin-top: 48px; text-align: right; }
+  .hd-grid { grid-template-columns: 1fr 1fr; }
+}
+.hd-sheet p a, .hc-layout p a { text-decoration: underline; text-underline-offset: 2px; }
+.hd-stats { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+@media (max-width: 1100px) { .hd-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .hd-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

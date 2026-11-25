@@ -46,6 +46,8 @@ const NAV: { section: MessageKey; items: NavItem[] }[] = [
       { href: '/students', label: 'nav.studentList', icon: 'cap', permission: PERMISSIONS.STU_STUDENT_READ, module: 'STUDENTS' },
       { href: '/students/promotion', label: 'nav.promotion', icon: 'layers', permission: PERMISSIONS.STU_PROMOTE, module: 'STUDENTS' },
       { href: '/certificates', label: 'nav.certificates', icon: 'file', permission: PERMISSIONS.CERT_READ, module: 'STUDENTS' },
+      { href: '/students/allotments', label: 'nav.allotments', icon: 'clipboard', module: 'STUDENTS', anyOf: [PERMISSIONS.ALLOT_JOIN, PERMISSIONS.ALLOT_MANAGE] },
+      { href: '/moves', label: 'nav.moves', icon: 'swap', anyOf: [PERMISSIONS.STU_TRANSFER, PERMISSIONS.HR_TRANSFER, PERMISSIONS.OVERVIEW_READ] },
       { href: '/students/govt', label: 'nav.govData', icon: 'file', permission: PERMISSIONS.STU_STUDENT_READ, module: 'STUDENTS' },
       { href: '/welfare', label: 'nav.welfare', icon: 'star', module: 'STUDENTS', anyOf: [PERMISSIONS.WELFARE_READ, PERMISSIONS.WELFARE_GIVE, PERMISSIONS.WELFARE_MANAGE] },
     ],
@@ -152,6 +154,7 @@ const NAV: { section: MessageKey; items: NavItem[] }[] = [
     section: 'nav.campusCare',
     items: [
       { href: '/health', label: 'nav.health', icon: 'shield', module: 'HEALTH', anyOf: [PERMISSIONS.HEALTH_READ, PERMISSIONS.HEALTH_MANAGE, PERMISSIONS.HEALTH_HOSTEL] },
+      { href: '/health/camps', label: 'nav.healthCamps', icon: 'users', module: 'HEALTH', anyOf: [PERMISSIONS.HEALTH_READ, PERMISSIONS.HEALTH_MANAGE] },
       { href: '/discipline', label: 'nav.discipline', icon: 'alert', module: 'DISCIPLINE', anyOf: [PERMISSIONS.DISC_REPORT, PERMISSIONS.DISC_MANAGE, PERMISSIONS.DISC_CLASS] },
       { href: '/discipline/counselling', label: 'nav.counselling', icon: 'users', module: 'DISCIPLINE', permission: PERMISSIONS.COUNSEL },
     ],
@@ -212,6 +215,7 @@ const NAV: { section: MessageKey; items: NavItem[] }[] = [
     items: [
       { href: '/hostel', label: 'nav.hostels', icon: 'building', permission: PERMISSIONS.HOSTEL_READ, module: 'HOSTEL' },
       { href: '/hostel/mess', label: 'nav.mess', icon: 'clipboard', permission: PERMISSIONS.HOSTEL_READ, module: 'HOSTEL' },
+      { href: '/hostel/daily', label: 'nav.hostelDaily', icon: 'calendar', permission: PERMISSIONS.HOSTEL_READ, module: 'HOSTEL' },
       { href: '/hostel/diet', label: 'nav.diet', icon: 'clipboard', module: 'HOSTEL', anyOf: [PERMISSIONS.HOSTEL_READ, PERMISSIONS.MEALS_RECORD, PERMISSIONS.DIET_MANAGE] },
     ],
   },

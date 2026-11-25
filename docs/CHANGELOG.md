@@ -1,5 +1,17 @@
 # Changelog
 
+## [Unreleased] — 2026-11-25 (Phase 21: Residential edition)
+### Added
+- **Allotment list** (Students → Allotment list): head office imports the entrance / counselling allotment list (Setup → Imports → Allotment list; every row checked, duplicates refused; "1", "Cat-1" and "Category 1" all mean Category 1). Each school sees its allotted children and marks them **Joined** — the student record, parents, class place and admission number are created in one step — or **Not reported**; head office can cancel or reopen. Counts by school: allotted, joined, waiting, not reported.
+- **Moves between schools**: "Move to another school" on a student page (same class, same year, with the transfer order number; refused while the child still holds a hostel bed) and on a staff page (with a department of the new school). Marks, attendance, fees and documents stay on the record. History on the student and staff pages and a list of all moves (Students → Moves between schools).
+- **Monthly report by school** (Reports → Government): for a month, each school with its district — girls, boys, joined, moved in / out, left, attendance %, children in the hostel, children fed per day, diet items off the scale, welfare hand-outs, sick visits and health check-ups — plus the total; on screen, Excel or CSV. A principal sees only their own school.
+- **Hostel daily report** (Hostel → Daily report): for one hostel and day — residents, present and absent at the roll call (with names), children away on outpass or home-going, sick visits, the meal register, and the warden's remarks (saved once per hostel and day); printable with a signature line.
+- **Health check-up camps** (Student care → Check-up camps): a camp per school and date; a class sheet for each child's height, weight (BMI worked out), vision, teeth, skin, haemoglobin, findings and referral, each saved as a check-up on the child's health record; summary of screened, referred and not yet screened children; a camp can be closed.
+- Demo (Residential demo institution): an allotment list of 11 children (7 joined, 1 not reported, 3 waiting), a teacher moved from Hunsur to Kollegal, today's roll call at the Hunsur girls' hostel with an absent girl in the infirmary and the warden's remarks, an RBSK screening camp with two classes entered.
+### Changed
+- Rights added: students.allotment.manage / join, students.transfer, hr.staff.transfer (Institution Admin and Head office officer have them; Principal can mark joined but not import, cancel or move between schools).
+- Hostel and health screens are unchanged; the new pages sit next to them.
+
 ## [Unreleased] — 2026-11-24 (Phase 20: Editions — Standard and Residential)
 ### Added
 - **Editions.** Every institution has an edition, chosen by the platform when it is created: **EduERP** (standard, every module on) or **EduERP Residential** (government residential schools such as Morarji Desai / KREIS — starts without Admissions, Fees, Transport and Placements, and with the extra roles Principal, Warden, Kitchen in-charge and Head office officer). The platform console shows and filters institutions by edition and can change an institution's edition after a preview of what changes; data and roles are never deleted, platform add-ons stay, and with a plan the plan keeps deciding the modules.

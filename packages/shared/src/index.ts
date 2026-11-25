@@ -32,3 +32,4 @@ export * from './activities';
 export * from './placements';
 export * from './govt';
 export * from './editions';
+export * from './residential';

@@ -60706,7 +60706,8 @@
                       "GOV_SATS",
                       "GOV_UDISE",
                       "STAFF_GOVT",
-                      "WELFARE_STATUS"
+                      "WELFARE_STATUS",
+                      "MIS_MONTHLY"
                     ]
                   },
                   "name": {
@@ -60877,7 +60878,8 @@
                       "GOV_SATS",
                       "GOV_UDISE",
                       "STAFF_GOVT",
-                      "WELFARE_STATUS"
+                      "WELFARE_STATUS",
+                      "MIS_MONTHLY"
                     ]
                   },
                   "name": {
@@ -61091,7 +61093,8 @@
                       "GOV_SATS",
                       "GOV_UDISE",
                       "STAFF_GOVT",
-                      "WELFARE_STATUS"
+                      "WELFARE_STATUS",
+                      "MIS_MONTHLY"
                     ]
                   },
                   "filters": {
@@ -61605,6 +61608,1479 @@
           "kind": "public"
         },
         "description": "Access: public (no login)."
+      }
+    },
+    "/api/v1/allotments": {
+      "get": {
+        "operationId": "AllotmentsController_list",
+        "parameters": [
+          {
+            "name": "campusId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "academicYearId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ALLOTTED",
+                "JOINED",
+                "NOT_REPORTED",
+                "CANCELLED"
+              ]
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 60
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input failed validation; `errors` lists each field",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Allotments"
+        ],
+        "x-access": {
+          "kind": "member"
+        },
+        "description": "Access: any active member of the institution in the token.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/allotments/{id}/sections": {
+      "get": {
+        "operationId": "AllotmentsController_sections",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Allotments"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "students.allotment.join"
+        },
+        "description": "Access: permission `students.allotment.join` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/allotments/{id}/join": {
+      "post": {
+        "operationId": "AllotmentsController_join",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input failed validation; `errors` lists each field",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Allotments"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "students.allotment.join"
+        },
+        "description": "Access: permission `students.allotment.join` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "sectionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "joinedOn": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "admissionNo": {
+                    "type": "string",
+                    "maxLength": 30,
+                    "nullable": true
+                  },
+                  "rollNo": {
+                    "type": "string",
+                    "maxLength": 10,
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "sectionId",
+                  "joinedOn"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/allotments/{id}/status": {
+      "post": {
+        "operationId": "AllotmentsController_status",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input failed validation; `errors` lists each field",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Allotments"
+        ],
+        "x-access": {
+          "kind": "member"
+        },
+        "description": "Access: any active member of the institution in the token.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "ALLOTTED",
+                      "NOT_REPORTED",
+                      "CANCELLED"
+                    ]
+                  },
+                  "date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 300
+                  }
+                },
+                "required": [
+                  "status",
+                  "date",
+                  "reason"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/moves": {
+      "get": {
+        "operationId": "MovesController_list",
+        "parameters": [
+          {
+            "name": "personType",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "STUDENT",
+                "STAFF"
+              ]
+            }
+          },
+          {
+            "name": "campusId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input failed validation; `errors` lists each field",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Moves"
+        ],
+        "x-access": {
+          "kind": "member"
+        },
+        "description": "Access: any active member of the institution in the token.",
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/moves/students/{id}": {
+      "get": {
+        "operationId": "MovesController_studentHistory",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Moves"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "students.student.read"
+        },
+        "description": "Access: permission `students.student.read` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "MovesController_moveStudent",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input failed validation; `errors` lists each field",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Moves"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "students.transfer"
+        },
+        "description": "Access: permission `students.transfer` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "toCampusId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "sectionId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "transferDate": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "orderNo": {
+                    "type": "string",
+                    "maxLength": 60,
+                    "nullable": true
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 300
+                  }
+                },
+                "required": [
+                  "toCampusId",
+                  "sectionId",
+                  "transferDate",
+                  "reason"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/moves/students/{id}/options": {
+      "get": {
+        "operationId": "MovesController_studentOptions",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Moves"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "students.transfer"
+        },
+        "description": "Access: permission `students.transfer` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/moves/staff/{id}": {
+      "get": {
+        "operationId": "MovesController_staffHistory",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Moves"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "hr.staff.read"
+        },
+        "description": "Access: permission `hr.staff.read` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "MovesController_moveStaff",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input failed validation; `errors` lists each field",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Moves"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "hr.staff.transfer"
+        },
+        "description": "Access: permission `hr.staff.transfer` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "toCampusId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "departmentId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "nullable": true
+                  },
+                  "transferDate": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "orderNo": {
+                    "type": "string",
+                    "maxLength": 60,
+                    "nullable": true
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 300
+                  }
+                },
+                "required": [
+                  "toCampusId",
+                  "transferDate",
+                  "reason"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/hostel-day/{hostelId}": {
+      "get": {
+        "operationId": "HostelDayController_report",
+        "parameters": [
+          {
+            "name": "hostelId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input failed validation; `errors` lists each field",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "HostelDay"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "hostel.read"
+        },
+        "description": "Access: permission `hostel.read` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/hostel-day/{hostelId}/remarks": {
+      "put": {
+        "operationId": "HostelDayController_remarks",
+        "parameters": [
+          {
+            "name": "hostelId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input failed validation; `errors` lists each field",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "HostelDay"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "hostel.warden"
+        },
+        "description": "Access: permission `hostel.warden` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "remarks": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 2000
+                  }
+                },
+                "required": [
+                  "date",
+                  "remarks"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health/camps": {
+      "get": {
+        "operationId": "HealthCampsController_list",
+        "parameters": [
+          {
+            "name": "campusId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input failed validation; `errors` lists each field",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "HealthCamps"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "health.read"
+        },
+        "description": "Access: permission `health.read` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "HealthCampsController_create",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input failed validation; `errors` lists each field",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "HealthCamps"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "health.manage"
+        },
+        "description": "Access: permission `health.manage` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "campusId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "campDate": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "title": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 150
+                  },
+                  "conductedBy": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "nullable": true
+                  },
+                  "notes": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "campusId",
+                  "campDate",
+                  "title"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health/camps/{id}": {
+      "get": {
+        "operationId": "HealthCampsController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sectionId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input failed validation; `errors` lists each field",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "HealthCamps"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "health.read"
+        },
+        "description": "Access: permission `health.read` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ]
+      },
+      "patch": {
+        "operationId": "HealthCampsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input failed validation; `errors` lists each field",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "HealthCamps"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "health.manage"
+        },
+        "description": "Access: permission `health.manage` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "campDate": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "title": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 150
+                  },
+                  "conductedBy": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "nullable": true
+                  },
+                  "notes": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "nullable": true
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "OPEN",
+                      "CLOSED"
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/health/camps/{id}/entries": {
+      "put": {
+        "operationId": "HealthCampsController_entries",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "401": {
+            "description": "Not signed in, or the session has ended",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Signed in but not allowed (permission, scope, or read-only institution)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Input failed validation; `errors` lists each field",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "HealthCamps"
+        ],
+        "x-access": {
+          "kind": "permission",
+          "code": "health.manage"
+        },
+        "description": "Access: permission `health.manage` in the institution of the token (campus scope applies).",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "entries": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "studentId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "heightCm": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                ""
+                              ]
+                            },
+                            {
+                              "enum": [
+                                "null"
+                              ],
+                              "nullable": true
+                            },
+                            {
+                              "type": "number",
+                              "minimum": 50,
+                              "maximum": 220
+                            }
+                          ]
+                        },
+                        "weightKg": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                ""
+                              ]
+                            },
+                            {
+                              "enum": [
+                                "null"
+                              ],
+                              "nullable": true
+                            },
+                            {
+                              "type": "number",
+                              "minimum": 8,
+                              "maximum": 150
+                            }
+                          ]
+                        },
+                        "vision": {
+                          "type": "string",
+                          "maxLength": 30,
+                          "nullable": true
+                        },
+                        "dental": {
+                          "type": "string",
+                          "maxLength": 100,
+                          "nullable": true
+                        },
+                        "skin": {
+                          "type": "string",
+                          "maxLength": 100,
+                          "nullable": true
+                        },
+                        "haemoglobin": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "enum": [
+                                ""
+                              ]
+                            },
+                            {
+                              "enum": [
+                                "null"
+                              ],
+                              "nullable": true
+                            },
+                            {
+                              "type": "number",
+                              "minimum": 3,
+                              "maximum": 25
+                            }
+                          ]
+                        },
+                        "findings": {
+                          "type": "string",
+                          "maxLength": 1000,
+                          "nullable": true
+                        },
+                        "referred": {
+                          "type": "boolean",
+                          "default": false
+                        }
+                      },
+                      "required": [
+                        "studentId"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "minItems": 1,
+                    "maxItems": 80
+                  }
+                },
+                "required": [
+                  "entries"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
       }
     }
   },

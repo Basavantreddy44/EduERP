@@ -477,6 +477,20 @@ Existing institutions become the **Standard** edition and nothing changes for th
 
 Acceptance: **AC105** a new institution gets its edition's modules and roles; **AC106** changing the edition switches modules as previewed, keeps overrides, data and existing roles, and is audited; **AC107** Residential screens say "School" / "Head office" in both languages while Standard screens are unchanged; **AC108** the institution profile and logo save with checks (image types only, 1 MB) and the logo shows on the sign-in link and printed documents; the public branding answer holds nothing but the name and logo.
 
+### 2x.2 Phase 21 — Residential edition: build plan (2026-11-25) — ✅ complete 2026-11-25
+
+Builds on Phase 20 and the government pack (G1–G5). Everything also works in the Standard edition where it makes sense (transfers, health camps, warden report); nothing existing changes.
+
+| Step | Scope |
+|---|---|
+| **R1 Allotment list** | Head office imports the entrance / counselling allotment list (Excel, checked row by row like every import): entrance registration no., name, gender, date of birth, category, quota, rank, allotted school and class, parents, phone, address. Each school sees its allotted children and marks each one **Joined** (choose the section — the student record, parents, class place and "Joined from allotment" status are created in one step, admission number from the school's series), **Not reported** or **Cancelled** (with a reason). Counts by school: allotted, joined, waiting, not reported |
+| **R2 Moves between schools** | Move a student to another school of the institution (same class in the same year, date, transfer order no., reason): the old class place ends as moved, the record, marks, attendance, fees and documents travel with the student; refused while the student still holds a hostel bed (vacate first). Move a staff member to another school (date, order no., new department). A history of moves on the student and staff pages and a list of all moves for head office |
+| **R3 Monthly report for head office** | Report "Monthly report by school" in the report catalogue (screen and Excel): for a month, each school with its district — students (girls / boys), joined, moved in / out, left, attendance %, hostel residents, children fed per day, diet items off the scale, welfare handed out, sick visits, health check-ups — plus totals |
+| **R4 Warden's daily report** | Hostel → Daily report for one hostel and date: residents, present / absent at roll call (absent names), out on outpass or home-going, sick visits that day, meals from the meal register, and the warden's remarks (saved per hostel and day); printable |
+| **R5 Health check-up camps** | Health → Check-up camps: a camp per school and date (title, doctor or team); a class sheet to enter each child's height, weight (BMI worked out), vision, teeth, skin, haemoglobin, findings and whether referred; each entry is a normal health check-up on the child's record. Camp summary: screened, referred, not yet screened |
+
+Acceptance: **AC109** allotment import checks rows and refuses duplicates; joining creates exactly one student in the chosen section (also when pressed twice), only for the school's own allotments; **AC110** moves between schools keep history and records, refuse a bed still held, and are audited; staff moves change the school; **AC111** the monthly report counts match the records and a principal sees only their school; **AC112** the warden's daily report counts match roll call, outpasses and visits, and remarks save once per hostel and day; **AC113** camp entries are checked (ranges), saved as check-ups, and the summary counts referred and not-yet-screened children.
+
 ### Next version — VTU (not built now)
 
 | Phase | Scope | Size |
