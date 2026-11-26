@@ -460,7 +460,7 @@ Any module of another edition can still be switched on for one institution. The 
 | **22 SaaS billing** (was Phase 20) | As planned in 2t, with a price per edition and per student; grace period 30 days by default, changeable in the platform console (for all institutions and for one institution, e.g. 45 days); each institution chooses monthly or yearly billing (owner, 2026-11-24) | Medium |
 | **B7 Final testing / private pilot** | One pilot institution per edition, release | — |
 
-**Count:** 3 phases (20–22) plus the final testing. Order: Editions → Residential → SaaS billing → B7.
+**Count:** 3 phases (20–22) plus the final testing. Order: Editions → Residential → SaaS billing → B7. **Added 2026-11-26:** Phases 23–26 (go-live gaps, §2y) come before B7.
 
 ### 2x.1 Phase 20 — Editions: build plan (2026-11-24) — ✅ complete 2026-11-24
 
@@ -517,6 +517,65 @@ Acceptance: **AC114** plans carry a price per edition, monthly and / or yearly; 
 | Affiliation, central examinations, convocation & university analytics | Only if VTU itself is the customer | Large / very large / medium |
 
 **Open questions for the owner:** (1) does KREIS need its own server (government data centre)? — affects hosting only, not the build.
+
+## 2y. Go-live gaps — four phases before the final testing (owner, 2026-11-26)
+
+The owner's go-live review (2026-11-26) listed ten gaps that stop a school from going live, create a legal exposure or keep parents off the app. A check against the code found three partly built: sign-in with a phone number already works once a password is set; bills from an earlier year already stay in the dues list after promotion; and money paid over the bills online is already held as "fees received in advance". The rest is new.
+
+**Owner decision (2026-11-26):** GAP-02.1 (first-time set-up for parents by phone) and GAP-17.1 (SMS / WhatsApp switched on) are **not built now** — they stay "Coming soon" until an SMS provider is chosen (DEC-09, CD-137). The other eight are built in Phases 23–26, then B7.
+
+| Phase | Gaps | Scope | Size |
+|---|---|---|---|
+| **23 Fees at go-live** | GAP-10.1, GAP-10.2 | Earlier-year dues shown and collected as such; opening dues brought in at go-live; student credit balance | Medium |
+| **24 Exams at go-live** | GAP-09.1, GAP-09.3, GAP-04.1 | Hall tickets with an eligibility check; supplementary exams and revaluation with marks history; promotion that reads the final result | Medium |
+| **25 RTE and Form 16** | GAP-03.1, GAP-12.1 | RTE 25 % seats, fee waiver and reimbursement claims; old or new tax regime, investment declarations with proofs, Form 16 Part B | Medium |
+| **26 Privacy (DPDP)** | GAP-NF.1 (NFR-24) | Privacy notice and consent, requests to see, correct or erase data, retention and clean-up after a person leaves | Medium |
+| **B7 Final testing / private pilot** | — | One pilot institution per edition, release | — |
+
+Each phase follows the usual steps (plan, API and screens in English and Kannada, tests, demo data, walk-throughs, full regression, documents, push). New requirements and screens get new FR / WF IDs in the product documentation package.
+
+### 2y.1 Phase 23 — Fees at go-live: build plan (2026-11-26)
+
+| Step | Scope |
+|---|---|
+| **F1 Earlier-year dues** | Bills from an earlier academic year stay open after promotion (as today) and are now shown as such: an "Earlier years" amount on the dues list and the student's fee page (grouped by year), at the fee counter (earlier-year bills listed first and suggested first), in reminders, on the parent's fees page and in the promotion preview. Report "Dues carried into this year" by class (student, year, bill, balance) |
+| **F2 Opening dues at go-live** | Settings → Fees → **Opening dues**: import the dues each student owed before EduERP (Excel, checked row by row: admission no., year, description, amount, due date). Each row becomes an ordinary bill marked "Opening due", collected, reminded, concessioned and reported like any bill; posted to student receivable against the opening balance in accounts. A student's opening dues can be imported only once per year label; a wrong one is cancelled with a reason |
+| **F3 Student credit balance** | Money received over a student's bills — at the counter (cashier chooses "keep the extra as credit") or online (as today) — is the student's **credit balance**, shown on the student's fee page, at the counter and on the parent's fees page. Use it: adjust credit against a chosen bill (counter or fee office, with a receipt-style adjustment note), or let new bills be adjusted automatically when raised (setting, off by default); refund it through the existing refund approval. Every movement is in the student's fee statement; report "Fees received in advance" by class with totals that match the accounts balance |
+
+Acceptance: **AC119** earlier-year bills stay open after promotion, are shown with their year on the dues list, counter, student and parent pages, and the carried-dues report matches the open bills; **AC120** opening dues import checks rows, refuses a second import of the same student and year, posts to accounts, and the bills behave like any bill; **AC121** an excess payment at the counter becomes credit only when chosen; credit can be adjusted against a bill (never more than the bill or the credit), automatically when the setting is on, and refunded with approval; credit balances match the accounts "fees received in advance".
+
+### 2y.2 Phase 24 — Exams at go-live: build plan
+
+| Step | Scope |
+|---|---|
+| **X1 Hall tickets** | Per exam: eligibility rules — minimum attendance % (up to a chosen date) and / or no overdue fees above an amount; either can be off. A list per class and section showing each student as Eligible or Blocked with the reason (attendance 68 % of 75 %, ₹4,500 overdue). The principal (new permission) can allow a blocked student with a reason (audited) or block one by hand. Print hall tickets for eligible students only: photo, name, admission no., class, the exam timetable from the exam's subjects, instructions, logo, signature. Marks entry shows a "No hall ticket" mark for students who were not issued one |
+| **X2 Supplementary exams** | A supplementary exam is linked to an original exam; its candidates are the students who failed a subject in the published result (added automatically, more by hand). Marks entered and verified as usual. The rule for each scheme: the new marks replace the old, or the better of the two is kept; a passed supplementary can be capped at the pass mark (setting). The result is recalculated as a new version marked "After supplementary"; the old version is kept |
+| **X3 Revaluation** | A request per student and subject (by the exam office; fee optional) is recorded with a date; the outcome is entered with the new marks and a reason, checked by a second person; the result is recalculated as a new version marked "After revaluation". The student's marks page shows the history (original → revaluation / supplementary, who, when) |
+| **X4 Promotion reads results** | Year-end promotion (FR-04.06) shows each student's final result — Pass, Fail, supplementary pending, or no result. Students who failed are set to **Detain** by default and those with a supplementary pending are flagged; the office can change any choice with a reason. A setting turns this on per institution (on by default when final results exist); classes without a final result say so |
+
+Acceptance: **AC122** eligibility follows the exam's rules, an allowed student needs a reason and is audited, and hall tickets print only for eligible students; **AC123** supplementary candidates are the failed students, the replace / best-of / cap rules give the right result, and the original result version stays; **AC124** revaluation needs a second person, changes marks only through the request and keeps history; **AC125** promotion preview reads the final result, defaults failed students to Detain and records the reason for any change.
+
+### 2y.3 Phase 25 — RTE and Form 16: build plan
+
+| Step | Scope |
+|---|---|
+| **R1 RTE seats** | An admission quota "RTE 25 %" on the application and the student (government application / lottery no., date of allotment). Seats per entry class: 25 % of the intake (changeable), filled and remaining shown on the admissions screen; RTE admission beyond the seats is refused |
+| **R2 Fee waiver** | RTE students get the waiver automatically on the fee heads marked "covered by RTE" (tuition by default) — a concession of type RTE that needs no approval and shows on bills and receipts; other heads are charged as the school decides |
+| **R3 Reimbursement claims** | A claim per academic year and instalment: RTE students with attendance %, the per-child amount (the government rate or the school's fee, whichever is lower — rate set per year), total. Status Draft → Submitted → Part received → Received; receipts recorded against the claim and posted in accounts (government reimbursement receivable). Printable claim list and a report by year |
+| **T1 Tax regime and declarations** | Each employee chooses the old or the new regime for the financial year (new by default). Investment declarations: 80C (up to ₹1.5 lakh), 80D, 80CCD(1B), house rent paid (HRA exemption worked out), home-loan interest, others. Proofs are submitted by a date and verified by HR (accepted amount and remarks); after the proof date TDS uses accepted amounts only. Old-regime slabs, standard deduction and rebate are tax rules like the new regime's |
+| **T2 TDS and Form 16** | The monthly TDS projection uses the chosen regime and the declarations, spread over the remaining months. At year end: **Form 16 Part B** (salary, exemptions, deductions, tax, TDS by month) per employee, printable; Part A from TRACES is attached as a file to the employee. A staff member sees their own declaration, proofs and Form 16 |
+
+Acceptance: **AC126** RTE seats cannot be exceeded and RTE students get the automatic waiver on covered heads only; **AC127** a claim's amount follows the lower-of rule, receipts post to accounts and the status follows the receipts; **AC128** TDS under each regime matches worked examples, declarations change TDS only within the limits, unverified proofs stop counting after the proof date, and Form 16 Part B totals match the year's payslips. The accountant confirms the tax rules and the form names under the Income-tax Act 2025 before release.
+
+### 2y.4 Phase 26 — Privacy (DPDP): build plan
+
+| Step | Scope |
+|---|---|
+| **P1 Privacy notice and consent** | Settings → Privacy: the institution's privacy notice (English and Kannada, versioned), the grievance officer's contact, and the purposes that need consent (for example photos on the feed and gallery, health records, messages that are not about school work). A parent gives consent for each child when they first sign in or when the notice changes (verifiable: the parent's own signed-in account, time and notice version); the office can record a paper consent with a scan. Optional consents can be withdrawn at any time; features follow the choice (a child without photo consent is flagged where photos are posted). Consent log per child |
+| **P2 Requests about data** | A parent, student or staff member can ask to **see** their data (a downloadable file), **correct** a field (the office reviews and applies or refuses with a reason) or **erase** data (handled under the retention rules — records the law requires are kept). The office has a request queue with the due date, status and decision, all audited |
+| **P3 Retention and clean-up after leaving** | Retention rules per kind of data (for example academic records and transfer certificates kept, fee and accounts records kept for the years tax law requires, contact details, photos and health data cleared a set number of months after leaving). A monthly check lists the records due; an administrator approves; personal fields are cleared or masked (never the money records), audited |
+
+Acceptance: **AC129** consent is recorded per child with the notice version and withdrawal works and is followed; **AC130** data requests move through the queue with due dates, a see-my-data file holds only that person's data, corrections apply only after review; **AC131** the clean-up clears only records past their retention, needs approval, keeps money records and is audited.
 
 ## 2t. Order after Phase 17 (owner, 2026-11-20)
 
