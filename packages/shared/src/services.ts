@@ -3,7 +3,7 @@ import { z } from 'zod';
 // ───────────── Numbering (G-05) ─────────────
 
 /** Document types that use number series. Modules add theirs here. */
-export const DOC_TYPES = ['ENQUIRY', 'ADMISSION', 'APPLICATION', 'RECEIPT', 'INVOICE', 'EMPLOYEE', 'TC', 'CERT', 'COMPLAINT', 'DEPT_REQUEST', 'GATE_PASS', 'VISITOR_PASS', 'VENDOR', 'VENDOR_BILL', 'VENDOR_PAYMENT', 'VOUCHER', 'JOURNAL', 'PAYROLL_RUN', 'STAFF_LOAN', 'PURCHASE_REQUEST', 'PURCHASE_ORDER', 'GRN', 'STOCK_ISSUE', 'TEST'] as const;
+export const DOC_TYPES = ['ENQUIRY', 'ADMISSION', 'APPLICATION', 'RECEIPT', 'INVOICE', 'EMPLOYEE', 'TC', 'CERT', 'COMPLAINT', 'DEPT_REQUEST', 'GATE_PASS', 'VISITOR_PASS', 'VENDOR', 'VENDOR_BILL', 'VENDOR_PAYMENT', 'VOUCHER', 'JOURNAL', 'PAYROLL_RUN', 'STAFF_LOAN', 'PURCHASE_REQUEST', 'PURCHASE_ORDER', 'GRN', 'STOCK_ISSUE', 'FEE_ADJUSTMENT', 'TEST'] as const;
 export type DocType = (typeof DOC_TYPES)[number];
 
 export const createSequenceSchema = z.object({

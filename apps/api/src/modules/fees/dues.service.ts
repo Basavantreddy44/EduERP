@@ -20,12 +20,12 @@ const NIL = '00000000-0000-0000-0000-000000000000';
 export interface DuesRow {
   studentId: string; admissionNo: string; firstName: string; lastName: string | null; status: string; campusId: string;
   levelName: string | null; sectionName: string | null; programName: string | null; guardianName: string | null; guardianPhone: string | null; guardianEmail: string | null;
-  bills: number; balance: string; overdue: string; notDue: string; d1_30: string; d31_60: string; d61_90: string; d90_plus: string; oldestDue: Date | null; lastReminder: Date | null;
+  bills: number; balance: string; overdue: string; notDue: string; d1_30: string; d31_60: string; d61_90: string; d90_plus: string; oldestDue: Date | null; earlier: string; lastReminder: Date | null;
 }
 
 /** The no-dues answer for one student (used by the Transfer Certificate in M1.4). */
 export async function noDuesOf(tx: Tx, studentId: string) {
-  const open = await tx.feeInvoice.findMany({ where: { studentId, status: { in: ['UNPAID', 'PARTIAL'] } }, select: { invoiceNo: true, description: true, dueDate: true, balanceAmount: true } });
+  const open = await tx.feeInvoice.findMany({ where: { studentId, status: { in: ['UNPAID', 'PARTIAL'] } }, select: { invoiceNo: true, description: true, dueDate: true, balanceAmount: true, openingYearLabel: true, academicYear: { select: { name: true, isCurrent: true } } } });
   const pendingRefunds = await tx.refund.count({ where: { studentId, status: 'PENDING' } });
   const balance = open.reduce((a, b) => a + paise(b.balanceAmount), 0);
   const today = todayIST();
@@ -76,6 +76,7 @@ export class FeeDuesService {
       }
       const having: Prisma.Sql[] = [Prisma.sql`sum(f.balance_amount) > 0`];
       if (q.minBalance) having.push(Prisma.sql`sum(f.balance_amount) >= ${q.minBalance}::numeric`);
+      if (q.earlier) having.push(Prisma.sql`coalesce(sum(f.balance_amount) FILTER (WHERE f.academic_year_id <> ${year?.id ?? NIL}::uuid OR f.opening_year_label IS NOT NULL), 0) > 0`);
       if (q.minDaysOverdue !== undefined) having.push(Prisma.sql`min(f.due_date) FILTER (WHERE f.balance_amount > 0) <= (${today}::date - ${q.minDaysOverdue}::int) AND sum(f.balance_amount) FILTER (WHERE f.due_date < ${today}::date) > 0`);
       const order = {
         balance: Prisma.sql`balance DESC, name_key`, overdue: Prisma.sql`overdue DESC, balance DESC, name_key`, name: Prisma.sql`name_key, admission_no`,
@@ -93,7 +94,8 @@ export class FeeDuesService {
                coalesce(sum(f.balance_amount) FILTER (WHERE ${today}::date - f.due_date BETWEEN 31 AND 60), 0) AS d31_60,
                coalesce(sum(f.balance_amount) FILTER (WHERE ${today}::date - f.due_date BETWEEN 61 AND 90), 0) AS d61_90,
                coalesce(sum(f.balance_amount) FILTER (WHERE ${today}::date - f.due_date > 90), 0) AS d90_plus,
-               min(f.due_date) FILTER (WHERE f.balance_amount > 0) AS oldest_due
+               min(f.due_date) FILTER (WHERE f.balance_amount > 0) AS oldest_due,
+               coalesce(sum(f.balance_amount) FILTER (WHERE f.academic_year_id <> ${year?.id ?? NIL}::uuid OR f.opening_year_label IS NOT NULL), 0) AS earlier
           FROM fee_invoices f
           JOIN students s ON s.id = f.student_id
           LEFT JOIN student_enrollments e ON e.student_id = s.id AND e.academic_year_id = ${year?.id ?? NIL}::uuid AND e.status = 'ACTIVE'
@@ -115,7 +117,7 @@ export class FeeDuesService {
       const totals = await tx.$queryRaw<Record<string, Prisma.Decimal | bigint | null>[]>`
         WITH d AS (${base})
         SELECT count(*) AS students, coalesce(sum(balance), 0) AS balance, coalesce(sum(overdue), 0) AS overdue, coalesce(sum(not_due), 0) AS not_due,
-               coalesce(sum(d1_30), 0) AS d1_30, coalesce(sum(d31_60), 0) AS d31_60, coalesce(sum(d61_90), 0) AS d61_90, coalesce(sum(d90_plus), 0) AS d90_plus
+               coalesce(sum(d1_30), 0) AS d1_30, coalesce(sum(d31_60), 0) AS d31_60, coalesce(sum(d61_90), 0) AS d61_90, coalesce(sum(d90_plus), 0) AS d90_plus, coalesce(sum(earlier), 0) AS earlier
           FROM d`;
       const t = totals[0];
       const money = (v: unknown) => fromPaise(paise(v as Prisma.Decimal));
@@ -125,13 +127,13 @@ export class FeeDuesService {
         total: rows.length ? Number(rows[0].total_rows) : Number(t.students),
         page: q.page,
         pageSize: q.pageSize,
-        totals: { students: Number(t.students), balance: money(t.balance), overdue: money(t.overdue), notDue: money(t.not_due), d1_30: money(t.d1_30), d31_60: money(t.d31_60), d61_90: money(t.d61_90), d90_plus: money(t.d90_plus) },
+        totals: { students: Number(t.students), balance: money(t.balance), overdue: money(t.overdue), notDue: money(t.not_due), d1_30: money(t.d1_30), d31_60: money(t.d31_60), d61_90: money(t.d61_90), d90_plus: money(t.d90_plus), earlier: money(t.earlier) },
         items: rows.map((r): DuesRow => ({
           studentId: r.student_id as string, admissionNo: r.admission_no as string, firstName: r.first_name as string, lastName: r.last_name as string | null, status: r.status as string, campusId: r.campus_id as string,
           levelName: r.level_name as string | null, sectionName: r.section_name as string | null, programName: r.program_name as string | null,
           guardianName: r.guardian_name as string | null, guardianPhone: r.guardian_phone as string | null, guardianEmail: r.guardian_email as string | null,
           bills: Number(r.bills), balance: money(r.balance), overdue: money(r.overdue), notDue: money(r.not_due), d1_30: money(r.d1_30), d31_60: money(r.d31_60), d61_90: money(r.d61_90), d90_plus: money(r.d90_plus),
-          oldestDue: r.oldest_due as Date | null, lastReminder: r.last_reminder as Date | null,
+          oldestDue: r.oldest_due as Date | null, earlier: money(r.earlier), lastReminder: r.last_reminder as Date | null,
         })),
       };
     });
@@ -187,7 +189,7 @@ export class FeeDuesService {
       }
       await this.db.run(this.ctx(auth), async (tx) => {
         if (!skip) {
-          const lines = nd.openBills.map((b) => `• ${b.description} (${b.invoiceNo}) — ${formatINR(paise(b.balanceAmount))}, due ${iso(b.dueDate)}`).join('\n');
+          const lines = nd.openBills.map((b) => `• ${b.description} (${b.invoiceNo}${b.openingYearLabel || !b.academicYear.isCurrent ? `, ${b.openingYearLabel ?? b.academicYear.name}` : ''}) — ${formatINR(paise(b.balanceAmount))}, due ${iso(b.dueDate)}`).join('\n');
           await this.notifications.emailExternal(tx, {
             tenantId: s.tenantId, senderUserId: auth.userId, to: main!.guardian.email!, eventCode: 'FEE_REMINDER', entityType: 'STUDENT', entityId: s.id,
             subject: `${school}: fees due for ${s.firstName} ${s.lastName ?? ''}`.trim(),

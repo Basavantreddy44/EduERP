@@ -19,8 +19,8 @@ interface Session { id: string; campusId: string; openedAt: string; openingCash:
 interface Receipt { id: string; receiptNo: string; amount: string; paymentMode: string; status: string; createdAt: string; payerName: string; student: { id: string; firstName: string; lastName: string | null; admissionNo: string } }
 interface Counter { session: Session | null; receipts?: Receipt[]; campuses: { id: string; code: string; name: string }[] }
 interface Hit { id: string; admissionNo: string; firstName: string; lastName: string | null; levelName: string | null; sectionName: string | null; guardianName: string | null; guardianPhone: string | null; status: string }
-interface Bill { id: string; invoiceNo: string; description: string; dueDate: string; status: string; netAmount: string; balanceAmount: string }
-interface Account { student: { id: string; firstName: string; lastName: string | null; admissionNo: string }; invoices: Bill[]; totals: { balance: string; overdue: string } }
+interface Bill { id: string; invoiceNo: string; description: string; dueDate: string; status: string; netAmount: string; balanceAmount: string; yearLabel?: string; isEarlier?: boolean; isOpening?: boolean }
+interface Account { student: { id: string; firstName: string; lastName: string | null; admissionNo: string }; invoices: Bill[]; totals: { balance: string; overdue: string; earlier?: string }; credit?: { available: string } }
 
 const inr = (p: number) => formatINR(p, { paise: p % 100 !== 0 });
 
@@ -42,6 +42,7 @@ function CollectInner() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
+  const [keepCredit, setKeepCredit] = useState(false);
   const [done, setDone] = useState<{ id: string; receiptNo: string; amount: string } | null>(null);
 
   const loadCounter = useCallback(() => {
@@ -88,9 +89,9 @@ function CollectInner() {
     setError(null);
     if (!acc) return;
     if (!amountOk(form.amount) || !amountPaise) return setErrors({ amount: t('fee.amountInvalid') });
-    if (amountPaise > duePaise) return setErrors({ amount: t('fee.col.moreThanDue', { v: inr(duePaise) }) });
+    if (amountPaise > duePaise && !keepCredit) return setErrors({ amount: t('fee.col.moreThanDue', { v: inr(duePaise) }) });
     const body = {
-      studentId: acc.student.id, amount: form.amount.replace(/,/g, '').trim(), mode: form.mode, payerName: form.payerName.trim(), invoiceIds: chosen.map((b) => b.id),
+      studentId: acc.student.id, amount: form.amount.replace(/,/g, '').trim(), mode: form.mode, payerName: form.payerName.trim(), invoiceIds: chosen.map((b) => b.id), keepCredit: amountPaise > duePaise && keepCredit,
       referenceNo: MODES_WITH_REFERENCE.includes(form.mode) ? form.referenceNo.trim() || null : null,
       bankName: ['CHEQUE', 'DD'].includes(form.mode) ? form.bankName.trim() || null : null,
       chequeDate: ['CHEQUE', 'DD'].includes(form.mode) ? form.chequeDate || null : null,
@@ -198,7 +199,7 @@ function CollectInner() {
                           <input type="checkbox" checked={on} onChange={() => setSelected((sel) => (sel.includes(b.id) ? sel.filter((x) => x !== b.id) : [...sel, b.id]))} />
                           <span className="bill-pick-main">
                             <strong>{b.description}</strong>
-                            <span className={`sub-line ${late ? 'overdue-text' : 'muted'}`}>{b.invoiceNo} · {t('fee.acct.dueOn', { date: day(b.dueDate) })}{late ? ` · ${t('fee.acct.overdueShort')}` : ''}</span>
+                            <span className={`sub-line ${late ? 'overdue-text' : 'muted'}`}>{b.isEarlier && <span className="chip chip-sm chip-gold year-chip">{b.isOpening ? t('cr.openingDueOf', { y: b.yearLabel ?? '' }) : b.yearLabel}</span>}{b.invoiceNo} · {t('fee.acct.dueOn', { date: day(b.dueDate) })}{late ? ` · ${t('fee.acct.overdueShort')}` : ''}</span>
                           </span>
                           <span className="bill-pick-amt">
                             <strong>{inr(paiseOf(b.balanceAmount))}</strong>
@@ -224,7 +225,7 @@ function CollectInner() {
               <span className="mono">{done.receiptNo}</span>
               <div className="paid-actions">
                 <a className="btn btn-primary" href={`/fees/receipts/${done.id}`} target="_blank" rel="noreferrer"><Icon name="receipt" size={16} /> {t('fee.col.print')}</a>
-                <button type="button" className="btn" onClick={() => { setDone(null); setPicked(null); setAcc(null); }}>{t('fee.col.next')}</button>
+                <button type="button" className="btn" onClick={() => { setDone(null); setPicked(null); setAcc(null); setKeepCredit(false); }}>{t('fee.col.next')}</button>
               </div>
               {acc && paiseOf(acc.totals.balance) > 0 && <p className="muted small">{t('fee.col.stillDue', { v: inr(paiseOf(acc.totals.balance)) })}</p>}
             </div>
@@ -237,6 +238,10 @@ function CollectInner() {
                 <div className="input-affix big"><span aria-hidden>₹</span><input id="p-amount" inputMode="decimal" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} /></div>
               </Field>
               {amountPaise !== duePaise && duePaise > 0 && <button type="button" className="btn btn-sm btn-ghost full-due" onClick={() => setForm({ ...form, amount: String(duePaise / 100) })}>{t('fee.col.payFull', { v: inr(duePaise) })}</button>}
+              {amountPaise > duePaise && duePaise > 0 && (
+                <label className="check keep-credit"><input type="checkbox" checked={keepCredit} onChange={(e) => setKeepCredit(e.target.checked)} /> {t('cr.keepExtra', { v: inr(amountPaise - duePaise) })}</label>
+              )}
+              {acc.credit && paiseOf(acc.credit.available) > 0 && <p className="note-info"><Icon name="info" size={15} /> {t('cr.counterHas', { v: inr(paiseOf(acc.credit.available)) })}</p>}
               <div className="field">
                 <span className="label">{t('fee.col.mode')}</span>
                 <div className="segmented" role="radiogroup" aria-label={t('fee.col.mode')}>

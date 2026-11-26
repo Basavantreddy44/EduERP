@@ -11,8 +11,9 @@ import { Icon } from '@/components/Icon';
 import { EmptyState, PageHeader, SkeletonRows } from '@/components/ui';
 import { todayIST, useDay } from '@/components/admissions';
 import { paiseOf } from '@/components/fees';
+import { AdvancesReport, CarriedReport } from '@/components/FeeGoLiveReports';
 
-type Tab = 'collection' | 'heads' | 'dues';
+type Tab = 'collection' | 'heads' | 'dues' | 'carried' | 'advances';
 interface Bucket { key: string; amount: string; count: number }
 interface Collection { total: string; receipts: number; byDay: Bucket[]; byMode: Bucket[]; byCashier: Bucket[]; ledgerTotal: string; matchesAccounts: boolean }
 interface Heads { heads: { name: string; code: string; feeType: string; amount: string }[]; advance: string; total: string }
@@ -55,7 +56,7 @@ export default function FeeReportsPage() {
     [t('fee.rep.last7'), { from: shift(today, -6), to: today }],
     [t('fee.rep.thisMonth'), { from: monthStart, to: today }],
   ];
-  const TABS: [Tab, string][] = [['collection', t('fee.rep.collection')], ['heads', t('fee.rep.heads')], ['dues', t('fee.rep.dues')]];
+  const TABS: [Tab, string][] = [['collection', t('fee.rep.collection')], ['heads', t('fee.rep.heads')], ['dues', t('fee.rep.dues')], ['carried', t('cr.rep.carried')], ['advances', t('cr.rep.advances')]];
 
   return (
     <>
@@ -64,7 +65,7 @@ export default function FeeReportsPage() {
         {TABS.map(([k, label]) => <button key={k} role="tab" type="button" aria-selected={tab === k} className={`tab ${tab === k ? 'on' : ''}`} onClick={() => setTab(k)}>{label}</button>)}
       </div>
 
-      {tab !== 'dues' && (
+      {(tab === 'collection' || tab === 'heads') && (
         <div className="card filter-bar no-print">
           <div className="preset-row" role="group" aria-label={t('fee.rep.period')}>
             {presets.map(([label, r]) => <button key={label} type="button" className={`btn btn-sm ${range.from === r.from && range.to === r.to ? 'btn-primary' : ''}`} onClick={() => setRange(r)}>{label}</button>)}
@@ -73,7 +74,7 @@ export default function FeeReportsPage() {
           <label className="filter"><span>{t('fee.rep.to')}</span><input className="input" type="date" max={today} value={range.to} onChange={(e) => setRange({ ...range, to: e.target.value })} /></label>
         </div>
       )}
-      <p className="print-only muted">{tab === 'dues' ? t('fee.rep.asOf', { date: day(today) }) : `${day(range.from)} – ${day(range.to)}`}</p>
+      <p className="print-only muted">{tab !== 'collection' && tab !== 'heads' ? t('fee.rep.asOf', { date: day(today) }) : `${day(range.from)} – ${day(range.to)}`}</p>
       {error && <div className="alert" role="alert"><Icon name="alert" />{error}</div>}
 
       {tab === 'collection' && (!col ? !error && <SkeletonRows rows={5} /> : col.receipts === 0 ? <EmptyState icon="receipt" title={t('fee.rep.noneTitle')} text={t('fee.rep.noneText')} /> : (
@@ -122,6 +123,8 @@ export default function FeeReportsPage() {
           </div>
         </section>
       ))}
+      {tab === 'carried' && <CarriedReport campusId={campusId ?? null} />}
+      {tab === 'advances' && <AdvancesReport campusId={campusId ?? null} />}
     </>
   );
 }

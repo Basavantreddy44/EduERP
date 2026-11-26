@@ -255,6 +255,8 @@ export const collectSchema = z
     notes: z.string().trim().max(300).optional().nullable(),
     /** Bills to pay, in order; default: oldest due first. Each gets up to its balance. */
     invoiceIds: z.array(z.string().uuid()).max(50).optional(),
+    /** Phase 23: money over the chosen bills (or over everything due) is kept as the student's credit. */
+    keepCredit: z.boolean().optional(),
   })
   .refine((v) => !MODES_WITH_REFERENCE.includes(v.mode) || !!v.referenceNo, { message: 'Enter the cheque / DD / transaction number', path: ['referenceNo'] })
   .refine((v) => !['CHEQUE', 'DD'].includes(v.mode) || !!v.bankName, { message: 'Enter the bank', path: ['bankName'] });
@@ -359,6 +361,8 @@ export const duesQuerySchema = z.object({
   /** Only students with something overdue for at least this many days. */
   minDaysOverdue: z.coerce.number().int().min(0).max(3650).optional(),
   minBalance: money.optional(),
+  /** Phase 23: only students with dues from an earlier academic year (or opening dues). */
+  earlier: z.enum(['only']).optional(),
   sort: z.enum(DUES_SORTS).default('overdue'),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(200).default(50),
@@ -379,3 +383,32 @@ export const reportQuerySchema = z
   .refine((v) => v.from <= v.to, { message: 'The start date must be before the end date', path: ['from'] })
   .refine((v) => Date.parse(v.to) - Date.parse(v.from) <= 366 * 86_400_000, { message: 'Choose at most one year', path: ['to'] });
 export type ReportQuery = z.infer<typeof reportQuerySchema>;
+
+// ───────────── Fees at go-live (Phase 23) ─────────────
+
+/** "2024-25": a real academic-year label (the second part is the next year). */
+export const isYearLabel = (v: string) => {
+  const m = /^(\d{4})-(\d{2})$/.exec(v);
+  return !!m && (Number(m[1]) + 1) % 100 === Number(m[2]);
+};
+
+/** Use part of a student's credit balance against one bill. */
+export const adjustCreditSchema = z.object({
+  invoiceId: z.string().uuid(),
+  amount: money.refine((v) => toPaise(v) > 0, 'Enter the amount to use'),
+  note: z.string().trim().max(300).optional().nullable(),
+});
+export type AdjustCreditInput = z.infer<typeof adjustCreditSchema>;
+
+export const cancelAdjustmentSchema = z.object({ reason: z.string().trim().min(5, 'Give a reason (at least 5 characters)').max(300) });
+
+/** Pay a student's credit balance back (through the refund approval). */
+export const creditRefundSchema = z.object({
+  amount: money.refine((v) => toPaise(v) > 0, 'Enter the amount to refund'),
+  reason: z.string().trim().min(5, 'Give a reason (at least 5 characters)').max(300),
+  refundMode: z.enum(['CASH', 'BANK_TRANSFER', 'CHEQUE']),
+});
+export type CreditRefundInput = z.infer<typeof creditRefundSchema>;
+
+export const carriedDuesQuery = z.object({ campusId: z.string().uuid().optional(), programLevelId: z.string().uuid().optional() });
+export type CarriedDuesQuery = z.infer<typeof carriedDuesQuery>;

@@ -131,8 +131,9 @@ function Attendance({ id }: { id: string }) {
 
 interface Fees {
   year: { name: string } | null;
-  totals: { net: string; paid: string; balance: string; overdue: string };
-  invoices: { id: string; invoiceNo: string; description: string; dueDate: string; status: string; net: string; paid: string; balance: string }[];
+  totals: { net: string; paid: string; balance: string; overdue: string; earlier?: string };
+  credit?: string;
+  invoices: { id: string; invoiceNo: string; description: string; academicYear?: string; isEarlier?: boolean; dueDate: string; status: string; net: string; paid: string; balance: string }[];
   receipts: { id: string; receiptNo: string; paymentDate: string; amount: string; paymentMode: string; status: string }[];
   onlinePayment: boolean;
 }
@@ -168,6 +169,8 @@ function Fees({ id }: { id: string }) {
           <strong className="dash-big">{inr(f.totals.balance)}</strong>
           {toPaise(f.totals.overdue) > 0 && <span className="pt-overdue">{t('pt.fee.overdue', { amount: inr(f.totals.overdue) })}</span>}
           <span className="muted small">{t('pt.fee.paidOf', { paid: inr(f.totals.paid), net: inr(f.totals.net) })}</span>
+          {toPaise(f.totals.earlier ?? '0') > 0 && <span className="muted small">{t('cr.earlierIncl', { v: inr(f.totals.earlier ?? '0') })}</span>}
+          {toPaise(f.credit ?? '0') > 0 && <span className="pt-credit small">{t('cr.parentCredit', { v: inr(f.credit ?? '0') })}</span>}
         </div>
         {owes && (f.onlinePayment
           ? <button type="button" className="btn btn-primary" disabled={busy} onClick={payNow}><Icon name="rupee" size={16} /> {t('pt.fee.pay', { amount: inr(f.totals.balance) })}</button>
@@ -179,7 +182,7 @@ function Fees({ id }: { id: string }) {
         <ul className="pt-list">
           {f.invoices.map((i) => (
             <li key={i.id}>
-              <span className="pt-list-main"><strong>{i.description}</strong><span className="muted small">{i.invoiceNo} · {t('pt.fee.due', { date: day(i.dueDate) })}</span></span>
+              <span className="pt-list-main"><strong>{i.description}</strong><span className="muted small">{i.isEarlier && i.academicYear ? i.academicYear + ' · ' : ''}{i.invoiceNo} · {t('pt.fee.due', { date: day(i.dueDate) })}</span></span>
               <span className="pt-list-amt">
                 <strong>{inr(i.balance)}</strong>
                 <StatusBadge status={toPaise(i.balance) > 0 && i.dueDate.slice(0, 10) < today ? 'OVERDUE' : i.status} label={toPaise(i.balance) > 0 && i.dueDate.slice(0, 10) < today ? t('pt.fee.overdueTag') : undefined} />

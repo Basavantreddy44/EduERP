@@ -534,7 +534,7 @@ The owner's go-live review (2026-11-26) listed ten gaps that stop a school from 
 
 Each phase follows the usual steps (plan, API and screens in English and Kannada, tests, demo data, walk-throughs, full regression, documents, push). New requirements and screens get new FR / WF IDs in the product documentation package.
 
-### 2y.1 Phase 23 — Fees at go-live: build plan (2026-11-26)
+### 2y.1 Phase 23 — Fees at go-live: build plan (2026-11-26) — ✅ complete 2026-11-26
 
 | Step | Scope |
 |---|---|

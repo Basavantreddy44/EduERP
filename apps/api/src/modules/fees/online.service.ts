@@ -13,6 +13,7 @@ import { ApprovalsService } from '../approvals/approvals.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { todayIST } from '../students/student-records';
 import { ensureChart, post } from './ledger';
+import { creditBalancePaise, lockCredit } from './credit-core';
 import { FeeCollectionService } from './collection.service';
 import { GatewayError, GatewayPayment, PAYMENT_GATEWAY, PaymentGateway, SimulatedGateway } from './gateway';
 
@@ -356,20 +357,30 @@ export class FeeOnlineService implements OnModuleInit {
       return;
     }
     const amount = paise(r.amount);
-    let gatewayRefundId: string | null = null;
-    if (r.refundMode === 'ONLINE') {
-      try {
-        gatewayRefundId = (await this.gateway.refund(r.payment.referenceNo!, amount, { refund: r.id })).id;
-      } catch (e) {
-        await tx.refund.update({ where: { id: r.id }, data: { status: 'FAILED', failureReason: (e as Error).message.slice(0, 300), decidedAt: new Date() } });
-        return;
-      }
+    const fail = (reason: string) => tx.refund.update({ where: { id: r.id }, data: { status: 'FAILED', failureReason: reason.slice(0, 300), decidedAt: new Date() } });
+    await lockCredit(tx, r.studentId);
+    const credit = await creditBalancePaise(tx, r.tenantId, r.studentId);
+    if (r.kind === 'CREDIT' || !r.payment) {
+      // Phase 23: a credit balance paid back — no receipt, no bill reopened.
+      if (amount > credit) { await fail(`The credit balance is now ${formatINR(credit)}; it was used meanwhile`); return; }
+      const chart = await ensureChart(tx, r.tenantId);
+      const entry = await post(tx, this.numbering, {
+        tenantId: r.tenantId, campusId: r.campusId, date: iso(todayIST()), voucherType: 'PAYMENT', sourceType: 'REFUND', sourceId: r.id, userId: d.userId,
+        narration: `Refund of credit: ${r.reason}`,
+        lines: [
+          { accountId: chart.get('FEE_ADVANCE')!, debitPaise: amount, partyType: 'STUDENT', partyId: r.studentId },
+          { accountId: chart.get(REFUND_ACCOUNT[r.refundMode])!, creditPaise: amount },
+        ],
+      });
+      await tx.refund.update({ where: { id: r.id }, data: { status: 'PAID', journalEntryId: entry.id, decidedAt: new Date() } });
+      return;
     }
+    const payment = r.payment;
     // What earlier refunds already reopened, so the same rupee is not reopened twice.
     const before = await tx.refund.aggregate({ where: { paymentId: r.paymentId, status: 'PAID' }, _sum: { amount: true } });
     let skip = paise(before._sum.amount ?? 0);
     let left = amount;
-    const allocs = [...r.payment.allocations].sort((a, b) => b.invoice.dueDate.getTime() - a.invoice.dueDate.getTime() || (LINE_ORDER[b.item.feeHead.feeType] ?? 5) - (LINE_ORDER[a.item.feeHead.feeType] ?? 5));
+    const allocs = [...payment.allocations].sort((a, b) => b.invoice.dueDate.getTime() - a.invoice.dueDate.getTime() || (LINE_ORDER[b.item.feeHead.feeType] ?? 5) - (LINE_ORDER[a.item.feeHead.feeType] ?? 5));
     const moves: { itemId: string; invoiceId: string; paise: number }[] = [];
     for (const a of allocs) {
       let avail = paise(a.amount);
@@ -379,6 +390,17 @@ export class FeeOnlineService implements OnModuleInit {
       const take = Math.min(avail, left);
       if (take > 0) { moves.push({ itemId: a.invoiceItemId, invoiceId: a.invoiceId, paise: take }); left -= take; }
       if (left <= 0) break;
+    }
+    // The part not reopened on bills comes out of the student's credit; refuse if that credit was used meanwhile.
+    if (left > credit) { await fail(`${formatINR(left)} of this refund would come from the student's credit, but only ${formatINR(credit)} is left. Cancel the credit adjustment first.`); return; }
+    let gatewayRefundId: string | null = null;
+    if (r.refundMode === 'ONLINE') {
+      try {
+        gatewayRefundId = (await this.gateway.refund(payment.referenceNo!, amount, { refund: r.id })).id;
+      } catch (e) {
+        await fail((e as Error).message);
+        return;
+      }
     }
     const invoices = await tx.feeInvoice.findMany({ where: { id: { in: [...new Set(moves.map((m) => m.invoiceId))] } }, include: { items: true } });
     for (const inv of invoices) {
@@ -395,7 +417,7 @@ export class FeeOnlineService implements OnModuleInit {
     const chart = await ensureChart(tx, r.tenantId);
     const entry = await post(tx, this.numbering, {
       tenantId: r.tenantId, campusId: r.campusId, date: iso(todayIST()), voucherType: 'PAYMENT', sourceType: 'REFUND', sourceId: r.id, userId: d.userId,
-      narration: `Refund of receipt ${r.payment.receiptNo}: ${r.reason}`,
+      narration: `Refund of receipt ${payment.receiptNo}: ${r.reason}`,
       lines: [
         { accountId: chart.get('STUDENT_RECEIVABLE')!, debitPaise: reopened, partyType: 'STUDENT', partyId: r.studentId },
         { accountId: chart.get('FEE_ADVANCE')!, debitPaise: amount - reopened, partyType: 'STUDENT', partyId: r.studentId },

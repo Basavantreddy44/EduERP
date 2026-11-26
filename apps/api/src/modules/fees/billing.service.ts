@@ -12,6 +12,8 @@ import { NumberingService } from '../numbering/numbering.service';
 import { ApprovalsService } from '../approvals/approvals.service';
 import { allocateNo, todayIST } from '../students/student-records';
 import { ensureChart, post, reverse } from './ledger';
+import { SettingsService } from '../settings/settings.service';
+import { adjustCreditInTx, creditAvailablePaise } from './credit-core';
 
 const READ = PERMISSIONS.FEE_READ;
 const BILL = PERMISSIONS.FEE_BILL;
@@ -33,6 +35,7 @@ export class FeeBillingService implements OnModuleInit {
     private readonly audit: AuditService,
     private readonly numbering: NumberingService,
     private readonly approvals: ApprovalsService,
+    private readonly settings: SettingsService,
   ) {}
 
   onModuleInit() {
@@ -103,7 +106,53 @@ export class FeeBillingService implements OnModuleInit {
         ...applied.map((l) => ({ accountId: lines.find((x) => x.feeHeadId === l.feeHeadId)!.incomeAccountId, creditPaise: l.amountPaise })),
       ],
     });
-    return tx.feeInvoice.update({ where: { id: inv.id }, data: { journalEntryId: entry.id } });
+    const saved = await tx.feeInvoice.update({ where: { id: inv.id }, data: { journalEntryId: entry.id } });
+    await this.autoUseCredit(tx, { tenantId: b.tenantId, campusId: b.campusId, ...b.student }, saved, b.userId);
+    return saved;
+  }
+
+  /** Phase 23: when the setting is on, a student's credit is used against a new bill straight away. */
+  private async autoUseCredit(tx: Tx, s: { tenantId: string; campusId: string; id: string; firstName: string; lastName: string | null; admissionNo: string }, inv: { id: string; balanceAmount: Prisma.Decimal; status: string }, userId: string) {
+    if (paise(inv.balanceAmount) <= 0 || !['UNPAID', 'PARTIAL'].includes(inv.status)) return;
+    if (!(await this.settings.effective<boolean>(tx, 'fees.auto_use_credit', s.campusId))) return;
+    if ((await creditAvailablePaise(tx, s.tenantId, s.id)).available <= 0) return;
+    await adjustCreditInTx(tx, this.numbering, { tenantId: s.tenantId, student: s, invoiceId: inv.id, amountPaise: 'ALL', source: 'AUTO', note: 'Used automatically when the bill was raised', userId });
+  }
+
+  /**
+   * Phase 23 F2: dues a student owed before EduERP, as an ordinary bill marked with its year. Posted
+   * Dr Student receivable / Cr General fund (an opening balance, not this year's income).
+   */
+  async openingDue(tx: Tx, r: { studentId: string; yearLabel: string; description: string; amountPaise: number; dueDate: string }, userId: string) {
+    const s = await tx.student.findUniqueOrThrow({ where: { id: r.studentId }, select: { id: true, tenantId: true, campusId: true, firstName: true, lastName: true, admissionNo: true } });
+    const year = (await tx.academicYear.findFirst({ where: { isCurrent: true }, select: { id: true, name: true } })) ?? (await tx.academicYear.findFirstOrThrow({ orderBy: { startDate: 'desc' }, select: { id: true, name: true } }));
+    const chart = await ensureChart(tx, s.tenantId);
+    await tx.$executeRaw`
+      INSERT INTO fee_heads (id, tenant_id, name, code, fee_type, income_account_id, updated_at)
+      VALUES (gen_random_uuid(), ${s.tenantId}::uuid, 'Opening dues', 'OPENING_DUES', 'OTHER', ${chart.get('INCOME_OTHER')!}::uuid, now())
+      ON CONFLICT DO NOTHING`;
+    const head = await tx.feeHead.findFirstOrThrow({ where: { code: 'OPENING_DUES' }, select: { id: true } });
+    const today = iso(todayIST());
+    const invoiceNo = await allocateNo(this.numbering, tx, 'INVOICE', s.campusId, year.name, userId);
+    const amt = fromPaise(r.amountPaise);
+    const inv = await tx.feeInvoice.create({
+      data: {
+        tenantId: s.tenantId, campusId: s.campusId, invoiceNo, studentId: s.id, academicYearId: year.id, description: r.description.slice(0, 200), invoiceDate: day(today), dueDate: day(r.dueDate),
+        grossAmount: amt, netAmount: amt, balanceAmount: amt, openingYearLabel: r.yearLabel, createdBy: userId,
+      },
+    });
+    await tx.feeInvoiceItem.create({ data: { tenantId: s.tenantId, invoiceId: inv.id, feeHeadId: head.id, amount: amt, netAmount: amt } });
+    const entry = await post(tx, this.numbering, {
+      tenantId: s.tenantId, campusId: s.campusId, date: today, voucherType: 'JOURNAL', sourceType: 'FEE_INVOICE', sourceId: inv.id, userId,
+      narration: `Opening dues ${r.yearLabel} · bill ${invoiceNo} · ${s.admissionNo} ${s.firstName} ${s.lastName ?? ''}`,
+      lines: [
+        { accountId: chart.get('STUDENT_RECEIVABLE')!, debitPaise: r.amountPaise, partyType: 'STUDENT', partyId: s.id },
+        { accountId: chart.get('CAPITAL_FUND')!, creditPaise: r.amountPaise },
+      ],
+    });
+    const saved = await tx.feeInvoice.update({ where: { id: inv.id }, data: { journalEntryId: entry.id } });
+    await this.autoUseCredit(tx, s, saved, userId);
+    return saved;
   }
 
   // ───────────── Billing runs ─────────────
@@ -233,6 +282,9 @@ export class FeeBillingService implements OnModuleInit {
       const live = invoices.filter((i) => i.status !== 'CANCELLED');
       const sum = (f: (i: (typeof live)[number]) => Prisma.Decimal) => fromPaise(live.reduce((a, i) => a + paise(f(i)), 0));
       const today = todayIST();
+      // Phase 23: a bill is from an earlier year when it belongs to another academic year or is an opening due.
+      const earlierOf = (i: (typeof invoices)[number]) => !!i.openingYearLabel || (!!year && i.academicYearId !== year.id);
+      const credit = await creditAvailablePaise(tx, s.tenantId!, s.id);
       return {
         student: s,
         year,
@@ -242,8 +294,10 @@ export class FeeBillingService implements OnModuleInit {
           billed: sum((i) => i.grossAmount), concession: sum((i) => i.concessionAmount), fine: sum((i) => i.fineAmount), net: sum((i) => i.netAmount),
           paid: sum((i) => i.paidAmount), balance: sum((i) => i.balanceAmount),
           overdue: fromPaise(live.filter((i) => i.dueDate < today).reduce((a, i) => a + paise(i.balanceAmount), 0)),
+          earlier: fromPaise(live.filter(earlierOf).reduce((a, i) => a + paise(i.balanceAmount), 0)),
         },
-        invoices,
+        credit: { balance: fromPaise(credit.balance), pendingRefunds: fromPaise(credit.pendingRefunds), available: fromPaise(credit.available) },
+        invoices: invoices.map((i) => ({ ...i, yearLabel: i.openingYearLabel ?? i.academicYear.name, isEarlier: earlierOf(i), isOpening: !!i.openingYearLabel })),
         concessions,
         payments,
         canBill: !!scopeFor(auth, BILL) && canAccessCampus(this.scope(auth, BILL), s.campusId),

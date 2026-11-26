@@ -57,6 +57,9 @@ import { PAYMENT_GATEWAY, createGateway } from './modules/fees/gateway';
 import { LateFeeService } from './modules/fees/late-fee.service';
 import { FeeDuesService } from './modules/fees/dues.service';
 import { FeeDuesController } from './modules/fees/dues.controller';
+import { FeeCreditController } from './modules/fees/credit.controller';
+import { FeeCreditService } from './modules/fees/credit.service';
+import { OpeningDuesImporter } from './modules/fees/opening-dues.importer';
 import { StudentsController } from './modules/students/students.controller';
 import { StudentsImporter } from './modules/students/students.importer';
 import { StudentLifecycleController } from './modules/students/lifecycle.controller';
@@ -210,6 +213,7 @@ const isTest = process.env.NODE_ENV === 'test';
     PublicPayController,
     PaymentWebhookController,
     FeeDuesController,
+    FeeCreditController,
     DashboardController,
     StudentPortalAccessController,
     PortalController,
@@ -252,6 +256,8 @@ const isTest = process.env.NODE_ENV === 'test';
     InstitutionService,
     AllotmentsService,
     AllotmentsImporter,
+    OpeningDuesImporter,
+    FeeCreditService,
     MovesService,
     HostelDayService,
     HealthCampsService,
@@ -278,7 +284,7 @@ const isTest = process.env.NODE_ENV === 'test';
     {
       provide: IMPORTERS,
       useFactory: (...i: AnyImporter[]) => i,
-      inject: [DepartmentsImporter, HolidaysImporter, UsersImporter, StudentsImporter, StaffImporter, LibraryBooksImporter, AllotmentsImporter],
+      inject: [DepartmentsImporter, HolidaysImporter, UsersImporter, StudentsImporter, StaffImporter, LibraryBooksImporter, AllotmentsImporter, OpeningDuesImporter],
     },
     ImportsService,
     ExportsService,

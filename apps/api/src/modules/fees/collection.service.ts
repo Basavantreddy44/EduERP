@@ -10,6 +10,7 @@ import { NumberingService } from '../numbering/numbering.service';
 import { allocateNo, todayIST } from '../students/student-records';
 import { ensureChart, ensureFinancialYear, post, reverse } from './ledger';
 import { FeeBillingService } from './billing.service';
+import { creditBalancePaise, lockCredit } from './credit-core';
 
 const COLLECT = PERMISSIONS.FEE_COLLECT;
 const CANCEL = PERMISSIONS.FEE_RECEIPT_CANCEL;
@@ -125,7 +126,7 @@ export class FeeCollectionService {
 
       const saved = await this.record(tx, s, {
         amountPaise: toPaise(input.amount), mode: input.mode, date, payerName: input.payerName, referenceNo: input.referenceNo ?? null,
-        chequeDate: input.chequeDate ?? null, bankName: input.bankName ?? null, notes: input.notes ?? null, invoiceIds: input.invoiceIds,
+        chequeDate: input.chequeDate ?? null, bankName: input.bankName ?? null, notes: input.notes ?? null, invoiceIds: input.invoiceIds, keepCredit: !!input.keepCredit,
         sessionId: session && session.campusId === s.campusId ? session.id : null, idempotencyKey, userId: auth.userId,
       });
       await this.audit.log(tx, { tenantId: s.tenantId, userId: auth.userId, campusId: s.campusId, action: 'CREATE', entityType: 'PAYMENT', entityId: saved.id, newValues: { receiptNo: saved.receiptNo, amount: input.amount, mode: input.mode } }, client);
@@ -146,6 +147,8 @@ export class FeeCollectionService {
     r: {
       amountPaise: number; mode: string; date: string; payerName: string; referenceNo: string | null; chequeDate: string | null; bankName: string | null; notes: string | null;
       invoiceIds?: string[]; sessionId: string | null; idempotencyKey: string | null; userId: string | null; allowExcess?: boolean;
+      /** Phase 23 (counter): money over the chosen bills is kept as the student's credit. */
+      keepCredit?: boolean;
     },
   ) {
     // Lock the student's open bills: two counters (or a counter and the gateway) cannot spend the same balance.
@@ -158,11 +161,11 @@ export class FeeCollectionService {
     // Within a bill: fees first, fines next, refundable deposits last (a part payment pays the fees).
     for (const inv of all) inv.items.sort((x, y) => (LINE_ORDER[x.feeHead.feeType] ?? 5) - (LINE_ORDER[y.feeHead.feeType] ?? 5) || x.feeHead.name.localeCompare(y.feeHead.name));
     const chosen = r.invoiceIds?.length ? r.invoiceIds.map((id) => all.find((o) => o.id === id)).filter((x): x is (typeof all)[number] => !!x) : all;
-    if (r.invoiceIds?.length && chosen.length !== new Set(r.invoiceIds).size && !r.allowExcess) throw Conflict('bill-not-open', 'One of the chosen bills is not open any more');
+    if (r.invoiceIds?.length && chosen.length !== new Set(r.invoiceIds).size && !r.allowExcess && !r.keepCredit) throw Conflict('bill-not-open', 'One of the chosen bills is not open any more');
     const ordered = r.allowExcess ? [...chosen, ...all.filter((a) => !chosen.includes(a))] : chosen;
     const lines = ordered.flatMap((inv) => inv.items.map((it) => ({ id: it.id, invoiceId: inv.id, duePaise: paise(it.netAmount) - paise(it.paidAmount) })));
     const due = lines.reduce((a, l) => a + l.duePaise, 0);
-    if (!r.allowExcess) {
+    if (!r.allowExcess && !r.keepCredit) {
       if (due === 0) throw Conflict('nothing-due', 'Nothing is due from this student');
       if (r.amountPaise > due) throw new AppError(HttpStatus.UNPROCESSABLE_ENTITY, 'more-than-due', `Only ${formatINR(due)} is due on the chosen bills`, [{ field: 'amount', message: `At most ${formatINR(due)}` }]);
     }
@@ -222,6 +225,13 @@ export class FeeCollectionService {
     if (status === 'BOUNCED' && !['CHEQUE', 'DD'].includes(p.paymentMode)) throw Conflict('not-a-cheque', 'Only a cheque or DD can bounce');
     if (await tx.refund.count({ where: { paymentId: id, status: { in: ['PENDING', 'PAID'] } } })) throw Conflict('receipt-refunded', 'This receipt has a refund; it cannot be cancelled');
     if (p.paymentMode === 'ONLINE') throw Conflict('online-receipt', 'An online payment is returned with a refund, not cancelled');
+    // Phase 23: money this receipt left as credit must still be there (not used on another bill).
+    const toCredit = paise(p.amount) - p.allocations.reduce((a, x) => a + paise(x.amount), 0);
+    if (toCredit > 0) {
+      await lockCredit(tx, p.studentId);
+      const credit = await creditBalancePaise(tx, p.tenantId, p.studentId);
+      if (toCredit > credit) throw Conflict('credit-used', `${formatINR(toCredit)} of this receipt was kept as credit and has since been used. Cancel that credit adjustment first.`);
+    }
     const invIds = [...new Set(p.allocations.map((a) => a.invoiceId))];
     await tx.$queryRaw`SELECT id FROM fee_invoices WHERE id = ANY(${invIds}::uuid[]) FOR UPDATE`;
     const invoices = await tx.feeInvoice.findMany({ where: { id: { in: invIds } }, include: { items: true } });

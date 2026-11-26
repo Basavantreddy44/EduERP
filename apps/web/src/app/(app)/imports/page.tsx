@@ -12,7 +12,7 @@ interface Job { id: string; entityType: string; fileName: string; status: string
 interface Row { rowNo: number; data: Record<string, string>; errors: string[] | null; status: string }
 
 const ICON: Record<string, IconName> = { DEPARTMENTS: 'department', HOLIDAYS: 'holiday', USERS: 'users', STUDENTS: 'cap' };
-const LINK: Record<string, string> = { DEPARTMENTS: '/departments', HOLIDAYS: '/holidays', USERS: '/users', STUDENTS: '/students', ALLOTMENTS: '/students/allotments' };
+const LINK: Record<string, string> = { DEPARTMENTS: '/departments', HOLIDAYS: '/holidays', USERS: '/users', STUDENTS: '/students', ALLOTMENTS: '/students/allotments', OPENING_DUES: '/fees/dues' };
 
 type Step = { kind: 'choose' } | { kind: 'review'; type: ImportType; job: Job } | { kind: 'done'; type: ImportType; job: Job };
 

@@ -1,5 +1,17 @@
 # Changelog
 
+## [Unreleased] — 2026-11-26 (Phase 23: fees at go-live)
+### Added
+- **Earlier-year dues shown as such**: bills from an earlier academic year (they always stayed open after promotion) now carry their year — a gold year chip on the student's Fees tab and at the fee counter, "Includes ₹… from earlier years" under the balance, an "Earlier years" figure and an "Only dues from earlier years" filter on the dues list, the year in fee reminders, and the year on the parent's fees page.
+- **Opening dues at go-live** (Setup → Imports → Opening dues, or "Import opening dues" on Fees → Setup): what each student owed before EduERP, one row per student and earlier year (admission no., year, description, amount, due date), checked row by row. Each row becomes an ordinary bill marked "Opening due" — collected, reminded and reported like any bill — posted to Student fees receivable against the General fund. A second import for the same student and year is refused.
+- **Student credit balance**: at the counter, money over the chosen bills is kept as the student's credit only when the cashier ticks "Keep the extra ₹… as the student's credit" (online payments already did this). The Fees tab shows the credit, every use, and lets the fee office **use credit** against an open bill (never more than the credit or the bill; numbered ADJ/2026-27/0001), **cancel** a wrong adjustment (the bill opens again and the credit comes back) and **refund credit** through the usual refund approval. Setting "Use credit on new bills" (off by default) uses credit as soon as a bill is raised.
+- Fee reports: **Earlier-year dues** (by year, by class, and each bill) and **Credit balances** (by student, checked against the "Fees received in advance" account).
+- Demo (Standard demo school): opening dues from 2025-26 for three students (₹8,450) and one student who paid ₹500 more than due and holds it as credit.
+### Changed
+- A receipt whose extra money (kept as credit) has since been used cannot be cancelled until that adjustment is cancelled; a receipt refund that would need credit that has been used is marked failed with the reason. Before, this could have left a negative credit.
+- The refunds list on a student's Fees tab shows "From credit" for credit refunds (they have no receipt).
+- Phone set-up for parents without e-mail and SMS / WhatsApp stay "Coming soon" (CD-137).
+
 ## [Unreleased] — 2026-11-25 (Phase 22: SaaS billing)
 ### Added
 - **Prices per edition, monthly or yearly** (Platform console → Plans): a plan can be for one edition or for any, with a price per student per month and / or per year; prices can be changed later (new terms only — a running term keeps its rate).

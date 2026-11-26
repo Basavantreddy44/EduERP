@@ -2414,3 +2414,17 @@ tr.inv-differs td { background: #fdf8ee; }
   .bill-cycles, .saas-bank { grid-template-columns: minmax(0, 1fr); }
 }
 @media print { .saas-page { page: saasinvoice; } .saas-page .receipt { border: 0; box-shadow: none; padding: 0; } .acct-banner { display: none !important; } }
+
+/* ───────────── Phase 23 — fees at go-live: earlier-year dues, opening dues, credit ───────────── */
+.year-chip { margin-left: 6px; vertical-align: 1px; }
+.fee-tile .earlier-line { color: var(--gold-ink); }
+.fee-tile.credit { background: var(--gold-soft); border-color: #ead7ae; }
+.fee-tile.credit em { color: var(--gold-ink); }
+.credit-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; margin: 0 0 10px; }
+.credit-bar p { margin: 0; flex: 1 1 260px; }
+.dues-headline .earlier { padding: 10px 12px; border-radius: 12px; background: var(--gold-soft); color: var(--gold-ink); }
+.dues-headline .earlier strong { color: var(--gold-ink); font-size: 22px; }
+.earlier-text { color: var(--gold-ink); font-weight: 600; }
+.filter-check { align-self: end; padding-bottom: 9px; white-space: nowrap; }
+.keep-credit { margin: -4px 0 12px; padding: 9px 12px; border: 1px dashed #ead7ae; border-radius: 10px; background: var(--gold-soft); color: var(--gold-ink); font-weight: 600; }
+.pt-credit { color: var(--gold-ink); font-weight: 600; }

@@ -19,9 +19,9 @@ import { initials, studentName } from '@/components/students';
 interface Row {
   studentId: string; admissionNo: string; firstName: string; lastName: string | null; levelName: string | null; sectionName: string | null;
   guardianName: string | null; guardianPhone: string | null; guardianEmail: string | null; bills: number;
-  balance: string; overdue: string; notDue: string; d1_30: string; d31_60: string; d61_90: string; d90_plus: string; oldestDue: string | null; lastReminder: string | null;
+  balance: string; overdue: string; notDue: string; d1_30: string; d31_60: string; d61_90: string; d90_plus: string; earlier: string; oldestDue: string | null; lastReminder: string | null;
 }
-interface Dues { today: string; total: number; page: number; pageSize: number; totals: Record<'balance' | 'overdue' | 'notDue' | 'd1_30' | 'd31_60' | 'd61_90' | 'd90_plus', string> & { students: number }; items: Row[] }
+interface Dues { today: string; total: number; page: number; pageSize: number; totals: Record<'balance' | 'overdue' | 'notDue' | 'd1_30' | 'd31_60' | 'd61_90' | 'd90_plus' | 'earlier', string> & { students: number }; items: Row[] }
 
 const BUCKETS = [['notDue', 'fee.due.b.notDue'], ['d1_30', 'fee.due.b.d1_30'], ['d31_60', 'fee.due.b.d31_60'], ['d61_90', 'fee.due.b.d61_90'], ['d90_plus', 'fee.due.b.d90_plus']] as const;
 const inr = (v: string) => formatINR(paiseOf(v));
@@ -33,7 +33,7 @@ export default function DuesPage() {
   const day = useDay();
   const { opts } = useFeeOptions();
   const canBill = can(PERMISSIONS.FEE_BILL);
-  const [f, setF] = useState({ q: '', level: '', minDays: '', sort: 'overdue', page: 1 });
+  const [f, setF] = useState({ q: '', level: '', minDays: '', earlier: false, sort: 'overdue', page: 1 });
   useEffect(() => { if (new URLSearchParams(window.location.search).get('overdue') === '1') setF((x) => ({ ...x, minDays: '1' })); }, []); // from the dashboard
   const [text, setText] = useState('');
   const [d, setD] = useState<Dues | null>(null);
@@ -49,6 +49,7 @@ export default function DuesPage() {
     if (f.q) p.set('q', f.q);
     if (f.level) p.set('programLevelId', f.level);
     if (f.minDays) p.set('minDaysOverdue', f.minDays);
+    if (f.earlier) p.set('earlier', 'only');
     if (campusId) p.set('campusId', campusId);
     return p.toString();
   }, [f, campusId]);
@@ -97,6 +98,7 @@ export default function DuesPage() {
             <div className="dues-headline">
               <div><span className="muted small">{t('fee.due.totalDue')}</span><strong>{inr(d.totals.balance)}</strong><span className="muted small">{t('fee.due.students', { n: d.totals.students })}</span></div>
               <div className="overdue"><span className="small">{t('fee.due.overdue')}</span><strong>{inr(d.totals.overdue)}</strong></div>
+              {paiseOf(d.totals.earlier) > 0 && <div className="earlier"><span className="small">{t('cr.earlierYears')}</span><strong>{inr(d.totals.earlier)}</strong></div>}
             </div>
             <ul className="ageing" aria-label={t('fee.due.ageing')}>
               {BUCKETS.map(([k, label]) => {
@@ -126,6 +128,7 @@ export default function DuesPage() {
                 {['1', '30', '60', '90'].map((n) => <option key={n} value={n}>{t('fee.due.moreThan', { n })}</option>)}
               </select>
             </label>
+            <label className="check filter-check"><input type="checkbox" checked={f.earlier} onChange={(e) => setF({ ...f, earlier: e.target.checked, page: 1 })} /> {t('cr.onlyEarlier')}</label>
             <label className="filter"><span>{t('fee.due.sort')}</span>
               <select value={f.sort} onChange={(e) => setF({ ...f, sort: e.target.value, page: 1 })}>
                 {['overdue', 'balance', 'oldest', 'class', 'name'].map((s) => <option key={s} value={s}>{t(`fee.due.sortBy.${s}` as MessageKey)}</option>)}
@@ -170,7 +173,7 @@ export default function DuesPage() {
                           </td>
                           <td className="hide-sm">{r.levelName ? `${r.levelName} – ${r.sectionName}` : <span className="muted">—</span>}</td>
                           <td>{r.guardianName ?? '—'}{r.guardianPhone && <span className="sub-line"><a className="muted" href={`tel:${r.guardianPhone}`}>{r.guardianPhone}</a></span>}{!r.guardianEmail && <span className="sub-line muted small">{t('fee.due.noEmail')}</span>}</td>
-                          <td className="num strong">{inr(r.balance)}</td>
+                          <td className="num strong">{inr(r.balance)}{paiseOf(r.earlier) > 0 && <span className="sub-line small earlier-text">{t('cr.earlierShort', { v: inr(r.earlier) })}</span>}</td>
                           <td className={`num ${paiseOf(r.overdue) ? 'overdue-text' : 'muted'}`}>{paiseOf(r.overdue) ? inr(r.overdue) : '—'}</td>
                           <td className="hide-sm">{r.oldestDue ? <>{day(r.oldestDue)}{late > 0 && <span className={`sub-line small ${late > 90 ? 'overdue-text' : 'muted'}`}>{t('fee.due.daysLate', { n: late })}</span>}</> : '—'}</td>
                           <td className="hide-sm">{r.lastReminder ? day(r.lastReminder) : <span className="muted">—</span>}</td>

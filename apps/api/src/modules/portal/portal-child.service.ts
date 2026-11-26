@@ -117,8 +117,9 @@ export class PortalChildService {
     return {
       year: a.year,
       totals: a.totals,
+      credit: a.credit.balance,
       invoices: a.invoices.filter((i) => i.status !== 'CANCELLED').map((i) => ({
-        id: i.id, invoiceNo: i.invoiceNo, description: i.description, academicYear: i.academicYear.name, dueDate: i.dueDate, status: i.status,
+        id: i.id, invoiceNo: i.invoiceNo, description: i.description, academicYear: i.yearLabel, isEarlier: i.isEarlier, dueDate: i.dueDate, status: i.status,
         net: i.netAmount, paid: i.paidAmount, balance: i.balanceAmount, fine: i.fineAmount, concession: i.concessionAmount,
         items: i.items.map((x) => ({ head: x.feeHead.name, amount: x.amount })),
       })),

@@ -9,6 +9,7 @@ import { AccountMailer, ApprovalNotifier, CONSUMERS, Consumer, EmailConsumer } f
 import { JobsRunner } from './jobs.runner';
 import { NumberingService } from '../modules/numbering/numbering.service';
 import { FeeBillingService } from '../modules/fees/billing.service';
+import { SettingsService } from '../modules/settings/settings.service';
 import { FeeCollectionService } from '../modules/fees/collection.service';
 import { FeeOnlineService } from '../modules/fees/online.service';
 import { PAYMENT_GATEWAY, createGateway } from '../modules/fees/gateway';
@@ -43,6 +44,7 @@ import { LocalDiskStorage, STORAGE } from '../modules/files/storage';
     // Online payment re-check (missed webhooks / closed browsers).
     NumberingService,
     FeeBillingService,
+    SettingsService,
     FeeCollectionService,
     FeeOnlineService,
     { provide: PAYMENT_GATEWAY, useFactory: createGateway },

@@ -17,6 +17,7 @@ interface Invoice {
   id: string; invoiceNo: string; description: string; instalmentNo: number | null; invoiceDate: string; dueDate: string; status: string;
   grossAmount: string; concessionAmount: string; fineAmount: string; netAmount: string; paidAmount: string; balanceAmount: string; cancelReason: string | null; fineWaived: boolean; fineWaiveReason: string | null;
   items: Item[]; academicYear: { name: string };
+  yearLabel: string; isEarlier: boolean; isOpening: boolean;
 }
 interface Concession {
   id: string; concessionType: string; valueType: 'PERCENT' | 'AMOUNT'; value: string; reason: string; status: string; decisionRemarks: string | null; createdAt: string;
@@ -28,7 +29,8 @@ interface Account {
   year: { id: string; name: string } | null;
   assignment: { structure: { id: string; name: string; feeGroup: string | null; totalAmount: string } } | null;
   structureOptions: { id: string; name: string; feeGroup: string | null; totalAmount: string }[];
-  totals: { billed: string; concession: string; fine: string; net: string; paid: string; balance: string; overdue: string };
+  totals: { billed: string; concession: string; fine: string; net: string; paid: string; balance: string; overdue: string; earlier: string };
+  credit: { balance: string; pendingRefunds: string; available: string };
   invoices: Invoice[];
   concessions: Concession[];
   payments: Pay[];
@@ -38,8 +40,10 @@ interface Account {
   canRequestConcession: boolean;
 }
 interface PayLink { id: string; amount: string; status: string; expiresAt: string; sentTo: string | null; createdAt: string }
-interface RefundRow { id: string; amount: string; reason: string; refundMode: string; status: string; failureReason: string | null; createdAt: string; payment: { receiptNo: string; paymentMode: string } }
-type Dialog = null | 'plan' | 'charge' | 'concession' | 'link' | { waive: Invoice } | { bill: Invoice } | { cancel: Invoice } | { stop: Concession } | { undo: Pay; kind: 'cancel' | 'bounce' } | { refund: Pay };
+interface RefundRow { id: string; amount: string; reason: string; refundMode: string; status: string; failureReason: string | null; createdAt: string; kind: 'RECEIPT' | 'CREDIT'; payment: { receiptNo: string; paymentMode: string } | null }
+interface CreditAdj { id: string; adjustmentNo: string; adjustedOn: string; amount: string; source: 'MANUAL' | 'AUTO'; note: string | null; status: string; cancelReason: string | null; invoiceNo: string | null; invoiceDescription: string | null }
+interface CreditView { balance: string; pendingRefunds: string; available: string; adjustments: CreditAdj[]; canUse: boolean; canCancel: boolean }
+type Dialog = null | 'useCredit' | 'refundCredit' | { unadjust: CreditAdj } | 'plan' | 'charge' | 'concession' | 'link' | { waive: Invoice } | { bill: Invoice } | { cancel: Invoice } | { stop: Concession } | { undo: Pay; kind: 'cancel' | 'bounce' } | { refund: Pay };
 
 const inr = (v: string) => formatINR(paiseOf(v));
 
@@ -59,8 +63,10 @@ export function StudentFees({ studentId }: { studentId: string }) {
   const [gateway, setGateway] = useState<string>('off');
   const [links, setLinks] = useState<PayLink[]>([]);
   const [refunds, setRefunds] = useState<RefundRow[]>([]);
+  const [credit, setCredit] = useState<CreditView | null>(null);
   const load = useCallback(() => {
     api<Account>('/fees/students/' + studentId).then(setAcc).catch(() => setAcc(null));
+    api<CreditView>('/fees/students/' + studentId + '/credit').then(setCredit).catch(() => setCredit(null));
     api<PayLink[]>('/fees/students/' + studentId + '/pay-links').then(setLinks).catch(() => setLinks([]));
     api<RefundRow[]>('/fees/students/' + studentId + '/refunds').then(setRefunds).catch(() => setRefunds([]));
   }, [studentId]);
@@ -76,6 +82,7 @@ export function StudentFees({ studentId }: { studentId: string }) {
   const today = todayIST();
   const overdue = paiseOf(acc.totals.overdue) > 0;
   const activeHeads = heads.filter((h) => h.status === 'ACTIVE');
+  const openBills = acc.invoices.filter((i) => ['UNPAID', 'PARTIAL'].includes(i.status) && paiseOf(i.balanceAmount) > 0);
   const concText = (c: Concession) => `${c.valueType === 'PERCENT' ? `${Number(c.value)}%` : inr(c.value)} · ${c.feeHead?.name ?? t('fee.conc.allHeads')}`;
 
   return (
@@ -87,8 +94,15 @@ export function StudentFees({ studentId }: { studentId: string }) {
         <div className={`fee-tile due ${paiseOf(acc.totals.balance) > 0 ? 'has' : ''}`}>
           <span>{t('fee.acct.balance')}</span><strong>{inr(acc.totals.balance)}</strong>
           {overdue && <em><Icon name="alert" size={13} /> {t('fee.acct.overdue', { v: inr(acc.totals.overdue) })}</em>}
+          {paiseOf(acc.totals.earlier) > 0 && <em className="earlier-line">{t('cr.earlierIncl', { v: inr(acc.totals.earlier) })}</em>}
           {!paiseOf(acc.totals.balance) && acc.invoices.some((i) => i.status !== 'CANCELLED') && <em className="no-dues"><Icon name="check" size={13} /> {t('fee.due.clear')}</em>}
         </div>
+        {(paiseOf(acc.credit.balance) > 0 || (credit?.adjustments.length ?? 0) > 0) && (
+          <div className="fee-tile credit">
+            <span>{t('cr.balance')}</span><strong>{inr(acc.credit.balance)}</strong>
+            {paiseOf(acc.credit.pendingRefunds) > 0 && <em>{t('cr.heldForRefund', { v: inr(acc.credit.pendingRefunds) })}</em>}
+          </div>
+        )}
       </div>
 
       <div className="fee-plan">
@@ -118,7 +132,13 @@ export function StudentFees({ studentId }: { studentId: string }) {
                 const late = i.status !== 'CANCELLED' && paiseOf(i.balanceAmount) > 0 && i.dueDate.slice(0, 10) < today;
                 return (
                   <tr key={i.id} className={i.status === 'CANCELLED' ? 'row-muted' : undefined}>
-                    <td><strong>{i.description}</strong><span className="sub-line muted mono">{i.invoiceNo}</span></td>
+                    <td>
+                      <strong>{i.description}</strong>
+                      <span className="sub-line muted"><span className="mono">{i.invoiceNo}</span>
+                        {i.isEarlier && <span className="chip chip-sm chip-gold year-chip">{i.yearLabel}</span>}
+                        {i.isOpening && <span className="chip chip-sm year-chip">{t('cr.openingDue')}</span>}
+                      </span>
+                    </td>
                     <td className={late ? 'overdue-text' : ''}>{day(i.dueDate)}{late && <span className="sub-line">{t('fee.acct.overdueShort')}</span>}</td>
                     <td className="num">{inr(i.grossAmount)}</td>
                     <td className="num hide-sm">{paiseOf(i.concessionAmount) ? `−${inr(i.concessionAmount)}` : <span className="muted">—</span>}</td>
@@ -156,6 +176,33 @@ export function StudentFees({ studentId }: { studentId: string }) {
         </ul>
       )}
 
+      {credit && (paiseOf(credit.balance) > 0 || credit.adjustments.length > 0) && (
+        <>
+          <h3 className="module-group-name">{t('cr.title')}</h3>
+          <div className="credit-bar">
+            <p className="muted small">{t('cr.explain', { v: inr(credit.available) })}</p>
+            <span className="fee-plan-actions">
+              {credit.canUse && paiseOf(credit.available) > 0 && openBills.length > 0 && <button type="button" className="btn btn-sm btn-primary" onClick={() => open('useCredit')}><Icon name="swap" size={15} /> {t('cr.use')}</button>}
+              {credit.canUse && paiseOf(credit.available) > 0 && <button type="button" className="btn btn-sm" onClick={() => open('refundCredit')}>{t('cr.refund')}</button>}
+            </span>
+          </div>
+          {credit.adjustments.length > 0 && (
+            <ul className="conc-list">
+              {credit.adjustments.map((a) => (
+                <li key={a.id} className={a.status === 'CANCELLED' ? 'row-muted' : undefined}>
+                  <span className="conc-main">
+                    <strong>{inr(a.amount)} · {t('cr.usedOn', { bill: a.invoiceDescription ?? a.invoiceNo ?? '' })}</strong>
+                    <span className="sub-line muted"><span className="mono">{a.adjustmentNo}</span> · {day(a.adjustedOn)} · {a.source === 'AUTO' ? t('cr.auto') : t('cr.manual')}{a.cancelReason ? ' · ' + a.cancelReason : a.note && a.source === 'MANUAL' ? ' · ' + a.note : ''}</span>
+                  </span>
+                  <StatusBadge status={a.status === 'ACTIVE' ? 'PAID' : a.status} label={a.status === 'ACTIVE' ? t('cr.used') : undefined} />
+                  {credit.canCancel && a.status === 'ACTIVE' && <button type="button" className="btn btn-sm btn-ghost danger-text" onClick={() => open({ unadjust: a })}>{t('cr.cancelAdj')}</button>}
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
+
       {refunds.length > 0 && (
         <>
           <h3 className="module-group-name">{t('fee.ref.title')} · {refunds.length}</h3>
@@ -164,7 +211,7 @@ export function StudentFees({ studentId }: { studentId: string }) {
               <li key={r.id}>
                 <span className="conc-main">
                   <strong>{inr(r.amount)} · {t(('fee.ref.mode.' + r.refundMode) as MessageKey)}</strong>
-                  <span className="sub-line muted"><span className="mono">{r.payment.receiptNo}</span> · {day(r.createdAt)} · {r.reason}{r.failureReason ? ' · ' + r.failureReason : ''}</span>
+                  <span className="sub-line muted">{r.payment ? <span className="mono">{r.payment.receiptNo}</span> : t('cr.fromCredit')} · {day(r.createdAt)} · {r.reason}{r.failureReason ? ' · ' + r.failureReason : ''}</span>
                 </span>
                 <StatusBadge status={r.status} />
               </li>
@@ -207,6 +254,18 @@ export function StudentFees({ studentId }: { studentId: string }) {
         </ul>
       )}
 
+      {dialog === 'useCredit' && credit && (
+        <UseCreditDialog bills={openBills} available={credit.available} busy={busy} error={error} errors={errors} setErrors={setErrors} onClose={() => setDialog(null)}
+          onSave={(b) => run(() => api(`/fees/students/${studentId}/credit/adjust`, { method: 'POST', body: JSON.stringify(b) }), t('cr.usedToast'))} />
+      )}
+      {dialog === 'refundCredit' && credit && (
+        <CreditRefundDialog available={credit.available} busy={busy} error={error} errors={errors} setErrors={setErrors} onClose={() => setDialog(null)}
+          onSave={(b) => run(() => api(`/fees/students/${studentId}/credit/refunds`, { method: 'POST', body: JSON.stringify(b) }), t('fee.ref.sent'))} />
+      )}
+      {dialog && typeof dialog === 'object' && 'unadjust' in dialog && (
+        <ReasonDialog title={t('cr.cancelAdjTitle')} subtitle={`${dialog.unadjust.adjustmentNo} · ${inr(dialog.unadjust.amount)}`} text={t('cr.cancelAdjText')} submitLabel={t('cr.cancelAdj')} busy={busy} error={error} errors={errors} setErrors={setErrors} onClose={() => setDialog(null)}
+          onSave={(reason) => run(() => api(`/fees/credit-adjustments/${(dialog as { unadjust: CreditAdj }).unadjust.id}/cancel`, { method: 'POST', body: JSON.stringify({ reason }) }), t('cr.cancelledToast'))} />
+      )}
       {dialog === 'plan' && <PlanDialog acc={acc} busy={busy} error={error} onClose={() => setDialog(null)} onSave={(id) => run(() => api(`/fees/students/${studentId}/assignment`, { method: 'POST', body: JSON.stringify({ feeStructureId: id }) }), t('fee.acct.planSaved'))} />}
       {dialog === 'charge' && <ChargeDialog heads={activeHeads} busy={busy} error={error} errors={errors} setErrors={setErrors} onClose={() => setDialog(null)} onSave={(b) => run(() => api(`/fees/students/${studentId}/charges`, { method: 'POST', body: JSON.stringify(b) }), t('fee.acct.chargeSaved'))} />}
       {dialog === 'concession' && acc.year && <ConcessionDialog yearId={acc.year.id} yearName={acc.year.name} heads={activeHeads} busy={busy} error={error} errors={errors} setErrors={setErrors} onClose={() => setDialog(null)} onSave={(b) => run(() => api(`/fees/students/${studentId}/concessions`, { method: 'POST', body: JSON.stringify(b) }), t('fee.conc.sent'))} />}
@@ -474,6 +533,77 @@ function WaiveDialog({ inv, busy, error, errors, setErrors, onClose, onSave }: D
       onSubmit={(e) => { e.preventDefault(); if (reason.trim().length < 5) return setErrors({ reason: t('app.reasonMin') }); onSave(reason.trim()); }}>
       <p>{t('fee.due.waiveText')}</p>
       <Field id="w-reason" label={t('app.reasonRequired')} error={errors.reason}><textarea id="w-reason" rows={2} value={reason} onChange={(e) => setReason(e.target.value)} /></Field>
+    </Modal>
+  );
+}
+
+function UseCreditDialog({ bills, available, busy, error, errors, setErrors, onClose, onSave }: DlgProps & { bills: Invoice[]; available: string; errors: FieldErrors; setErrors: (e: FieldErrors) => void; onSave: (b: object) => void }) {
+  const { t } = useI18n();
+  const most = (b?: Invoice) => (b ? String(Math.min(paiseOf(available), paiseOf(b.balanceAmount)) / 100) : '');
+  const [billId, setBillId] = useState(bills[0]?.id ?? '');
+  const [amount, setAmount] = useState(most(bills[0]));
+  const [note, setNote] = useState('');
+  const bill = bills.find((b) => b.id === billId);
+  return (
+    <Modal open onClose={onClose} title={t('cr.use')} subtitle={t('cr.available', { v: inr(available) })} submitLabel={t('cr.useGo')} busy={busy} error={error}
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!amountOk(amount) || !amount || paiseOf(amount) <= 0) return setErrors({ amount: t('fee.amountInvalid') });
+        if (bill && paiseOf(amount) > Math.min(paiseOf(available), paiseOf(bill.balanceAmount))) return setErrors({ amount: t('cr.atMost', { v: inr(String(Math.min(paiseOf(available), paiseOf(bill.balanceAmount)) / 100)) }) });
+        onSave({ invoiceId: billId, amount: amount.replace(/,/g, ''), note: note.trim() || null });
+      }}>
+      <p className="note-info"><Icon name="info" size={15} /> {t('cr.useHint')}</p>
+      <Field id="uc-bill" label={t('cr.whichBill')}>
+        <select id="uc-bill" value={billId} onChange={(e) => { setBillId(e.target.value); setAmount(most(bills.find((b) => b.id === e.target.value))); }}>
+          {bills.map((b) => <option key={b.id} value={b.id}>{b.description}{b.isEarlier ? ` (${b.yearLabel})` : ''} · {b.invoiceNo} · {inr(b.balanceAmount)}</option>)}
+        </select>
+      </Field>
+      <div className="grid-2">
+        <Field id="uc-amount" label={t('fee.late.amount')} error={errors.amount}>
+          <div className="input-affix"><span aria-hidden>₹</span><input id="uc-amount" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} /></div>
+        </Field>
+        <Field id="uc-note" label={t('cr.note')}><input id="uc-note" value={note} maxLength={300} onChange={(e) => setNote(e.target.value)} /></Field>
+      </div>
+    </Modal>
+  );
+}
+
+function CreditRefundDialog({ available, busy, error, errors, setErrors, onClose, onSave }: DlgProps & { available: string; errors: FieldErrors; setErrors: (e: FieldErrors) => void; onSave: (b: object) => void }) {
+  const { t } = useI18n();
+  const [amount, setAmount] = useState(String(paiseOf(available) / 100));
+  const [reason, setReason] = useState('');
+  const [mode, setMode] = useState('BANK_TRANSFER');
+  return (
+    <Modal open onClose={onClose} title={t('cr.refund')} subtitle={t('cr.available', { v: inr(available) })} submitLabel={t('fee.conc.send')} busy={busy} error={error}
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!amountOk(amount) || !amount || paiseOf(amount) <= 0) return setErrors({ amount: t('fee.amountInvalid') });
+        if (paiseOf(amount) > paiseOf(available)) return setErrors({ amount: t('cr.atMost', { v: inr(available) }) });
+        if (reason.trim().length < 5) return setErrors({ reason: t('app.reasonMin') });
+        onSave({ amount: amount.replace(/,/g, ''), reason: reason.trim(), refundMode: mode });
+      }}>
+      <p className="note-info"><Icon name="info" size={15} /> {t('fee.ref.manualHint')}</p>
+      <div className="grid-2">
+        <Field id="cr-amount" label={t('fee.late.amount')} error={errors.amount}>
+          <div className="input-affix"><span aria-hidden>₹</span><input id="cr-amount" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} /></div>
+        </Field>
+        <Field id="cr-mode" label={t('fee.ref.how')}>
+          <select id="cr-mode" value={mode} onChange={(e) => setMode(e.target.value)}>{['BANK_TRANSFER', 'CASH', 'CHEQUE'].map((m) => <option key={m} value={m}>{t(('fee.ref.mode.' + m) as MessageKey)}</option>)}</select>
+        </Field>
+      </div>
+      <Field id="cr-reason" label={t('app.reasonRequired')} error={errors.reason}><textarea id="cr-reason" rows={2} value={reason} onChange={(e) => setReason(e.target.value)} placeholder={t('fee.ref.reasonPh')} /></Field>
+    </Modal>
+  );
+}
+
+function ReasonDialog({ title, subtitle, text, submitLabel, busy, error, errors, setErrors, onClose, onSave }: DlgProps & { title: string; subtitle: string; text: string; submitLabel: string; errors: FieldErrors; setErrors: (e: FieldErrors) => void; onSave: (reason: string) => void }) {
+  const { t } = useI18n();
+  const [reason, setReason] = useState('');
+  return (
+    <Modal open danger onClose={onClose} title={title} subtitle={subtitle} submitLabel={submitLabel} busy={busy} error={error}
+      onSubmit={(e) => { e.preventDefault(); if (reason.trim().length < 5) return setErrors({ reason: t('app.reasonMin') }); onSave(reason.trim()); }}>
+      <p>{text}</p>
+      <Field id="rd-reason" label={t('app.reasonRequired')} error={errors.reason}><textarea id="rd-reason" rows={2} value={reason} onChange={(e) => setReason(e.target.value)} /></Field>
     </Modal>
   );
 }

@@ -144,6 +144,18 @@ export const IMPORT_TYPES = {
       { key: 'address', header: 'Address', required: false, example: 'Bilikere, Hunsur taluk, Mysuru', help: 'Up to 500 characters.' },
     ],
   },
+  OPENING_DUES: {
+    type: 'OPENING_DUES',
+    label: 'Opening dues',
+    description: 'What each student still owed before EduERP, one row per student and year. Each row becomes a bill marked "Opening due" that is collected, reminded and reported like any bill.',
+    columns: [
+      { key: 'admissionNo', header: 'Admission no', required: true, example: 'ADM/2023/0142', help: 'The student must already be in EduERP.' },
+      { key: 'yearLabel', header: 'Year', required: true, example: '2025-26', help: 'The academic year the dues belong to, before the current one. One row per student and year.' },
+      { key: 'description', header: 'Description', required: false, example: 'Balance tuition fee 2025-26', help: 'Up to 200 characters. Default: Opening dues <year>.' },
+      { key: 'amount', header: 'Amount', required: true, example: '4500', help: 'In rupees, more than 0, up to 2 decimals.' },
+      { key: 'dueDate', header: 'Due date', required: false, example: '2026-06-30', help: 'YYYY-MM-DD or DD-MM-YYYY. Default: today.' },
+    ],
+  },
 } as const satisfies Record<string, ImportType>;
 
 export type ImportTypeCode = keyof typeof IMPORT_TYPES;

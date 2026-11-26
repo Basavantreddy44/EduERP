@@ -1438,6 +1438,8 @@ model FeeInvoice {
   cancelReason     String?   @map("cancel_reason") @db.VarChar(300)
   fineWaived       Boolean   @default(false) @map("fine_waived")
   fineWaiveReason  String?   @map("fine_waive_reason") @db.VarChar(300)
+  /// Set on dues brought in at go-live (Phase 23): the year they belong to, e.g. 2024-25.
+  openingYearLabel String?   @map("opening_year_label") @db.VarChar(9)
   createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt        DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
   createdBy        String?   @map("created_by") @db.Uuid
@@ -1705,7 +1707,9 @@ model Refund {
   id                String    @id @default(uuid()) @db.Uuid
   tenantId          String    @map("tenant_id") @db.Uuid
   campusId          String    @map("campus_id") @db.Uuid
-  paymentId         String    @map("payment_id") @db.Uuid
+  /// RECEIPT: money back from a receipt; CREDIT: a student credit balance paid back (Phase 23, no receipt).
+  kind              String    @default("RECEIPT") @db.VarChar(10)
+  paymentId         String?   @map("payment_id") @db.Uuid
   studentId         String    @map("student_id") @db.Uuid
   amount            Decimal   @db.Decimal(14, 2)
   reason            String    @db.VarChar(300)
@@ -1719,11 +1723,54 @@ model Refund {
   createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
   createdBy         String?   @map("created_by") @db.Uuid
 
-  payment Payment @relation(fields: [tenantId, paymentId], references: [tenantId, id])
+  payment Payment? @relation(fields: [tenantId, paymentId], references: [tenantId, id])
 
   @@unique([tenantId, id])
   @@index([tenantId, paymentId, status])
   @@map("refunds")
+}
+
+/// A student's credit (fees received in advance) used against a bill (Phase 23). Cancelled by reversal, never deleted.
+model FeeCreditAdjustment {
+  id             String    @id @default(uuid()) @db.Uuid
+  tenantId       String    @map("tenant_id") @db.Uuid
+  campusId       String    @map("campus_id") @db.Uuid
+  studentId      String    @map("student_id") @db.Uuid
+  adjustmentNo   String    @map("adjustment_no") @db.VarChar(40)
+  adjustedOn     DateTime  @map("adjusted_on") @db.Date
+  amount         Decimal   @db.Decimal(14, 2)
+  /// MANUAL (fee office / counter) or AUTO (when a new bill was raised).
+  source         String    @default("MANUAL") @db.VarChar(10)
+  note           String?   @db.VarChar(300)
+  status         String    @default("ACTIVE") @db.VarChar(20)
+  journalEntryId String?   @map("journal_entry_id") @db.Uuid
+  cancelReason   String?   @map("cancel_reason") @db.VarChar(300)
+  cancelledAt    DateTime? @map("cancelled_at") @db.Timestamptz(6)
+  cancelledBy    String?   @map("cancelled_by") @db.Uuid
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  createdBy      String?   @map("created_by") @db.Uuid
+
+  lines FeeCreditAdjustmentLine[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, adjustmentNo])
+  @@index([tenantId, studentId])
+  @@map("fee_credit_adjustments")
+}
+
+model FeeCreditAdjustmentLine {
+  id            String  @id @default(uuid()) @db.Uuid
+  tenantId      String  @map("tenant_id") @db.Uuid
+  adjustmentId  String  @map("adjustment_id") @db.Uuid
+  invoiceId     String  @map("invoice_id") @db.Uuid
+  invoiceItemId String  @map("invoice_item_id") @db.Uuid
+  amount        Decimal @db.Decimal(14, 2)
+
+  adjustment FeeCreditAdjustment @relation(fields: [tenantId, adjustmentId], references: [tenantId, id])
+
+  @@unique([tenantId, id])
+  @@index([tenantId, invoiceId])
+  @@map("fee_credit_adjustment_lines")
 }
 
 // ───────────── Dues, late fees, reminders (M2.5) ─────────────

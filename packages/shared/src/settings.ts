@@ -98,6 +98,15 @@ export const SETTINGS = [
     scopes: ['TENANT', 'CAMPUS'],
   }),
   define({
+    key: 'fees.auto_use_credit',
+    label: 'Use credit on new bills',
+    description: 'When a bill is raised for a student who has a credit balance, use the credit against it straight away.',
+    group: 'Fees',
+    schema: z.boolean(),
+    defaultValue: false,
+    scopes: ['TENANT', 'CAMPUS'],
+  }),
+  define({
     key: 'fees.receipt_footer',
     label: 'Receipt footer',
     description: 'Text printed at the bottom of every fee receipt.',

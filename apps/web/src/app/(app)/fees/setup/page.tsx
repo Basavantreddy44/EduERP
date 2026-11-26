@@ -50,7 +50,12 @@ function SetupInner() {
         eyebrow={t('nav.fees')}
         title={t('fee.setup.title')}
         description={t('fee.setup.desc')}
-        actions={canManage && tab === 'structures' && activeHeads > 0 && <Link className="btn btn-primary" href="/fees/structures/new"><Icon name="plus" /> {t('fee.struct.new')}</Link>}
+        actions={canManage && (
+          <>
+            <Link className="btn" href="/imports" title={t('cr.importHint')}><Icon name="upload" /> {t('cr.importOpening')}</Link>
+            {tab === 'structures' && activeHeads > 0 && <Link className="btn btn-primary" href="/fees/structures/new"><Icon name="plus" /> {t('fee.struct.new')}</Link>}
+          </>
+        )}
       />
       <div className="tabs scroll" role="tablist" aria-label={t('fee.setup.title')}>
         {TABS.map((x) => (
